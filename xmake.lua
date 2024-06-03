@@ -27,7 +27,7 @@ target("PlotCraft") -- Change this to your plugin name.
         "/w45204"
     )
     add_defines("NOMINMAX", "UNICODE")
-    add_files("src/**.cpp")
+    add_files("src/**.cpp", "src/**.cc")
     add_includedirs("src")
     add_packages("levilamina", "more-dimensions")
     add_shflags("/DELAYLOAD:bedrock_server.dll") -- To use symbols provided by SymbolProvider.
