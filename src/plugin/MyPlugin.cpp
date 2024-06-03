@@ -32,7 +32,7 @@ bool MyPlugin::enable() {
 
     // 注册自定义维度
     logger.info("Registering plot dimension...");
-    more_dimensions::CustomDimensionManager::getInstance().addDimension<plotcraft::PlotDimension>("plot");
+    more_dimensions::CustomDimensionManager::getInstance().addDimension<plotcraft::core::PlotDimension>("plot");
 
     return true;
 }

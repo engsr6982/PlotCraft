@@ -1,8 +1,10 @@
 #include "PlotDimension.h"
+#include "PlotGenerator.h"
 
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/DimensionConversionData.h"
 #include "mc/world/level/Level.h"
+#include "mc/world/level/LevelSeed64.h"
 #include "mc/world/level/chunk/ChunkGeneratorStructureState.h"
 #include "mc/world/level/chunk/VanillaLevelChunkUpgrade.h"
 #include "mc/world/level/dimension/DimensionBrightnessRamp.h"
@@ -10,10 +12,12 @@
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "mc/world/level/levelgen/flat/FlatWorldGenerator.h"
 #include "mc/world/level/levelgen/structure/StructureFeatureRegistry.h"
+#include "mc/world/level/levelgen/structure/StructureSetRegistry.h"
+#include "mc/world/level/levelgen/structure/VillageFeature.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 
 
-namespace plotcraft {
+namespace plotcraft::core {
 
 PlotDimension::PlotDimension(std::string const& name, more_dimensions::DimensionFactoryInfo const& info)
 : Dimension(info.level, info.dimId, {-64, 320}, info.scheduler, name) {
@@ -27,18 +31,32 @@ PlotDimension::PlotDimension(std::string const& name, more_dimensions::Dimension
 
 CompoundTag PlotDimension::generateNewData() { return {}; }
 
-std::unique_ptr<WorldGenerator> PlotDimension::createGenerator(br::worldgen::StructureSetRegistry const&) {
-    // 本教程只涉及到生成器的更改，所以对其余部分不做详细说明
-    // 暂且这样处理，因为我们还没写生成器，先利用原版的超平坦生成器
+std::unique_ptr<WorldGenerator>
+PlotDimension::createGenerator(br::worldgen::StructureSetRegistry const& structureSetRegistry) {
     std::unique_ptr<WorldGenerator> worldGenerator;
     auto                            seed      = getLevel().getSeed();
     auto&                           levelData = getLevel().getLevelData();
 
-    // 实例化一个FlatWorldGenerator类
-    worldGenerator = std::make_unique<FlatWorldGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
+    // 实例化我们写的Generator类
+    worldGenerator =
+        std::make_unique<plotcraft::core::PlotGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
+    // structureSetRegistry里面仅有的土径结构村庄生成需要用到，所以我们拿一下
+    std::vector<std::shared_ptr<const br::worldgen::StructureSet>> structureMap;
+    for (auto iter = structureSetRegistry.begin(); iter != structureSetRegistry.end(); iter++) {
+        structureMap.emplace_back(iter->second);
+    }
+    worldGenerator->getStructureFeatureRegistry().mChunkGeneratorStructureState.mSeed = seed;
+    worldGenerator->getStructureFeatureRegistry().mChunkGeneratorStructureState.mSeed64 =
+        LevelSeed64::fromUnsigned32(seed);
+
+    // 这个就相当于在这个生成器里注册结构了
+    // VillageFeature的第二第三个参数是村庄之间的最大间隔与最小间隔
+    worldGenerator->getStructureFeatureRegistry().mStructureFeatures.emplace_back(
+        std::make_unique<VillageFeature>(seed, 34, 8)
+    );
     // 此为必须，一些结构生成相关
     worldGenerator->getStructureFeatureRegistry().mChunkGeneratorStructureState =
-        br::worldgen::ChunkGeneratorStructureState::createFlat(seed, worldGenerator->getBiomeSource(), {});
+        br::worldgen::ChunkGeneratorStructureState::createFlat(seed, worldGenerator->getBiomeSource(), structureMap);
 
     // 必须调用，初始化生成器
     worldGenerator->init();
@@ -90,4 +108,4 @@ short PlotDimension::getCloudHeight() const { return 192; }
 
 bool PlotDimension::hasPrecipitationFog() const { return true; }
 
-} // namespace plotcraft
+} // namespace plotcraft::core
