@@ -32,34 +32,16 @@ PlotDimension::PlotDimension(std::string const& name, more_dimensions::Dimension
 CompoundTag PlotDimension::generateNewData() { return {}; }
 
 std::unique_ptr<WorldGenerator>
-PlotDimension::createGenerator(br::worldgen::StructureSetRegistry const& structureSetRegistry) {
-    std::unique_ptr<WorldGenerator> worldGenerator;
-    auto                            seed      = getLevel().getSeed();
-    auto&                           levelData = getLevel().getLevelData();
+PlotDimension::createGenerator(br::worldgen::StructureSetRegistry const& /* structureSetRegistry */) {
+    auto  seed      = getLevel().getSeed();
+    auto& levelData = getLevel().getLevelData();
 
-    // 实例化我们写的Generator类
-    worldGenerator =
+    // 实例化 地皮生成器
+    auto worldGenerator =
         std::make_unique<plotcraft::core::PlotGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
-    // structureSetRegistry里面仅有的土径结构村庄生成需要用到，所以我们拿一下
-    std::vector<std::shared_ptr<const br::worldgen::StructureSet>> structureMap;
-    for (auto iter = structureSetRegistry.begin(); iter != structureSetRegistry.end(); iter++) {
-        structureMap.emplace_back(iter->second);
-    }
-    worldGenerator->getStructureFeatureRegistry().mChunkGeneratorStructureState.mSeed = seed;
-    worldGenerator->getStructureFeatureRegistry().mChunkGeneratorStructureState.mSeed64 =
-        LevelSeed64::fromUnsigned32(seed);
 
-    // 这个就相当于在这个生成器里注册结构了
-    // VillageFeature的第二第三个参数是村庄之间的最大间隔与最小间隔
-    worldGenerator->getStructureFeatureRegistry().mStructureFeatures.emplace_back(
-        std::make_unique<VillageFeature>(seed, 34, 8)
-    );
-    // 此为必须，一些结构生成相关
-    worldGenerator->getStructureFeatureRegistry().mChunkGeneratorStructureState =
-        br::worldgen::ChunkGeneratorStructureState::createFlat(seed, worldGenerator->getBiomeSource(), structureMap);
+    worldGenerator->init(); // 必须调用，初始化生成器
 
-    // 必须调用，初始化生成器
-    worldGenerator->init();
     return std::move(worldGenerator);
 }
 

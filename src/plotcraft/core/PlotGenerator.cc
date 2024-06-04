@@ -33,26 +33,26 @@ bool PlotGenerator::postProcess(ChunkViewSource& neighborhood) {
     chunkPos.x      = neighborhood.getArea().mBounds.min.x;
     chunkPos.z      = neighborhood.getArea().mBounds.min.z;
     auto levelChunk = neighborhood.getExistingChunk(chunkPos);
-    auto seed       = getLevel().getSeed();
+    // auto seed       = getLevel().getSeed();
 
-    // 必须，需要给区块上锁
+    // // 必须，需要给区块上锁
     auto lockChunk =
         levelChunk->getDimension().mPostProcessingManager->tryLock(levelChunk->getPosition(), neighborhood);
 
     if (!lockChunk) {
         return false;
     }
-    BlockSource blockSource(getLevel(), neighborhood.getDimension(), neighborhood, false, true, true);
-    auto        chunkPosL = levelChunk->getPosition();
-    random.mRandom.mObject._setSeed(seed);
-    auto one = 2 * (random.nextInt() / 2) + 1;
-    auto two = 2 * (random.nextInt() / 2) + 1;
-    random.mRandom.mObject._setSeed(seed ^ (chunkPosL.x * one + chunkPosL.z * two));
+    // BlockSource blockSource(getLevel(), neighborhood.getDimension(), neighborhood, false, true, true);
+    // auto        chunkPosL = levelChunk->getPosition();
+    // random.mRandom.mObject._setSeed(seed);
+    // auto one = 2 * (random.nextInt() / 2) + 1;
+    // auto two = 2 * (random.nextInt() / 2) + 1;
+    // random.mRandom.mObject._setSeed(seed ^ (chunkPosL.x * one + chunkPosL.z * two));
 
     // 放置结构体，如果包含有某个结构的区块，就会放置loadChunk准备的结构
-    WorldGenerator::postProcessStructureFeatures(blockSource, random, chunkPosL.x, chunkPosL.z);
+    // WorldGenerator::postProcessStructureFeatures(blockSource, random, chunkPosL.x, chunkPosL.z);
     // 处理其它单体结构，比如沉船，这里不是必须
-    WorldGenerator::postProcessStructures(blockSource, random, chunkPosL.x, chunkPosL.z);
+    // WorldGenerator::postProcessStructures(blockSource, random, chunkPosL.x, chunkPosL.z);
     return true;
 }
 
@@ -69,7 +69,19 @@ int positiveMod(int value, int modulus) {
 
 
 void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool forceImmediateReplacementDataLoad) {
-    auto chunkPos = levelchunk.getPosition();
+    // 自定义配置
+    int plotWidth   = 64;    // 地皮大小
+    int generatorY  = -61;   // 生成层
+    int borderWidth = 2 * 2; // 边框宽度(道路)
+    // 方块配置
+    const Block& roadBlock   = *Block::tryGetFromRegistry("minecraft:birch_planks", 0);     // 道路方块
+    const Block& fillBlock   = *Block::tryGetFromRegistry("minecraft:grass_block", 0);      // 填充方块
+    const Block& borderBlock = *Block::tryGetFromRegistry("minecraft:stone_block_slab", 0); // 边框方块
+
+    // 生成/计算
+    auto& chunkPos    = levelchunk.getPosition();
+    auto  blockSource = &getDimension().getBlockSourceFromMainChunkSource();
+    levelchunk.setBlockVolume(mPrototype, 0);
 
     // 计算当前区块的全局坐标
     int startX = chunkPos.x * 16;
@@ -83,34 +95,20 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool forceImmediateReplace
             int globalZ = startZ + z;
 
             // 计算在地盘网格中的位置
-            int gridX = positiveMod(globalX, 66); // 64地盘 + 2道路
-            int gridZ = positiveMod(globalZ, 66);
+            int gridX = positiveMod(globalX, plotWidth + borderWidth); // 地皮 + 边框（一个地皮4个边）
+            int gridZ = positiveMod(globalZ, plotWidth + borderWidth);
 
             // 判断是否为道路或边框
-            if (gridX < 2 || gridZ < 2 || gridX >= 64 || gridZ >= 64) {
+            if (gridX < borderWidth || gridZ < borderWidth || gridX >= plotWidth || gridZ >= plotWidth) {
                 // 道路
-                levelchunk.setBlock(
-                    ChunkBlockPos{BlockPos(x, -64, z), -64},
-                    Block::tryGetFromRegistry("minecraft:birch_planks", 0),
-                    &getDimension().getBlockSourceFromMainChunkSource(),
-                    nullptr
-                );
-            } else if (gridX == 2 || gridZ == 2 || gridX == 63 || gridZ == 63) {
+                levelchunk.setBlock(ChunkBlockPos{BlockPos(x, generatorY, z), -64}, roadBlock, blockSource, nullptr);
+            } else if (gridX == borderWidth || gridZ == borderWidth || gridX == plotWidth - 1 || gridZ == plotWidth - 1) {
                 // 边框
-                levelchunk.setBlock(
-                    ChunkBlockPos{BlockPos(x, -63, z), -64},
-                    Block::tryGetFromRegistry("minecraft:stone_block_slab", 0),
-                    &getDimension().getBlockSourceFromMainChunkSource(),
-                    nullptr
-                );
+                levelchunk
+                    .setBlock(ChunkBlockPos{BlockPos(x, generatorY + 1, z), -64}, borderBlock, blockSource, nullptr);
             } else {
                 // 地盘内部
-                levelchunk.setBlock(
-                    ChunkBlockPos{BlockPos(x, -64, z), -64},
-                    Block::tryGetFromRegistry("minecraft:grass_block", 0),
-                    &getDimension().getBlockSourceFromMainChunkSource(),
-                    nullptr
-                );
+                levelchunk.setBlock(ChunkBlockPos{BlockPos(x, generatorY, z), -64}, fillBlock, blockSource, nullptr);
             }
         }
     }
@@ -122,7 +120,7 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool forceImmediateReplace
 
 std::optional<short> PlotGenerator::getPreliminarySurfaceLevel(DividedPos2d<4> worldPos) const {
     // 超平坦的高度都是一样的，直接返回固定值即可
-    return -61;
+    return -60;
 }
 
 void PlotGenerator::prepareAndComputeHeights(
