@@ -26,7 +26,7 @@ target("PlotCraft") -- Change this to your plugin name.
         "/w44738",
         "/w45204"
     )
-    add_defines("NOMINMAX", "UNICODE")
+    add_defines("NOMINMAX", "UNICODE", "_HAS_CXX23=1")
     add_files("src/**.cpp", "src/**.cc")
     add_includedirs("src")
     add_packages("levilamina", "more-dimensions")

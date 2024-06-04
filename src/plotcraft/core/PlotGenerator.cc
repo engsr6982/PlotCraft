@@ -1,10 +1,16 @@
 #include "PlotGenerator.h"
 
 #include "mc/deps/core/data/DividedPos2d.h"
+#include "mc/network/packet/UpdateSubChunkBlocksPacket.h"
+#include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
+#include "mc/world/level/ChunkBlockPos.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/biome/VanillaBiomeNames.h"
 #include "mc/world/level/biome/registry/BiomeRegistry.h"
+#include "mc/world/level/block/Block.h"
+#include "mc/world/level/block/BlockLegacy.h"
+#include "mc/world/level/block/actor/BlockActor.h"
 #include "mc/world/level/chunk/ChunkViewSource.h"
 #include "mc/world/level/chunk/LevelChunk.h"
 #include "mc/world/level/chunk/PostprocessingManager.h"
@@ -50,28 +56,69 @@ bool PlotGenerator::postProcess(ChunkViewSource& neighborhood) {
     return true;
 }
 
+
+// Generator Plot
+
+int positiveMod(int value, int modulus) {
+    int result = value % modulus;
+    if (result < 0) {
+        result += modulus;
+    }
+    return result;
+}
+
+
 void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool forceImmediateReplacementDataLoad) {
     auto chunkPos = levelchunk.getPosition();
 
-    auto            blockPos = BlockPos(chunkPos, 0);
-    DividedPos2d<4> dividedPos2D;
-    dividedPos2D.x = (blockPos.x >> 31) - ((blockPos.x >> 31) - blockPos.x) / 4;
-    dividedPos2D.z = (blockPos.z >> 31) - ((blockPos.z >> 31) - blockPos.z) / 4;
+    // 计算当前区块的全局坐标
+    int startX = chunkPos.x * 16;
+    int startZ = chunkPos.z * 16;
 
-    // 处理其它单体结构，比如沉船，这里不是必须
-    WorldGenerator::preProcessStructures(getDimension(), chunkPos, getBiomeSource());
-    // 准备要放置的结构，如果是某个结构的区块，就会准备结构
-    WorldGenerator::prepareStructureFeatureBlueprints(getDimension(), chunkPos, getBiomeSource(), *this);
+    // 遍历区块内的每个方块位置
+    for (int x = 0; x < 16; x++) {
+        for (int z = 0; z < 16; z++) {
+            // 计算全局坐标
+            int globalX = startX + x;
+            int globalZ = startZ + z;
 
-    // 这里并没有放置结构，只有单纯基本地形
-    levelchunk.setBlockVolume(mPrototype, 0);
+            // 计算在地盘网格中的位置
+            int gridX = positiveMod(globalX, 66); // 64地盘 + 2道路
+            int gridZ = positiveMod(globalZ, 66);
 
-    levelchunk.recomputeHeightMap(0);
-    ChunkLocalNoiseCache chunkLocalNoiseCache(dividedPos2D, 8);
-    mBiomeSource->fillBiomes(levelchunk, chunkLocalNoiseCache);
+            // 判断是否为道路或边框
+            if (gridX < 2 || gridZ < 2 || gridX >= 64 || gridZ >= 64) {
+                // 道路
+                levelchunk.setBlock(
+                    ChunkBlockPos{BlockPos(x, -64, z), -64},
+                    Block::tryGetFromRegistry("minecraft:birch_planks", 0),
+                    &getDimension().getBlockSourceFromMainChunkSource(),
+                    nullptr
+                );
+            } else if (gridX == 2 || gridZ == 2 || gridX == 63 || gridZ == 63) {
+                // 边框
+                levelchunk.setBlock(
+                    ChunkBlockPos{BlockPos(x, -63, z), -64},
+                    Block::tryGetFromRegistry("minecraft:stone_block_slab", 0),
+                    &getDimension().getBlockSourceFromMainChunkSource(),
+                    nullptr
+                );
+            } else {
+                // 地盘内部
+                levelchunk.setBlock(
+                    ChunkBlockPos{BlockPos(x, -64, z), -64},
+                    Block::tryGetFromRegistry("minecraft:grass_block", 0),
+                    &getDimension().getBlockSourceFromMainChunkSource(),
+                    nullptr
+                );
+            }
+        }
+    }
+
     levelchunk.setSaved();
     levelchunk.changeState(ChunkState::Generating, ChunkState::Generated);
 }
+
 
 std::optional<short> PlotGenerator::getPreliminarySurfaceLevel(DividedPos2d<4> worldPos) const {
     // 超平坦的高度都是一样的，直接返回固定值即可

@@ -6,6 +6,13 @@
 #include "ll/api/event/server/ServerStartedEvent.h"
 #include "ll/api/plugin/NativePlugin.h"
 #include "ll/api/plugin/RegisterHelper.h"
+#include "ll/api/service/Bedrock.h"
+#include "mc/server/ServerLevel.h"
+#include "mc/server/commands/CommandContext.h"
+#include "mc/server/commands/CommandOutputType.h"
+#include "mc/server/commands/MinecraftCommands.h"
+#include "mc/server/commands/ServerCommandOrigin.h"
+#include "mc/world/Minecraft.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 #include "plotcraft/core/PlotDimension.h"
 
@@ -33,6 +40,20 @@ bool MyPlugin::enable() {
     // 注册自定义维度
     logger.info("Registering plot dimension...");
     more_dimensions::CustomDimensionManager::getInstance().addDimension<plotcraft::core::PlotDimension>("plot");
+
+
+#ifdef DEBUG
+    CommandContext ctx = CommandContext(
+        "gamerule showcoordinates true",
+        std::make_unique<ServerCommandOrigin>(
+            "Server",
+            ll::service::getLevel()->asServer(),
+            CommandPermissionLevel::Owner,
+            0
+        )
+    );
+    ll::service::getMinecraft()->getCommands().executeCommand(ctx, false);
+#endif
 
     return true;
 }

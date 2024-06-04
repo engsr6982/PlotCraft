@@ -13,7 +13,6 @@ class ChunkViewSource;
 class LevelChunk;
 class ChunkPos;
 
-// 依旧建议加一个命名空间避免冲突
 namespace plotcraft::core {
 
 // 我们直接继承原版超平坦这个类来写会方便很多
