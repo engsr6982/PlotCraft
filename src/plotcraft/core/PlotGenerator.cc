@@ -70,11 +70,11 @@ int positiveMod(int value, int modulus) {
 
 void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool forceImmediateReplacementDataLoad) {
     // 自定义配置
-    int plotWidth   = 64;    // 地皮大小
-    int generatorY  = -61;   // 生成层
-    int borderWidth = 2 * 2; // 边框宽度(道路)
+    int plotWidth  = 64;  // 地皮大小
+    int roadWidth  = 3;   // 道路宽度(默认*2)
+    int generatorY = -61; // 生成层
     // 方块配置
-    const Block& roadBlock   = *Block::tryGetFromRegistry("minecraft:birch_planks", 0);     // 道路方块
+    const Block& roadBlock   = *Block::tryGetFromRegistry("minecraft:cherry_planks", 0);    // 道路方块
     const Block& fillBlock   = *Block::tryGetFromRegistry("minecraft:grass_block", 0);      // 填充方块
     const Block& borderBlock = *Block::tryGetFromRegistry("minecraft:stone_block_slab", 0); // 边框方块
 
@@ -95,14 +95,14 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool forceImmediateReplace
             int globalZ = startZ + z;
 
             // 计算在地盘网格中的位置
-            int gridX = positiveMod(globalX, plotWidth + borderWidth); // 地皮 + 边框（一个地皮4个边）
-            int gridZ = positiveMod(globalZ, plotWidth + borderWidth);
+            int gridX = positiveMod(globalX, plotWidth + roadWidth); // 地皮 + 边框（一个地皮4个边）
+            int gridZ = positiveMod(globalZ, plotWidth + roadWidth);
 
             // 判断是否为道路或边框
-            if (gridX < borderWidth || gridZ < borderWidth || gridX >= plotWidth || gridZ >= plotWidth) {
+            if (gridX < roadWidth || gridZ < roadWidth || gridX >= plotWidth || gridZ >= plotWidth) {
                 // 道路
                 levelchunk.setBlock(ChunkBlockPos{BlockPos(x, generatorY, z), -64}, roadBlock, blockSource, nullptr);
-            } else if (gridX == borderWidth || gridZ == borderWidth || gridX == plotWidth - 1 || gridZ == plotWidth - 1) {
+            } else if (gridX == roadWidth || gridZ == roadWidth || gridX == plotWidth - 1 || gridZ == plotWidth - 1) {
                 // 边框
                 levelchunk
                     .setBlock(ChunkBlockPos{BlockPos(x, generatorY + 1, z), -64}, borderBlock, blockSource, nullptr);
