@@ -16,6 +16,9 @@
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 #include "plotcraft/core/PlotDimension.h"
 
+#include "plotcraft/config/Config.h"
+#include "plotcraft/event/Event.h"
+
 namespace my_plugin {
 
 static std::unique_ptr<MyPlugin> instance;
@@ -30,6 +33,8 @@ bool MyPlugin::load() {
     logger.consoleLevel = 5; // 调试模式下输出详细日志
 #endif
 
+    plotcraft::config::loadConfig();
+
     return true;
 }
 
@@ -39,8 +44,9 @@ bool MyPlugin::enable() {
 
     // 注册自定义维度
     logger.info("Registering plot dimension...");
-    more_dimensions::CustomDimensionManager::getInstance().addDimension<plotcraft::core::PlotDimension>("plot");
+    more_dimensions::CustomDimensionManager::getInstance().addDimension<plotcraft::core::PlotDimension>("plot").id;
 
+    plotcraft::event::registerEventListener();
 
 #ifdef DEBUG
     CommandContext ctx = CommandContext(
@@ -60,7 +66,9 @@ bool MyPlugin::enable() {
 
 bool MyPlugin::disable() {
     getSelf().getLogger().info("Disabling...");
-    // Code for disabling the plugin goes here.
+
+    plotcraft::event::unRegisterEventListener();
+
     return true;
 }
 

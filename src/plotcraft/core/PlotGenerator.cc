@@ -1,4 +1,5 @@
 #include "PlotGenerator.h"
+#include "plotcraft/config/Config.h"
 
 #include "mc/deps/core/data/DividedPos2d.h"
 #include "mc/network/packet/UpdateSubChunkBlocksPacket.h"
@@ -68,15 +69,12 @@ int positiveMod(int value, int modulus) {
 }
 
 
-void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool forceImmediateReplacementDataLoad) {
-    // 自定义配置
-    int plotWidth  = 64;  // 地皮大小
-    int roadWidth  = 3;   // 道路宽度(默认*2)
-    int generatorY = -61; // 生成层
+void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateReplacementDataLoad */) {
+    auto& gen = config::cfg.generator;
     // 方块配置
-    const Block& roadBlock   = *Block::tryGetFromRegistry("minecraft:cherry_planks", 0);    // 道路方块
-    const Block& fillBlock   = *Block::tryGetFromRegistry("minecraft:grass_block", 0);      // 填充方块
-    const Block& borderBlock = *Block::tryGetFromRegistry("minecraft:stone_block_slab", 0); // 边框方块
+    const Block& roadBlock   = *Block::tryGetFromRegistry(gen.roadBlock, 0);
+    const Block& fillBlock   = *Block::tryGetFromRegistry(gen.fillBlock, 0);
+    const Block& borderBlock = *Block::tryGetFromRegistry(gen.borderBlock, 0);
 
     // 生成/计算
     auto& chunkPos    = levelchunk.getPosition();
@@ -95,20 +93,26 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool forceImmediateReplace
             int globalZ = startZ + z;
 
             // 计算在地盘网格中的位置
-            int gridX = positiveMod(globalX, plotWidth + roadWidth); // 地皮 + 边框（一个地皮4个边）
-            int gridZ = positiveMod(globalZ, plotWidth + roadWidth);
+            int gridX = positiveMod(globalX, gen.plotWidth + gen.roadWidth); // 地皮 + 边框（一个地皮4个边）
+            int gridZ = positiveMod(globalZ, gen.plotWidth + gen.roadWidth);
 
             // 判断是否为道路或边框
-            if (gridX < roadWidth || gridZ < roadWidth || gridX >= plotWidth || gridZ >= plotWidth) {
+            if (gridX < gen.roadWidth || gridZ < gen.roadWidth || gridX >= gen.plotWidth || gridZ >= gen.plotWidth) {
                 // 道路
-                levelchunk.setBlock(ChunkBlockPos{BlockPos(x, generatorY, z), -64}, roadBlock, blockSource, nullptr);
-            } else if (gridX == roadWidth || gridZ == roadWidth || gridX == plotWidth - 1 || gridZ == plotWidth - 1) {
-                // 边框
                 levelchunk
-                    .setBlock(ChunkBlockPos{BlockPos(x, generatorY + 1, z), -64}, borderBlock, blockSource, nullptr);
+                    .setBlock(ChunkBlockPos{BlockPos(x, gen.generatorY, z), -64}, roadBlock, blockSource, nullptr);
+            } else if (gridX == gen.roadWidth || gridZ == gen.roadWidth || gridX == gen.plotWidth - 1 || gridZ == gen.plotWidth - 1) {
+                // 边框
+                levelchunk.setBlock(
+                    ChunkBlockPos{BlockPos(x, gen.generatorY + 1, z), -64},
+                    borderBlock,
+                    blockSource,
+                    nullptr
+                );
             } else {
                 // 地盘内部
-                levelchunk.setBlock(ChunkBlockPos{BlockPos(x, generatorY, z), -64}, fillBlock, blockSource, nullptr);
+                levelchunk
+                    .setBlock(ChunkBlockPos{BlockPos(x, gen.generatorY, z), -64}, fillBlock, blockSource, nullptr);
             }
         }
     }
@@ -118,23 +122,24 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool forceImmediateReplace
 }
 
 
-std::optional<short> PlotGenerator::getPreliminarySurfaceLevel(DividedPos2d<4> worldPos) const {
+std::optional<short> PlotGenerator::getPreliminarySurfaceLevel(DividedPos2d<4> /* worldPos */) const {
     // 超平坦的高度都是一样的，直接返回固定值即可
     return -60;
 }
 
 void PlotGenerator::prepareAndComputeHeights(
-    BlockVolume&        box,
-    ChunkPos const&     chunkPos,
+    BlockVolume& /* box */,
+    ChunkPos const& /* chunkPos */,
     std::vector<short>& ZXheights,
-    bool                factorInBeardsAndShavers,
-    int                 skipTopN
+    bool /* factorInBeardsAndShavers */,
+    int /* skipTopN */
 ) {
     auto heightMap = mPrototype.computeHeightMap();
     ZXheights.assign(heightMap->begin(), heightMap->end());
 }
 
-void PlotGenerator::prepareHeights(BlockVolume& box, ChunkPos const& chunkPos, bool factorInBeardsAndShavers) {
+void PlotGenerator::
+    prepareHeights(BlockVolume& box, ChunkPos const& /* chunkPos */, bool /* factorInBeardsAndShavers */) {
     // 在其它类型世界里，这里是需要对box进行处理，生成地形，超平坦没有这个需要，所以直接赋值即可
     box = mPrototype;
 };
