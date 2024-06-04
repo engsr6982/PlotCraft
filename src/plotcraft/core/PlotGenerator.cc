@@ -93,22 +93,14 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
             int globalZ = startZ + z;
 
             // 计算在地盘网格中的位置
-            int gridX = positiveMod(globalX, gen.plotWidth + gen.roadWidth); // 地皮 + 边框（一个地皮4个边）
+            int gridX = positiveMod(globalX, gen.plotWidth + gen.roadWidth); // 地皮 + 道路宽度
             int gridZ = positiveMod(globalZ, gen.plotWidth + gen.roadWidth);
 
             // 判断是否为道路或边框
-            if (gridX < gen.roadWidth || gridZ < gen.roadWidth || gridX >= gen.plotWidth || gridZ >= gen.plotWidth) {
+            if (gridX >= gen.plotWidth || gridZ >= gen.plotWidth) {
                 // 道路
                 levelchunk
                     .setBlock(ChunkBlockPos{BlockPos(x, gen.generatorY, z), -64}, roadBlock, blockSource, nullptr);
-            } else if (gridX == gen.roadWidth || gridZ == gen.roadWidth || gridX == gen.plotWidth - 1 || gridZ == gen.plotWidth - 1) {
-                // 边框
-                levelchunk.setBlock(
-                    ChunkBlockPos{BlockPos(x, gen.generatorY + 1, z), -64},
-                    borderBlock,
-                    blockSource,
-                    nullptr
-                );
             } else {
                 // 地盘内部
                 levelchunk
@@ -120,7 +112,6 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
     levelchunk.setSaved();
     levelchunk.changeState(ChunkState::Generating, ChunkState::Generated);
 }
-
 
 std::optional<short> PlotGenerator::getPreliminarySurfaceLevel(DividedPos2d<4> /* worldPos */) const {
     // 超平坦的高度都是一样的，直接返回固定值即可
