@@ -7,7 +7,8 @@ add_repositories("liteldev-repo https://github.com/LiteLDev/xmake-repo.git")
 -- please note that you should add bdslibrary yourself if using dev version
 add_requires(
     "levilamina 0.12.4",
-    "more-dimensions 0.3.1"
+    "more-dimensions 0.3.1",
+    "sqlitecpp 3.2.1"
 )
 
 if not has_config("vs_runtime") then
@@ -26,10 +27,18 @@ target("PlotCraft") -- Change this to your plugin name.
         "/w44738",
         "/w45204"
     )
-    add_defines("NOMINMAX", "UNICODE", "_HAS_CXX23=1")
+    add_defines(
+        "NOMINMAX",
+        "UNICODE",
+        "_HAS_CXX23=1"
+    )
+    add_packages(
+        "levilamina",
+        "more-dimensions",
+        "sqlitecpp"
+    )
     add_files("src/**.cpp", "src/**.cc")
     add_includedirs("src")
-    add_packages("levilamina", "more-dimensions")
     add_shflags("/DELAYLOAD:bedrock_server.dll") -- To use symbols provided by SymbolProvider.
     set_exceptions("none") -- To avoid conflicts with /EHa.
     set_kind("shared")
