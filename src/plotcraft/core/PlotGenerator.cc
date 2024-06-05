@@ -16,6 +16,7 @@
 #include "mc/world/level/chunk/LevelChunk.h"
 #include "mc/world/level/chunk/PostprocessingManager.h"
 #include "mc/world/level/levelgen/v1/ChunkLocalNoiseCache.h"
+#include <cstdio>
 
 
 namespace plotcraft::core {
@@ -81,6 +82,31 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
     auto  blockSource = &getDimension().getBlockSourceFromMainChunkSource();
     levelchunk.setBlockVolume(mPrototype, 0);
 
+#ifdef DEBUG
+    // clang-format off
+/* 
+    横向x轴，纵向z轴
+    -1,1   0,1   1,1
+    -1,0   0,0   1,0
+    -1,-1  0,-1  1,-1
+ */
+    if (
+        chunkPos.toString() != "(0, 0)" &&
+        chunkPos.toString() != "(1, 0)" &&
+        chunkPos.toString() != "(1, -1)" &&
+        chunkPos.toString() != "(0, -1)" &&
+        chunkPos.toString() != "(-1, -1)" &&
+        chunkPos.toString() != "(-1, 0)" &&
+        chunkPos.toString() != "(-1, 1)" &&
+        chunkPos.toString() != "(0, 1)" &&
+        chunkPos.toString() != "(1, 1)"
+    ) {
+        levelchunk.setSaved();
+        levelchunk.changeState(ChunkState::Generating, ChunkState::Generated);
+        return;
+    } // clang-format on
+#endif
+
     // 计算当前区块的全局坐标
     int startX = chunkPos.x * 16;
     int startZ = chunkPos.z * 16;
@@ -101,8 +127,16 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
                 // 道路
                 levelchunk
                     .setBlock(ChunkBlockPos{BlockPos(x, gen.generatorY, z), -64}, roadBlock, blockSource, nullptr);
+            } else if (gridX == gen.roadWidth - 3 || gridZ == gen.roadWidth - 3 || gridX == gen.plotWidth - 1 || gridZ == gen.plotWidth - 1) {
+                // 边框
+                levelchunk.setBlock(
+                    ChunkBlockPos{BlockPos(x, gen.generatorY + 1, z), -64},
+                    borderBlock,
+                    blockSource,
+                    nullptr
+                );
             } else {
-                // 地盘内部
+                // 地皮内部
                 levelchunk
                     .setBlock(ChunkBlockPos{BlockPos(x, gen.generatorY, z), -64}, fillBlock, blockSource, nullptr);
             }
