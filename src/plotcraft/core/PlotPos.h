@@ -24,15 +24,15 @@ public:
     // 构造函数
     PlotPos(int x, int z) : x(x), z(z) {
         auto& gen      = config::cfg.generator;
-        int   plotSize = gen.plotSize + gen.roadWidth;
+        int   plotSize = gen.plotWidth + gen.roadWidth;
         minPos         = Vec3{x * plotSize + gen.roadWidth, -64, z * plotSize + gen.roadWidth};
-        maxPos         = Vec3{minPos.x + gen.plotSize, 320, minPos.z + gen.plotSize};
+        maxPos         = Vec3{minPos.x + gen.plotWidth, 320, minPos.z + gen.plotWidth};
     }
 
     PlotPos(const Vec3& vec3)
     : PlotPos(
-        vec3.x / (config::cfg.generator.plotSize + config::cfg.generator.roadWidth),
-        vec3.z / (config::cfg.generator.plotSize + config::cfg.generator.roadWidth)
+        vec3.x / (config::cfg.generator.plotWidth + config::cfg.generator.roadWidth),
+        vec3.z / (config::cfg.generator.plotWidth + config::cfg.generator.roadWidth)
     ) {}
 
     PlotPos(const ChunkPos& chunkPos) : PlotPos(chunkPos.x * 16, chunkPos.z * 16) {}

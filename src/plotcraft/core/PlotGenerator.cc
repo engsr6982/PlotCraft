@@ -70,47 +70,41 @@ int positiveMod(int value, int modulus) {
 
 
 void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateReplacementDataLoad */) {
-    auto&        gen         = config::cfg.generator;
+    auto& gen = config::cfg.generator;
+    // 方块配置
     const Block& roadBlock   = *Block::tryGetFromRegistry(gen.roadBlock, 0);
     const Block& fillBlock   = *Block::tryGetFromRegistry(gen.fillBlock, 0);
     const Block& borderBlock = *Block::tryGetFromRegistry(gen.borderBlock, 0);
 
+    // 生成/计算
     auto& chunkPos    = levelchunk.getPosition();
     auto  blockSource = &getDimension().getBlockSourceFromMainChunkSource();
     levelchunk.setBlockVolume(mPrototype, 0);
 
+    // 计算当前区块的全局坐标
     int startX = chunkPos.x * 16;
     int startZ = chunkPos.z * 16;
 
-    int totalSize = gen.plotSize + gen.roadWidth + 2; // 地皮大小 + 道路宽度 + 边框（1边1格）
-
+    // 遍历区块内的每个方块位置
     for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
+            // 计算全局坐标
             int globalX = startX + x;
             int globalZ = startZ + z;
 
-            int gridX = positiveMod(globalX, totalSize);
-            int gridZ = positiveMod(globalZ, totalSize);
+            // 计算在地盘网格中的位置
+            int gridX = positiveMod(globalX, gen.plotWidth + gen.roadWidth); // 地皮 + 道路宽度
+            int gridZ = positiveMod(globalZ, gen.plotWidth + gen.roadWidth);
 
-            const Block* blockToPlace = nullptr;
-
-            // 判断边框
-            if (gridX == 0 || gridX == totalSize - 1 || gridZ == 0 || gridZ == totalSize - 1) {
-                blockToPlace = &borderBlock;
-            }
-            // 判断道路
-            else if (gridX >= gen.plotSize + 1 && gridX < gen.plotSize + 1 + gen.roadWidth || gridZ >= gen.plotSize + 1 && gridZ < gen.plotSize + 1 + gen.roadWidth) {
-                blockToPlace = &roadBlock;
-            }
-            // 地皮内部
-            else if (gridX > 0 && gridX < gen.plotSize + 1 && gridZ > 0 && gridZ < gen.plotSize + 1) {
-                blockToPlace = &fillBlock;
-            }
-
-            if (blockToPlace) {
-                BlockPos blockPos(globalX, gen.generatorY, globalZ);
+            // 判断是否为道路或边框
+            if (gridX >= gen.plotWidth || gridZ >= gen.plotWidth) {
+                // 道路
                 levelchunk
                     .setBlock(ChunkBlockPos{BlockPos(x, gen.generatorY, z), -64}, roadBlock, blockSource, nullptr);
+            } else {
+                // 地盘内部
+                levelchunk
+                    .setBlock(ChunkBlockPos{BlockPos(x, gen.generatorY, z), -64}, fillBlock, blockSource, nullptr);
             }
         }
     }

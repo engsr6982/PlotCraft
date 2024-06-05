@@ -6,10 +6,10 @@ using string = std::string;
 namespace plotcraft::config {
 
 struct _Config {
-    int version = 2;
+    int version = 1;
 
     struct _Generator {
-        int plotSize   = 16;  // 地皮大小
+        int plotWidth  = 16;  // 地皮大小
         int roadWidth  = 3;   // 道路宽度
         int generatorY = -61; // 生成层
 
