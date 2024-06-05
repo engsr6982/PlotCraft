@@ -1,3 +1,4 @@
+#pragma once
 #include "ll/api/Config.h"
 #include <string>
 

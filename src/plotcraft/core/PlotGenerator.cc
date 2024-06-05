@@ -1,6 +1,7 @@
 #include "PlotGenerator.h"
 #include "plotcraft/config/Config.h"
 
+#include "fmt/format.h"
 #include "mc/deps/core/data/DividedPos2d.h"
 #include "mc/network/packet/UpdateSubChunkBlocksPacket.h"
 #include "mc/world/level/BlockPos.h"
@@ -78,34 +79,10 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
     const Block& borderBlock = *Block::tryGetFromRegistry(gen.borderBlock, 0);
 
     // 生成/计算
-    auto& chunkPos    = levelchunk.getPosition();
-    auto  blockSource = &getDimension().getBlockSourceFromMainChunkSource();
-    levelchunk.setBlockVolume(mPrototype, 0);
+    auto& chunkPos = levelchunk.getPosition();
 
-#ifdef DEBUG
-    // clang-format off
-/* 
-    横向x轴，纵向z轴
-    -1,1   0,1   1,1
-    -1,0   0,0   1,0
-    -1,-1  0,-1  1,-1
- */
-    if (
-        chunkPos.toString() != "(0, 0)" &&
-        chunkPos.toString() != "(1, 0)" &&
-        chunkPos.toString() != "(1, -1)" &&
-        chunkPos.toString() != "(0, -1)" &&
-        chunkPos.toString() != "(-1, -1)" &&
-        chunkPos.toString() != "(-1, 0)" &&
-        chunkPos.toString() != "(-1, 1)" &&
-        chunkPos.toString() != "(0, 1)" &&
-        chunkPos.toString() != "(1, 1)"
-    ) {
-        levelchunk.setSaved();
-        levelchunk.changeState(ChunkState::Generating, ChunkState::Generated);
-        return;
-    } // clang-format on
-#endif
+    auto blockSource = &getDimension().getBlockSourceFromMainChunkSource();
+    levelchunk.setBlockVolume(mPrototype, 0); // 设置基础地形
 
     // 计算当前区块的全局坐标
     int startX = chunkPos.x * 16;
@@ -148,8 +125,7 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
 }
 
 std::optional<short> PlotGenerator::getPreliminarySurfaceLevel(DividedPos2d<4> /* worldPos */) const {
-    // 超平坦的高度都是一样的，直接返回固定值即可
-    return -60;
+    return plotcraft::config::cfg.generator.generatorY + 1; // 生成层 + 1
 }
 
 void PlotGenerator::prepareAndComputeHeights(
