@@ -80,7 +80,9 @@ struct PlotShare {
 };
 using PlotShares = std::vector<PlotShare>;
 
+typedef int CommentID;
 struct PlotComment {
+	CommentID mCommentID;     // 主键
 	PlotID    mPlotID;        // 主键
 	UUID      mCommentPlayer; // 主键
 	string    mCommentTime;
@@ -125,10 +127,38 @@ public:
     bool removeAdmin(UUID const& uuid);
     
     // Plots
+    bool hasPlot(PlotID const& pid);
+    bool isPlotOwner(UUID const& uid);
+    
+    bool addPlot(PlotPos const& pos, UUID const& uid, string const& name = "");
+    
+    bool removePlot(PlotID const& pid);
+
+    bool updatePlotOwner(PlotID const& pid, UUID const& newOwner);
+
+    bool updatePlotName(PlotID const& pid, string const& newName);
+
+    std::optional<Plot> getPlot(PlotID const& id);
+    Plots getPlots(UUID const& uid);
+    Plots getPlots();
     
     // PlotShares
+    bool hasPlotShared(PlotID const& id);
+    bool isPlotSharedPlayer(PlotID const& id, UUID const& uid);
+
+    bool addShareInfo(PlotID const& id, UUID const& targetPlayer);
+
+    bool removeSharedInfo(PlotID const& id, UUID const& uid);
+
+    std::optional<PlotShare> getSharedPlot(PlotID const& id, UUID const& uid);
+
+    PlotShares getSharedPlots(PlotID const& id);
+    PlotShares getSharedPlots(UUID const& uid);
+    PlotShares getSharedPlots();
 
     // PlotCommenets
+    bool hasComment(CommentID const& cid);
+    bool isCommentPlayer(CommentID const& cid, UUID const& uid);
     
     // PlotSales
 };
