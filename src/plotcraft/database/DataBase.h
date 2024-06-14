@@ -37,103 +37,73 @@ public:
 };
 
 
-/*
-
-## SQLite 表结构
-
-### PlotGlobalAdmins
-
-- uuid: 管理员的 UUID
-
-### PlotPermissions
-
-- permission_id: 本条权限的 ID
-- plot_id: 地皮 ID
-- destory_block: 是否允许破坏方块
-- place_block: 是否允许放置方块
-- ...: 待补充
-
-### Plots
-
-- plot_id: 地皮 ID
-- owner: 地皮所有者的 UUID
-- plot_x: 地皮 X 坐标
-- plot_z: 地皮 Z 坐标
-- plot_name: 地皮名称
-
-### PlotShares
-
-- share_id: 共享 ID
-- plot_id: 共享的地皮 ID
-- player_uuid: 共享者的 UUID
-- shared_time: 共享时间
-- bind_permission: 共享地皮的权限
-
-### PlotCommenets
-
-- comment_id: 评论 ID
-- plot_id: 评论的地皮 ID
-- player_uuid: 评论者的 UUID
-- comment_time: 评论时间
-- content: 评论内容
-
-### PlotSales
-
-- sale_id: 出售 ID
-- plot_id: 出售的地皮 ID
-- seller_uuid: 出售者的 UUID
-- buyer_uuid: 购买者的 UUID
-- sale_time: 出售时间
-- buy_time: 购买时间
-- price: 出售价格
-- status: 出售状态（待出售/已出售/已取消）
-
-### PlotTransfers
-
-- transfer_id: 转让 ID
-- plot_id: 转让的地皮 ID
-- old_owner: 原所有者的 UUID
-- new_owner: 新所有者的 UUID
-- transfer_time: 转让时间
-
-### PlotMerges
-
-- merge_id: 合并 ID
-- merged_player: 执行合并的玩家 UUID
-- merged_plots: 被合并的地皮 ID 列表
-- merge_time: 合并时间
-
- */
-
-// Global Vars
-enum class QueryTable : int {
-    Unknown          = 0,
-    PlotGlobalAdmins = 1, // 全局管理员
-    PlotPermissions  = 2, // 地皮权限
-    Plots            = 3, // 地皮信息
-    PlotShares       = 4, // 地皮共享
-    PlotComments     = 5, // 地皮评论
-    PlotSales        = 6, // 地皮出售
-    PlotTransfers    = 7, // 地皮转让
-    PlotMerges       = 8  // 地皮合并
+// Table Structure
+enum class PlotPermission : int {
+	UnKnown = 0, // 未知权限
+	Shared  = 1, // 共享者
+	Owner   = 2, // 主人
+	Admin   = 3  // 管理员
 };
 
-typedef int    PermissionID;
+enum class PlotSaleStatus : int {
+	UnKnown  = -1, // 未知
+	Saleing  = 0,  // 出售中
+	Saled    = 1,  // 已出售
+	Canceled = 2   // 已取消
+};
+
+
+// typedef
+
 typedef string PlotID;
 typedef int    ShareID;
 typedef int    CommentID;
 typedef int    SaleID;
-typedef int    TransferID;
-typedef int    MergeID;
 
-// Table structs
 
-enum class PlotSaleStatus : int {
-    UnKnown  = -1, // 未知状态
-    Pending  = 0,  // 待出售
-    Sold     = 1,  // 已出售
-    Canceled = 2   // 已取消
+struct PlotAdmin {
+	string mUUID;
 };
+using PlotAdmins = std::vector<PlotAdmin>;
+
+struct Plot {
+	PlotID mPlotID;
+	string mPlotName;
+	string mPlotOwner;
+	int    mPlotX;
+	int    mPlotZ;
+};
+using Plots = std::vector<Plot>;
+
+struct PlotShare {
+	ShareID mShareID;
+	PlotID  mPlotID;
+	string  mSharedPlayer;
+	string  mSharedTime;
+};
+using PlotShares = std::vector<PlotShare>;
+
+struct PlotComment {
+	CommentID mCommentID;
+	PlotID    mPlotID;
+	string    mCommentPlater;
+	string    mCommentTime;
+	string    mContent;
+};
+using PlotCommenets = std::vector<PlotComment>;
+	
+struct PlotSale {
+	SaleID mSaleID;
+	PlotID mPlotID;
+	int    mPrice;
+	string mSaleTime;
+	string mSellerUUID;
+	string mBuyerUUID;
+	string mBuyTime;
+	PlotSaleStatus mStatus;
+};
+using PlotSales = std::vector<PlotSale>;
+
 
 
 // Class: SQLite
