@@ -55,50 +55,45 @@ enum class PlotSaleStatus : int {
 
 // typedef
 
-typedef string PlotID;
-typedef int    ShareID;
-typedef int    CommentID;
-typedef int    SaleID;
+typedef string    PlotID;
+typedef mce::UUID UUID;
 
 
 struct PlotAdmin {
-	string mUUID;
+	UUID mUUID; // 主键
 };
 using PlotAdmins = std::vector<PlotAdmin>;
 
 struct Plot {
-	PlotID mPlotID;
+	PlotID mPlotID;    // 主键
 	string mPlotName;
-	string mPlotOwner;
+	UUID   mPlotOwner; // 主键
 	int    mPlotX;
 	int    mPlotZ;
 };
 using Plots = std::vector<Plot>;
 
 struct PlotShare {
-	ShareID mShareID;
-	PlotID  mPlotID;
-	string  mSharedPlayer;
+	PlotID  mPlotID;       // 主键
+	UUID    mSharedPlayer; // 主键
 	string  mSharedTime;
 };
 using PlotShares = std::vector<PlotShare>;
 
 struct PlotComment {
-	CommentID mCommentID;
-	PlotID    mPlotID;
-	string    mCommentPlater;
+	PlotID    mPlotID;        // 主键
+	UUID      mCommentPlayer; // 主键
 	string    mCommentTime;
 	string    mContent;
 };
 using PlotCommenets = std::vector<PlotComment>;
 	
 struct PlotSale {
-	SaleID mSaleID;
-	PlotID mPlotID;
+	PlotID mPlotID;       // 主键
 	int    mPrice;
 	string mSaleTime;
-	string mSellerUUID;
-	string mBuyerUUID;
+	UUID   mSellerPlayer; // 主键
+	UUID   mBuyerPlayer;  // 次键
 	string mBuyTime;
 	PlotSaleStatus mStatus;
 };
@@ -121,25 +116,21 @@ public:
 
     bool initSQLite();
 
-    bool hasTable(const string& tableName);
+    ////////// Table CRUD API //////////
 
+    // PlotAdmins
+    bool hasAdmin(UUID const& uuid);
+    bool isAdmin(UUID const& uuid);
+    bool addAdmin(UUID const& uuid);
+    bool removeAdmin(UUID const& uuid);
+    
+    // Plots
+    
+    // PlotShares
 
-    // 全局管理员
-    bool hasGlobalAdmin(const mce::UUID& uuid);
-    bool addGlobalAdmin(const mce::UUID& uuid);
-    bool removeGlobalAdmin(const mce::UUID& uuid);
-
-
-    // 地皮权限表
-    bool hasPermissionInfo(const int& permissionId); // 检查是否有此条权限信息
-    bool hasPermissionInfo(const string& plotId);
-    bool hasPermission(const int& permissionId, const PermissionType& permissionType); // 检查是否有权限
-    bool hasPermission(const string& plotId, const PermissionType& permissionType);
-
-    bool createPermissionInfo(const string& plotId);    // 创建权限信息
-    bool removePermissionInfo(const int& permissionId); // 删除权限信息
-    bool removePermissionInfo(const string& plotId);    // 删除权限信息(与地皮ID匹配所有权限记录)
-    bool updatePermission(const int& permissionId, const PermissionType& permissionType, const bool& value); // 更新权限
+    // PlotCommenets
+    
+    // PlotSales
 };
 
 } // namespace plotcraft::database
