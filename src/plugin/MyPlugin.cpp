@@ -38,7 +38,7 @@ bool MyPlugin::load() {
 
     plotcraft::config::loadConfig();
     plotcraft::database::PlayerNameDB::getInstance().initPlayerNameDB();
-    plotcraft::database::PlotDB::getInstance().initSQLite();
+    plotcraft::database::PlotDB::getInstance().load();
 
     return true;
 }

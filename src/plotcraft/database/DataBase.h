@@ -7,9 +7,12 @@
 #include "mc/world/actor/player/Player.h"
 #include "plotcraft/core/PlotPos.h"
 #include "plugin/MyPlugin.h"
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 
 
 using string = std::string;
@@ -23,6 +26,7 @@ typedef string    PlotID; // PlotPos::toString()
 typedef mce::UUID UUID;
 
 
+// Class: PlayerNameDB
 class PlayerNameDB {
 private:
     std::unique_ptr<ll::data::KeyValueDB> mPlayerNameDB;
@@ -48,10 +52,10 @@ public:
 
 // Table Structure
 enum class PlotPermission : int {
-    UnKnown = 0, // 未知权限
-    Shared  = 1, // 共享者
-    Owner   = 2, // 主人
-    Admin   = 3  // 管理员
+    None   = 0, // 无权限
+    Shared = 1, // 共享者
+    Owner  = 2, // 主人
+    Admin  = 3  // 管理员
 };
 
 struct PlotAdmin {
@@ -93,41 +97,20 @@ struct PlotSale {
 using PlotSales = std::vector<PlotSale>;
 
 
-#define HandleSQLiteExceptionAndReturn(defv)                                                                           \
-    catch (SQLite::Exception const& e) {                                                                               \
-        my_plugin::MyPlugin::getInstance().getSelf().getLogger().error(                                                \
-            "Fail in {}, SQLite::Exception: {}",                                                                       \
-            __FUNCTION__,                                                                                              \
-            e.what()                                                                                                   \
-        );                                                                                                             \
-        return defv;                                                                                                   \
-    }
-#define HandleSQLiteException()                                                                                        \
-    catch (SQLite::Exception const& e) {                                                                               \
-        my_plugin::MyPlugin::getInstance().getSelf().getLogger().error(                                                \
-            "Fail in {}, SQLite::Exception: {}",                                                                       \
-            __FUNCTION__,                                                                                              \
-            e.what()                                                                                                   \
-        );                                                                                                             \
-    }
-
-
-// Class: SQLite
-class PlotDB {
+// Class: PlotDBImpl
+class PlotDBImpl {
 private:
     std::unique_ptr<SQLite::Database> mSQLite;
     bool                              isInit = false;
 
-    PlotDB()                         = default;
-    PlotDB(const PlotDB&)            = delete;
-    PlotDB& operator=(const PlotDB&) = delete;
 
     void initTables();
+    bool initSQLite();
 
 public:
-    static PlotDB& getInstance();
-
-    bool initSQLite();
+    PlotDBImpl(); // 构造函数(自动Init)
+    PlotDBImpl(const PlotDBImpl&)            = delete;
+    PlotDBImpl& operator=(const PlotDBImpl&) = delete;
 
     // ============ Table CRUD API ============
 
@@ -141,7 +124,7 @@ public:
 
     // Plots
     bool hasPlot(PlotID const& pid);
-    bool isPlotOwner(UUID const& uid);
+    bool isPlotOwner(PlotID const& pid, UUID const& uid);
     bool addPlot(PlotPos& pos, UUID const& uid, string const& name);
     bool removePlot(PlotID const& pid);
     bool updatePlotOwner(PlotID const& pid, UUID const& newOwner);
@@ -195,6 +178,44 @@ public:
 
     // 从出售中购买地皮
     bool buyPlotFromSale(PlotID const& pid, UUID const& buyer, bool resetShares = true);
+
+    // 获取玩家权限等级
+    PlotPermission getPlayerPermission(UUID const& uid, PlotID const& pid, bool ignoreAdmin = false);
+};
+
+
+// Class: PlotDB
+class PlotDB {
+private:
+    // 三张高频表的缓存
+    std::unordered_map<size_t, Plot>      mPlots;      // 缓存地皮信息
+    std::unordered_map<size_t, PlotShare> mPlotShares; // 缓存共享信息
+    std::unordered_map<UUID, bool>        mAdmins;     // 缓存管理员信息
+
+    std::unique_ptr<PlotDBImpl> mImpl; // 数据库操作实现
+
+    // 禁止拷贝构造函数
+    PlotDB()                         = default;
+    PlotDB(const PlotDB&)            = delete;
+    PlotDB& operator=(const PlotDB&) = delete;
+
+public:
+    static PlotDB& getInstance() {
+        static PlotDB instance;
+        return instance;
+    }
+
+    bool load() {
+        if (mImpl != nullptr) return true;
+        mImpl = std::make_unique<PlotDBImpl>();
+        return true;
+    }
+
+    PlotDBImpl& getImpl() { return *mImpl; }
+
+    static size_t _hash(string const& str) { return std::hash<string>()(str); }
+    static size_t hash(Plot const& plot) { return _hash(plot.mPlotID); }
+    static size_t hash(PlotShare const& share) { return _hash(share.mPlotID + share.mSharedPlayer.asString()); }
 };
 
 } // namespace plotcraft::database

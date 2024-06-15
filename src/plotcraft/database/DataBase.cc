@@ -35,12 +35,26 @@ bool PlayerNameDB::insertPlayer(Player& player) {
 
 
 // ======================= Class PlotDB =======================
-PlotDB& PlotDB::getInstance() {
-    static PlotDB instance;
-    return instance;
-}
+#define HandleSQLiteExceptionAndReturn(defv)                                                                           \
+    catch (SQLite::Exception const& e) {                                                                               \
+        my_plugin::MyPlugin::getInstance().getSelf().getLogger().error(                                                \
+            "Fail in {}, SQLite::Exception: {}",                                                                       \
+            __FUNCTION__,                                                                                              \
+            e.what()                                                                                                   \
+        );                                                                                                             \
+        return defv;                                                                                                   \
+    }
+#define HandleSQLiteException()                                                                                        \
+    catch (SQLite::Exception const& e) {                                                                               \
+        my_plugin::MyPlugin::getInstance().getSelf().getLogger().error(                                                \
+            "Fail in {}, SQLite::Exception: {}",                                                                       \
+            __FUNCTION__,                                                                                              \
+            e.what()                                                                                                   \
+        );                                                                                                             \
+    }
 
-void PlotDB::initTables() {
+// private
+void PlotDBImpl::initTables() {
     try {
         // Table: PlotAdmins
         mSQLite->exec(R"(
@@ -92,7 +106,7 @@ void PlotDB::initTables() {
     }
     HandleSQLiteException();
 }
-bool PlotDB::initSQLite() {
+bool PlotDBImpl::initSQLite() {
     if (isInit) return true;
     // Initialize SQLite
     mSQLite = std::make_unique<SQLite::Database>(
@@ -102,10 +116,14 @@ bool PlotDB::initSQLite() {
     initTables();
     return isInit = true;
 }
-
+// public
+PlotDBImpl::PlotDBImpl() {
+    initSQLite();
+    initTables();
+}
 
 // ======================= PlotAdmins APIs =======================
-bool PlotDB::hasAdmin(UUID const& uuid) {
+bool PlotDBImpl::hasAdmin(UUID const& uuid) {
     SQLite::Statement query(*mSQLite, "SELECT COUNT(*) FROM PlotAdmins WHERE mUUID = ?");
     query.bind(1, uuid.asString());
     if (query.executeStep()) {
@@ -114,9 +132,9 @@ bool PlotDB::hasAdmin(UUID const& uuid) {
     return false;
 }
 
-bool PlotDB::isAdmin(UUID const& uuid) { return hasAdmin(uuid); }
+bool PlotDBImpl::isAdmin(UUID const& uuid) { return hasAdmin(uuid); }
 
-bool PlotDB::addAdmin(UUID const& uuid) {
+bool PlotDBImpl::addAdmin(UUID const& uuid) {
     try {
         SQLite::Statement query(*mSQLite, "INSERT INTO PlotAdmins (mUUID) VALUES (?)");
         query.bind(1, uuid.asString());
@@ -126,7 +144,7 @@ bool PlotDB::addAdmin(UUID const& uuid) {
     HandleSQLiteExceptionAndReturn(false);
 }
 
-bool PlotDB::removeAdmin(UUID const& uuid) {
+bool PlotDBImpl::removeAdmin(UUID const& uuid) {
     try {
         SQLite::Statement query(*mSQLite, "DELETE FROM PlotAdmins WHERE mUUID = ?");
         query.bind(1, uuid.asString());
@@ -138,7 +156,7 @@ bool PlotDB::removeAdmin(UUID const& uuid) {
 
 
 // ======================= Plots APIs =======================
-bool PlotDB::hasPlot(PlotID const& pid) {
+bool PlotDBImpl::hasPlot(PlotID const& pid) {
     SQLite::Statement query(*mSQLite, "SELECT COUNT(*) FROM Plots WHERE mPlotID = ?");
     query.bind(1, pid);
     if (query.executeStep()) {
@@ -146,15 +164,16 @@ bool PlotDB::hasPlot(PlotID const& pid) {
     }
     return false;
 }
-bool PlotDB::isPlotOwner(UUID const& uid) {
-    SQLite::Statement query(*mSQLite, "SELECT COUNT(*) FROM Plots WHERE mPlotOwner = ?");
+bool PlotDBImpl::isPlotOwner(PlotID const& pid, UUID const& uid) {
+    SQLite::Statement query(*mSQLite, "SELECT COUNT(*) FROM Plots WHERE mPlotOwner = ? AND mPlotID = ?");
     query.bind(1, uid.asString());
+    query.bind(2, pid);
     if (query.executeStep()) {
         return query.getColumn(0).getInt() > 0;
     }
     return false;
 }
-bool PlotDB::addPlot(PlotPos& pos, UUID const& uid, string const& name) {
+bool PlotDBImpl::addPlot(PlotPos& pos, UUID const& uid, string const& name) {
     try {
         SQLite::Statement query(
             *mSQLite,
@@ -171,7 +190,7 @@ bool PlotDB::addPlot(PlotPos& pos, UUID const& uid, string const& name) {
     }
     HandleSQLiteExceptionAndReturn(false);
 }
-bool PlotDB::removePlot(PlotID const& pid) {
+bool PlotDBImpl::removePlot(PlotID const& pid) {
     try {
         SQLite::Statement query(*mSQLite, "DELETE FROM Plots WHERE mPlotID = ?");
         query.bind(1, pid);
@@ -180,7 +199,7 @@ bool PlotDB::removePlot(PlotID const& pid) {
     }
     HandleSQLiteExceptionAndReturn(false);
 }
-bool PlotDB::updatePlotOwner(PlotID const& pid, UUID const& newOwner) {
+bool PlotDBImpl::updatePlotOwner(PlotID const& pid, UUID const& newOwner) {
     try {
         SQLite::Statement query(*mSQLite, "UPDATE Plots SET mPlotOwner = ? WHERE mPlotID = ?");
         query.bind(1, newOwner.asString());
@@ -191,7 +210,7 @@ bool PlotDB::updatePlotOwner(PlotID const& pid, UUID const& newOwner) {
     HandleSQLiteExceptionAndReturn(false);
 }
 
-bool PlotDB::updatePlotName(PlotID const& pid, string const& newName) {
+bool PlotDBImpl::updatePlotName(PlotID const& pid, string const& newName) {
     try {
         SQLite::Statement query(*mSQLite, "UPDATE Plots SET mPlotName = ? WHERE mPlotID = ?");
         query.bind(1, newName);
@@ -202,7 +221,7 @@ bool PlotDB::updatePlotName(PlotID const& pid, string const& newName) {
     HandleSQLiteExceptionAndReturn(false);
 }
 
-std::optional<Plot> PlotDB::getPlot(PlotID const& id) {
+std::optional<Plot> PlotDBImpl::getPlot(PlotID const& id) {
     SQLite::Statement query(*mSQLite, "SELECT * FROM Plots WHERE mPlotID = ?");
     query.bind(1, id);
     if (query.executeStep()) {
@@ -217,7 +236,7 @@ std::optional<Plot> PlotDB::getPlot(PlotID const& id) {
     return std::nullopt;
 }
 
-Plots PlotDB::getPlots(UUID const& uid) {
+Plots PlotDBImpl::getPlots(UUID const& uid) {
     Plots             plots;
     SQLite::Statement query(*mSQLite, "SELECT * FROM Plots WHERE mPlotOwner = ?");
     query.bind(1, uid.asString());
@@ -233,7 +252,7 @@ Plots PlotDB::getPlots(UUID const& uid) {
     return plots;
 }
 
-Plots PlotDB::getPlots() {
+Plots PlotDBImpl::getPlots() {
     Plots             plots;
     SQLite::Statement query(*mSQLite, "SELECT * FROM Plots");
     while (query.executeStep()) {
@@ -251,7 +270,7 @@ Plots PlotDB::getPlots() {
 
 // ======================= PlotShares APIs =======================
 
-bool PlotDB::hasPlotShared(PlotID const& id) {
+bool PlotDBImpl::hasPlotShared(PlotID const& id) {
     SQLite::Statement query(*mSQLite, "SELECT COUNT(*) FROM PlotShares WHERE mPlotID = ?");
     query.bind(1, id);
     if (query.executeStep()) {
@@ -259,7 +278,7 @@ bool PlotDB::hasPlotShared(PlotID const& id) {
     }
     return false;
 }
-bool PlotDB::isPlotSharedPlayer(PlotID const& id, UUID const& uid) {
+bool PlotDBImpl::isPlotSharedPlayer(PlotID const& id, UUID const& uid) {
     SQLite::Statement query(*mSQLite, "SELECT COUNT(*) FROM PlotShares WHERE mPlotID = ? AND mSharedPlayer = ?");
     query.bind(1, id);
     query.bind(2, uid.asString());
@@ -268,7 +287,7 @@ bool PlotDB::isPlotSharedPlayer(PlotID const& id, UUID const& uid) {
     }
     return false;
 }
-bool PlotDB::addShareInfo(PlotID const& id, UUID const& targetPlayer) {
+bool PlotDBImpl::addShareInfo(PlotID const& id, UUID const& targetPlayer) {
     try {
         SQLite::Statement query(*mSQLite, "INSERT INTO PlotShares (mPlotID, mSharedPlayer) VALUES (?, ?)");
         query.bind(1, id);
@@ -278,7 +297,7 @@ bool PlotDB::addShareInfo(PlotID const& id, UUID const& targetPlayer) {
     }
     HandleSQLiteExceptionAndReturn(false);
 }
-bool PlotDB::removeSharedInfo(PlotID const& id, UUID const& uid) {
+bool PlotDBImpl::removeSharedInfo(PlotID const& id, UUID const& uid) {
     try {
         SQLite::Statement query(*mSQLite, "DELETE FROM PlotShares WHERE mPlotID = ? AND mSharedPlayer = ?");
         query.bind(1, id);
@@ -288,7 +307,7 @@ bool PlotDB::removeSharedInfo(PlotID const& id, UUID const& uid) {
     }
     HandleSQLiteExceptionAndReturn(false);
 }
-bool PlotDB::resetPlotShareInfo(PlotID const& id) {
+bool PlotDBImpl::resetPlotShareInfo(PlotID const& id) {
     try {
         SQLite::Statement query(*mSQLite, "DELETE FROM PlotShares WHERE mPlotID = ?");
         query.bind(1, id);
@@ -297,7 +316,7 @@ bool PlotDB::resetPlotShareInfo(PlotID const& id) {
     }
     HandleSQLiteExceptionAndReturn(false);
 }
-std::optional<PlotShare> PlotDB::getSharedPlot(PlotID const& id, UUID const& uid) {
+std::optional<PlotShare> PlotDBImpl::getSharedPlot(PlotID const& id, UUID const& uid) {
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotShares WHERE mPlotID = ? AND mSharedPlayer = ?");
     query.bind(1, id);
     query.bind(2, uid.asString());
@@ -310,7 +329,7 @@ std::optional<PlotShare> PlotDB::getSharedPlot(PlotID const& id, UUID const& uid
     }
     return std::nullopt;
 }
-PlotShares PlotDB::getSharedPlots(PlotID const& id) {
+PlotShares PlotDBImpl::getSharedPlots(PlotID const& id) {
     PlotShares        shares;
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotShares WHERE mPlotID = ?");
     query.bind(1, id);
@@ -323,7 +342,7 @@ PlotShares PlotDB::getSharedPlots(PlotID const& id) {
     }
     return shares;
 }
-PlotShares PlotDB::getSharedPlots(UUID const& uid) {
+PlotShares PlotDBImpl::getSharedPlots(UUID const& uid) {
     PlotShares        shares;
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotShares WHERE mSharedPlayer = ?");
     query.bind(1, uid.asString());
@@ -337,7 +356,7 @@ PlotShares PlotDB::getSharedPlots(UUID const& uid) {
     return shares;
 }
 
-PlotShares PlotDB::getSharedPlots() {
+PlotShares PlotDBImpl::getSharedPlots() {
     PlotShares        shares;
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotShares");
     while (query.executeStep()) {
@@ -352,7 +371,7 @@ PlotShares PlotDB::getSharedPlots() {
 
 
 // ======================= PlotCommenets APIs =======================
-bool PlotDB::hasComment(CommentID const& cid) {
+bool PlotDBImpl::hasComment(CommentID const& cid) {
     SQLite::Statement query(*mSQLite, "SELECT COUNT(*) FROM PlotCommenets WHERE mCommentID = ?");
     query.bind(1, cid);
     if (query.executeStep()) {
@@ -361,7 +380,7 @@ bool PlotDB::hasComment(CommentID const& cid) {
     return false;
 }
 
-bool PlotDB::isCommentPlayer(CommentID const& cid, UUID const& uid) {
+bool PlotDBImpl::isCommentPlayer(CommentID const& cid, UUID const& uid) {
     SQLite::Statement query(*mSQLite, "SELECT COUNT(*) FROM PlotCommenets WHERE mCommentID = ? AND mCommentPlayer = ?");
     query.bind(1, cid);
     query.bind(2, uid.asString());
@@ -371,7 +390,7 @@ bool PlotDB::isCommentPlayer(CommentID const& cid, UUID const& uid) {
     return false;
 }
 
-bool PlotDB::addComment(PlotID const& pid, UUID const& uid, string const& content) {
+bool PlotDBImpl::addComment(PlotID const& pid, UUID const& uid, string const& content) {
     try {
         SQLite::Statement query(
             *mSQLite,
@@ -386,7 +405,7 @@ bool PlotDB::addComment(PlotID const& pid, UUID const& uid, string const& conten
     HandleSQLiteExceptionAndReturn(false);
 }
 
-bool PlotDB::removeComment(CommentID const& cid) {
+bool PlotDBImpl::removeComment(CommentID const& cid) {
     try {
         SQLite::Statement query(*mSQLite, "DELETE FROM PlotCommenets WHERE mCommentID = ?");
         query.bind(1, cid);
@@ -396,7 +415,7 @@ bool PlotDB::removeComment(CommentID const& cid) {
     HandleSQLiteExceptionAndReturn(false);
 }
 
-bool PlotDB::removeComments(PlotID const& pid) {
+bool PlotDBImpl::removeComments(PlotID const& pid) {
     try {
         SQLite::Statement query(*mSQLite, "DELETE FROM PlotCommenets WHERE mPlotID = ?");
         query.bind(1, pid);
@@ -406,7 +425,7 @@ bool PlotDB::removeComments(PlotID const& pid) {
     HandleSQLiteExceptionAndReturn(false);
 }
 
-bool PlotDB::removeComments(UUID const& uid) {
+bool PlotDBImpl::removeComments(UUID const& uid) {
     try {
         SQLite::Statement query(*mSQLite, "DELETE FROM PlotCommenets WHERE mCommentPlayer = ?");
         query.bind(1, uid.asString());
@@ -416,7 +435,7 @@ bool PlotDB::removeComments(UUID const& uid) {
     HandleSQLiteExceptionAndReturn(false);
 }
 
-bool PlotDB::updateComment(CommentID const& cid, string const& content) {
+bool PlotDBImpl::updateComment(CommentID const& cid, string const& content) {
     try {
         SQLite::Statement query(*mSQLite, "UPDATE PlotCommenets SET mContent = ? WHERE mCommentID = ?");
         query.bind(1, content);
@@ -427,7 +446,7 @@ bool PlotDB::updateComment(CommentID const& cid, string const& content) {
     HandleSQLiteExceptionAndReturn(false);
 }
 
-std::optional<PlotComment> PlotDB::getComment(CommentID const& cid) {
+std::optional<PlotComment> PlotDBImpl::getComment(CommentID const& cid) {
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotCommenets WHERE mCommentID = ?");
     query.bind(1, cid);
     if (query.executeStep()) {
@@ -442,7 +461,7 @@ std::optional<PlotComment> PlotDB::getComment(CommentID const& cid) {
     return std::nullopt;
 }
 
-PlotCommenets PlotDB::getComments(PlotID const& pid, UUID const& uid) {
+PlotCommenets PlotDBImpl::getComments(PlotID const& pid, UUID const& uid) {
     PlotCommenets     comments;
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotCommenets WHERE mPlotID = ? AND mCommentPlayer = ?");
     query.bind(1, pid);
@@ -459,7 +478,7 @@ PlotCommenets PlotDB::getComments(PlotID const& pid, UUID const& uid) {
     return comments;
 }
 
-PlotCommenets PlotDB::getComments(PlotID const& pid) {
+PlotCommenets PlotDBImpl::getComments(PlotID const& pid) {
     PlotCommenets     comments;
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotCommenets WHERE mPlotID = ?");
     query.bind(1, pid);
@@ -475,7 +494,7 @@ PlotCommenets PlotDB::getComments(PlotID const& pid) {
     return comments;
 }
 
-PlotCommenets PlotDB::getComments(UUID const& uid) {
+PlotCommenets PlotDBImpl::getComments(UUID const& uid) {
     PlotCommenets     comments;
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotCommenets WHERE mCommentPlayer = ?");
     query.bind(1, uid.asString());
@@ -491,7 +510,7 @@ PlotCommenets PlotDB::getComments(UUID const& uid) {
     return comments;
 }
 
-PlotCommenets PlotDB::getComments() {
+PlotCommenets PlotDBImpl::getComments() {
     PlotCommenets     comments;
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotCommenets");
     while (query.executeStep()) {
@@ -509,7 +528,7 @@ PlotCommenets PlotDB::getComments() {
 
 // ======================= PlotSales APIs =======================
 
-bool PlotDB::hasSale(PlotID const& pid) {
+bool PlotDBImpl::hasSale(PlotID const& pid) {
     SQLite::Statement query(*mSQLite, "SELECT COUNT(*) FROM PlotSales WHERE mPlotID = ?");
     query.bind(1, pid);
     if (query.executeStep()) {
@@ -518,7 +537,7 @@ bool PlotDB::hasSale(PlotID const& pid) {
     return false;
 }
 
-bool PlotDB::addSale(PlotID const& pid, int price) {
+bool PlotDBImpl::addSale(PlotID const& pid, int price) {
     try {
         SQLite::Statement query(*mSQLite, "INSERT INTO PlotSales (mPlotID, mPrice) VALUES (?, ?)");
         query.bind(1, pid);
@@ -529,7 +548,7 @@ bool PlotDB::addSale(PlotID const& pid, int price) {
     HandleSQLiteExceptionAndReturn(false);
 }
 
-bool PlotDB::removeSale(PlotID const& pid) {
+bool PlotDBImpl::removeSale(PlotID const& pid) {
     try {
         SQLite::Statement query(*mSQLite, "DELETE FROM PlotSales WHERE mPlotID = ?");
         query.bind(1, pid);
@@ -539,7 +558,7 @@ bool PlotDB::removeSale(PlotID const& pid) {
     HandleSQLiteExceptionAndReturn(false);
 }
 
-bool PlotDB::updateSale(PlotID const& pid, int price) {
+bool PlotDBImpl::updateSale(PlotID const& pid, int price) {
     try {
         SQLite::Statement query(*mSQLite, "UPDATE PlotSales SET mPrice = ? WHERE mPlotID = ?");
         query.bind(1, price);
@@ -550,7 +569,7 @@ bool PlotDB::updateSale(PlotID const& pid, int price) {
     HandleSQLiteExceptionAndReturn(false);
 }
 
-std::optional<PlotSale> PlotDB::getSale(PlotID const& pid) {
+std::optional<PlotSale> PlotDBImpl::getSale(PlotID const& pid) {
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotSales WHERE mPlotID = ?");
     query.bind(1, pid);
     if (query.executeStep()) {
@@ -563,7 +582,7 @@ std::optional<PlotSale> PlotDB::getSale(PlotID const& pid) {
     return std::nullopt;
 }
 
-PlotSales PlotDB::getSales() {
+PlotSales PlotDBImpl::getSales() {
     PlotSales         sales;
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotSales");
     while (query.executeStep()) {
@@ -577,7 +596,7 @@ PlotSales PlotDB::getSales() {
 }
 
 // 购买地皮
-bool PlotDB::buyPlotFromSale(PlotID const& pid, UUID const& buyer, bool resetShares) {
+bool PlotDBImpl::buyPlotFromSale(PlotID const& pid, UUID const& buyer, bool resetShares) {
     try {
         // Begin transaction
         mSQLite->exec("BEGIN");
@@ -612,5 +631,19 @@ bool PlotDB::buyPlotFromSale(PlotID const& pid, UUID const& buyer, bool resetSha
         return false;
     }
 }
+
+
+// 联表查询获取玩家权限等级
+PlotPermission PlotDBImpl::getPlayerPermission(UUID const& uid, PlotID const& pid, bool ignoreAdmin) {
+    try {
+        if (!ignoreAdmin && isAdmin(uid)) return PlotPermission::Admin;
+        if (isPlotOwner(pid, uid)) return PlotPermission::Owner;
+        if (isPlotSharedPlayer(pid, uid)) return PlotPermission::Shared;
+
+        return PlotPermission::None; // 无权限
+    }
+    HandleSQLiteExceptionAndReturn(PlotPermission::None);
+}
+
 
 } // namespace plotcraft::database
