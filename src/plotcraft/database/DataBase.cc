@@ -595,9 +595,9 @@ bool PlotDB::buyPlotFromSale(PlotID const& pid, UUID const& buyer, bool resetSha
 
         // 如果需要重置共享者，则删除共享信息
         if (resetShares) {
-            SQLite::Statement resetShares(*mSQLite, "DELETE FROM PlotShares WHERE mPlotID = ?");
-            resetShares.bind(1, pid);
-            resetShares.exec();
+            SQLite::Statement resetSharesStmt(*mSQLite, "DELETE FROM PlotShares WHERE mPlotID = ?");
+            resetSharesStmt.bind(1, pid);
+            resetSharesStmt.exec();
         }
 
         // Commit transaction
