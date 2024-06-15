@@ -1,5 +1,6 @@
 #include "plugin/MyPlugin.h"
 
+#include <corecrt.h>
 #include <memory>
 
 #include "ll/api/event/EventBus.h"
@@ -14,10 +15,12 @@
 #include "mc/server/commands/ServerCommandOrigin.h"
 #include "mc/world/Minecraft.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
-#include "plotcraft/core/PlotDimension.h"
 
 #include "plotcraft/config/Config.h"
+#include "plotcraft/core/PlotDimension.h"
+#include "plotcraft/database/DataBase.h"
 #include "plotcraft/event/Event.h"
+
 
 namespace my_plugin {
 
@@ -34,6 +37,8 @@ bool MyPlugin::load() {
 #endif
 
     plotcraft::config::loadConfig();
+    plotcraft::database::PlayerNameDB::getInstance().initPlayerNameDB();
+    plotcraft::database::PlotDB::getInstance().initSQLite();
 
     return true;
 }
@@ -44,7 +49,7 @@ bool MyPlugin::enable() {
 
     // 注册自定义维度
     logger.info("Registering plot dimension...");
-    more_dimensions::CustomDimensionManager::getInstance().addDimension<plotcraft::core::PlotDimension>("plot").id;
+    more_dimensions::CustomDimensionManager::getInstance().addDimension<plotcraft::core::PlotDimension>("plot");
 
     plotcraft::event::registerEventListener();
 
