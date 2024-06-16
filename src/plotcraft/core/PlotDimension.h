@@ -2,7 +2,7 @@
 #include "mc/world/level/dimension/Dimension.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 
-namespace plotcraft::core {
+namespace plo::core {
 
 
 class PlotDimension : public Dimension {
@@ -44,4 +44,4 @@ public:
 };
 
 
-} // namespace plotcraft::core
+} // namespace plo::core

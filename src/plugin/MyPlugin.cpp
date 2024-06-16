@@ -36,9 +36,9 @@ bool MyPlugin::load() {
     logger.consoleLevel = 5; // 调试模式下输出详细日志
 #endif
 
-    plotcraft::config::loadConfig();
-    plotcraft::database::PlayerNameDB::getInstance().initPlayerNameDB();
-    plotcraft::database::PlotDB::getInstance().load();
+    plo::config::loadConfig();
+    plo::database::PlayerNameDB::getInstance().initPlayerNameDB();
+    plo::database::PlotDB::getInstance().load();
 
     return true;
 }
@@ -49,9 +49,9 @@ bool MyPlugin::enable() {
 
     // 注册自定义维度
     logger.info("Registering plot dimension...");
-    more_dimensions::CustomDimensionManager::getInstance().addDimension<plotcraft::core::PlotDimension>("plot");
+    more_dimensions::CustomDimensionManager::getInstance().addDimension<plo::core::PlotDimension>("plot");
 
-    plotcraft::event::registerEventListener();
+    plo::event::registerEventListener();
 
 #ifdef DEBUG
     CommandContext ctx = CommandContext(
@@ -72,7 +72,7 @@ bool MyPlugin::enable() {
 bool MyPlugin::disable() {
     getSelf().getLogger().info("Disabling...");
 
-    plotcraft::event::unRegisterEventListener();
+    plo::event::unRegisterEventListener();
 
     return true;
 }

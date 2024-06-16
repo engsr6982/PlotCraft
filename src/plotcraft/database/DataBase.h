@@ -17,9 +17,9 @@
 
 
 using string = std::string;
-using namespace plotcraft::core;
+using namespace plo::core;
 
-namespace plotcraft::database {
+namespace plo::database {
 
 
 // typedefs
@@ -249,4 +249,4 @@ public:
     bool updateCachedPlotOwner(PlotID const& pid, UUID const& newOwner);
 };
 
-} // namespace plotcraft::database
+} // namespace plo::database

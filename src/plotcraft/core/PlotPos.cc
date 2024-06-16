@@ -5,7 +5,7 @@
 #include <cmath>
 
 
-namespace plotcraft::core {
+namespace plo::core {
 
 /*
     基准点：Vec3{0,0,0}
@@ -68,4 +68,4 @@ std::vector<PlotPos> PlotPos::getAdjacentPlots() {
 }
 
 
-} // namespace plotcraft::core
+} // namespace plo::core

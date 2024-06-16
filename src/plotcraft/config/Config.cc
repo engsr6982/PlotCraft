@@ -5,7 +5,7 @@
 
 namespace fs = std::filesystem;
 
-namespace plotcraft::config {
+namespace plo::config {
 
 _Config cfg;
 
@@ -21,4 +21,4 @@ void loadConfig() {
     }
 }
 
-} // namespace plotcraft::config
+} // namespace plo::config

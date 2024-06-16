@@ -13,7 +13,7 @@ class ChunkViewSource;
 class LevelChunk;
 class ChunkPos;
 
-namespace plotcraft::core {
+namespace plo::core {
 
 // 我们直接继承原版超平坦这个类来写会方便很多
 class PlotGenerator : public FlatWorldGenerator {
@@ -61,4 +61,4 @@ public:
     BlockPos findSpawnPosition() const { return {0, 16, 0}; };
 };
 
-} // namespace plotcraft::core
+} // namespace plo::core

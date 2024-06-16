@@ -4,7 +4,7 @@
 
 using string = std::string;
 
-namespace plotcraft::config {
+namespace plo::config {
 
 struct _Config {
     int version = 1;
@@ -24,4 +24,4 @@ extern _Config cfg;
 
 void loadConfig();
 
-} // namespace plotcraft::config
+} // namespace plo::config

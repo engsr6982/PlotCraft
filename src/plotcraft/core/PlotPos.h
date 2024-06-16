@@ -2,7 +2,7 @@
 #include "../config/Config.h"
 #include "mc/math/Vec3.h"
 
-namespace plotcraft::core {
+namespace plo::core {
 
 
 class PlotPos {
@@ -29,4 +29,4 @@ public:
 };
 
 
-} // namespace plotcraft::core
+} // namespace plo::core

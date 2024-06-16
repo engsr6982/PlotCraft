@@ -17,7 +17,7 @@
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 
 
-namespace plotcraft::core {
+namespace plo::core {
 
 PlotDimension::PlotDimension(std::string const& name, more_dimensions::DimensionFactoryInfo const& info)
 : Dimension(info.level, info.dimId, {-64, 320}, info.scheduler, name) {
@@ -38,7 +38,7 @@ PlotDimension::createGenerator(br::worldgen::StructureSetRegistry const& /* stru
 
     // 实例化 地皮生成器
     auto worldGenerator =
-        std::make_unique<plotcraft::core::PlotGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
+        std::make_unique<plo::core::PlotGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
 
     worldGenerator->init(); // 必须调用，初始化生成器
 
@@ -90,4 +90,4 @@ short PlotDimension::getCloudHeight() const { return 192; }
 
 bool PlotDimension::hasPrecipitationFog() const { return true; }
 
-} // namespace plotcraft::core
+} // namespace plo::core

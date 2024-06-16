@@ -3,7 +3,7 @@
 #include "ll/api/event/Listener.h"
 
 
-namespace plotcraft::event {
+namespace plo::event {
 
 
 void registerEventListener();
@@ -11,4 +11,4 @@ void registerEventListener();
 void unRegisterEventListener();
 
 
-} // namespace plotcraft::event
+} // namespace plo::event

@@ -20,7 +20,7 @@
 #include <cstdio>
 
 
-namespace plotcraft::core {
+namespace plo::core {
 
 PlotGenerator::PlotGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON)
 : FlatWorldGenerator(dimension, seed, generationOptionsJSON) {
@@ -125,7 +125,7 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
 }
 
 std::optional<short> PlotGenerator::getPreliminarySurfaceLevel(DividedPos2d<4> /* worldPos */) const {
-    return plotcraft::config::cfg.generator.generatorY + 1; // 生成层 + 1
+    return plo::config::cfg.generator.generatorY + 1; // 生成层 + 1
 }
 
 void PlotGenerator::prepareAndComputeHeights(
@@ -167,4 +167,4 @@ void PlotGenerator::garbageCollectBlueprints(buffer_span<ChunkPos> activeChunks)
     return WorldGenerator::garbageCollectBlueprints(activeChunks);
 };
 
-} // namespace plotcraft::core
+} // namespace plo::core

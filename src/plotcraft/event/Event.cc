@@ -21,7 +21,7 @@ using ll::chrono_literals::operator""_tick;
 ll::schedule::GameTickScheduler mTickScheduler; // Tick调度
 
 
-namespace plotcraft::event {
+namespace plo::event {
 
 
 void registerEventListener() {
@@ -45,4 +45,4 @@ void registerEventListener() {
 void unRegisterEventListener() { mTickScheduler.clear(); }
 
 
-} // namespace plotcraft::event
+} // namespace plo::event

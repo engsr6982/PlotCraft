@@ -5,7 +5,7 @@
 #include <stdexcept>
 
 
-namespace plotcraft::database {
+namespace plo::database {
 
 // ======================= Class PlayerNameDB =======================
 PlayerNameDB& PlayerNameDB::getInstance() {
@@ -867,4 +867,4 @@ bool PlotDB::updateCachedPlotOwner(PlotID const& pid, UUID const& newOwner) {
 }
 
 
-} // namespace plotcraft::database
+} // namespace plo::database
