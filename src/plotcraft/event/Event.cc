@@ -4,6 +4,7 @@
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/ListenerBase.h"
 #include "ll/api/event/player/PlayerJoinEvent.h"
+#include "ll/api/event/world/SpawnMobEvent.h"
 #include "ll/api/schedule/Scheduler.h"
 #include "ll/api/schedule/Task.h"
 #include "ll/api/service/Bedrock.h"
@@ -24,8 +25,9 @@
 using string = std::string;
 using ll::chrono_literals::operator""_tick;
 
-ll::schedule::GameTickScheduler mTickScheduler;           // Tick调度
-ll::event::ListenerPtr          mPlayerJoinEventListener; // 玩家加入事件监听器
+ll::schedule::GameTickScheduler mTickScheduler;            // Tick调度
+ll::event::ListenerPtr          mPlayerJoinEventListener;  // 玩家加入事件监听器
+ll::event::ListenerPtr          mSpawningMobEventListener; // 生物出生事件监听器
 
 namespace plo::event {
 
@@ -121,6 +123,11 @@ void registerEventListener() {
     mPlayerJoinEventListener = bus.emplaceListener<ll::event::PlayerJoinEvent>([](ll::event::PlayerJoinEvent& e) {
         database::PlayerNameDB::getInstance().insertPlayer(e.self());
     });
+
+    mSpawningMobEventListener = bus.emplaceListener<ll::event::SpawningMobEvent>([](ll::event::SpawningMobEvent& e) {
+        if (e.blockSource().getDimension().mName != "plot") return false; // 拦截地皮世界生物生成
+        return true;
+    });
 }
 
 
@@ -129,6 +136,7 @@ void unRegisterEventListener() {
 
     auto& bus = ll::event::EventBus::getInstance();
     bus.removeListener(mPlayerJoinEventListener);
+    bus.removeListener(mSpawningMobEventListener);
 }
 
 
