@@ -6,6 +6,9 @@
     "dependencies": [
         {
             "name": "more-dimensions"
+        },
+        {
+            "name": "LegacyMoney"
         }
     ]
 }
