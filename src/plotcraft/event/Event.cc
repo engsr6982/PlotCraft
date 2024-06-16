@@ -14,17 +14,35 @@
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/dimension/Dimension.h"
+#include "plot/PlayerPlotEvent.h"
 #include "plotcraft/config/Config.h"
 #include "plotcraft/core/PlotPos.h"
 #include "plotcraft/database/DataBase.h"
 #include "plugin/MyPlugin.h"
 #include <string>
 #include <thread>
+#include <unordered_map>
 
 
 using string = std::string;
 using ll::chrono_literals::operator""_tick;
 
+// 辅助表，用于实现自定义Event
+namespace pt {
+std::unordered_map<string, plo::core::PlotPos> mIsInPlot; // 玩家是否在地皮中
+
+bool has(string const& realName) { return mIsInPlot.find(realName) != mIsInPlot.end(); }
+void set(string realName, plo::core::PlotPos pos) { mIsInPlot[realName] = pos; }
+
+plo::core::PlotPos get(string const& realName) {
+    auto it = mIsInPlot.find(realName);
+    if (it == mIsInPlot.end()) return plo::core::PlotPos{};
+    return it->second;
+}
+} // namespace pt
+
+
+// Global variables
 ll::schedule::GameTickScheduler mTickScheduler;            // Tick调度
 ll::event::ListenerPtr          mPlayerJoinEventListener;  // 玩家加入事件监听器
 ll::event::ListenerPtr          mSpawningMobEventListener; // 生物出生事件监听器
@@ -33,7 +51,7 @@ namespace plo::event {
 
 
 void registerEventListener() {
-    mTickScheduler.add<ll::schedule::RepeatTask>(5_tick, []() {
+    mTickScheduler.add<ll::schedule::RepeatTask>(4_tick, []() {
         Level& lv = *ll::service::getLevel();
         lv.forEachPlayer([](Player& p) {
             if (p.getDimension().mName != "plot") return true; // 不是同一维度
@@ -58,9 +76,15 @@ void registerEventListener() {
             // PLUGIN_TITLE | 地皮世界
             // 输入: /plo 打开地皮菜单
 
-
-            auto plotPos = core::PlotPos(p.getPosition());
+            auto& bus     = ll::event::EventBus::getInstance();
+            auto  plotPos = core::PlotPos(p.getPosition());
             if (plotPos.isValid()) {
+                if (auto _pos = pt::get(p.getRealName()); _pos != plotPos) {
+                    // 玩家进入地皮
+                    bus.publish(PlayerEnterPlot(plotPos, &p)); // 玩家进入地皮，当前位置有效，使用当前位置
+                    pt::set(p.getRealName(), plotPos);         // 更新玩家位置
+                    p.sendMessage("[Debug] 进入地皮: " + plotPos.toDebug());
+                }
                 // 获取数据库实例
                 auto& pdb  = database::PlotDB::getInstance();
                 auto& impl = pdb.getImpl();
@@ -109,6 +133,12 @@ void registerEventListener() {
                 }
 
             } else {
+                if (auto _pos2 = pt::get(p.getRealName()); _pos2 != plotPos) {
+                    // 玩家离开地皮
+                    bus.publish(PlayerLeavePlot(_pos2, &p)); // 玩家离开地皮，当前位置无效，使用上次位置
+                    pt::set(p.getRealName(), plotPos);       // 更新玩家位置
+                    p.sendMessage("[Debug] 离开地皮: " + _pos2.toDebug());
+                }
                 // Tip3
                 pkt.mMessage = fmt::format("{0} | 地皮世界\n输入: /plo 打开地皮菜单", PLUGIN_TITLE);
             }
@@ -118,6 +148,9 @@ void registerEventListener() {
             return true;
         });
     });
+
+
+    // Listen Minecraft events
     auto& bus = ll::event::EventBus::getInstance();
 
     mPlayerJoinEventListener = bus.emplaceListener<ll::event::PlayerJoinEvent>([](ll::event::PlayerJoinEvent& e) {

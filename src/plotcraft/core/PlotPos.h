@@ -12,6 +12,8 @@ public:
     Vec3 maxPos;         // 地皮大端坐标
     bool mIsValid{true}; // 地皮是否有效
 
+    PlotPos();
+
     PlotPos(int x, int z);
 
     PlotPos(const Vec3& vec3);
@@ -29,6 +31,10 @@ public:
     bool isPosInPlot(const Vec3& vec3);
 
     std::vector<PlotPos> getAdjacentPlots();
+
+    // 重载比较运算符
+    bool operator==(const PlotPos& other) const;
+    bool operator!=(const PlotPos& other) const;
 };
 
 

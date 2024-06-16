@@ -18,6 +18,11 @@ namespace plo::core {
     -1,-1  0,-1  1,-1
  */
 
+PlotPos::PlotPos() : x(0), z(0), mIsValid(false) {
+    minPos = Vec3{0, 0, 0};
+    maxPos = Vec3{0, 0, 0};
+}
+
 PlotPos::PlotPos(int x, int z) : x(x), z(z) {
     auto& cfg       = config::cfg.generator;
     int   totalSize = cfg.plotWidth + cfg.roadWidth;
@@ -68,6 +73,13 @@ bool PlotPos::isPosInPlot(const Vec3& vec3) {
 std::vector<PlotPos> PlotPos::getAdjacentPlots() {
     return {PlotPos(x - 1, z), PlotPos(x + 1, z), PlotPos(x, z - 1), PlotPos(x, z + 1)};
 }
+
+
+bool PlotPos::operator==(const PlotPos& other) const {
+    return x == other.x && z == other.z && minPos == other.minPos && maxPos == other.maxPos;
+}
+
+bool PlotPos::operator!=(const PlotPos& other) const { return !(*this == other); }
 
 
 } // namespace plo::core
