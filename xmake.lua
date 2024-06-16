@@ -8,7 +8,8 @@ add_repositories("liteldev-repo https://github.com/LiteLDev/xmake-repo.git")
 add_requires(
     "levilamina 0.12.4",
     "more-dimensions 0.3.1",
-    "sqlitecpp 3.2.1"
+    "sqlitecpp 3.2.1",
+    "legacymoney 0.7.0"
 )
 
 if not has_config("vs_runtime") then
@@ -35,7 +36,8 @@ target("PlotCraft") -- Change this to your plugin name.
     add_packages(
         "levilamina",
         "more-dimensions",
-        "sqlitecpp"
+        "sqlitecpp",
+        "legacymoney"
     )
     add_files("src/**.cpp", "src/**.cc")
     add_includedirs("src")
@@ -47,7 +49,10 @@ target("PlotCraft") -- Change this to your plugin name.
 
     if is_mode("debug") then
         add_defines("DEBUG")
-    end 
+    end
+
+    add_defines("PLUGIN_NAME=\"PlotCraft\"")
+    add_defines("PLUGIN_TITLE=\"§6[§aPlotCraft§6]§r \"")
 
     after_build(function (target)
         local plugin_packer = import("scripts.after_build")

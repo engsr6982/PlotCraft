@@ -1,6 +1,8 @@
 #pragma once
 #include "ll/api/Config.h"
+#include "plotcraft/utils/Moneys.h"
 #include <string>
+
 
 using string = std::string;
 
@@ -18,6 +20,12 @@ struct _Config {
         string fillBlock   = "minecraft:grass_block";
         string borderBlock = "minecraft:stone_block_slab";
     } generator;
+    utils::MoneysConfig moneys; // 经济系统配置
+    struct _Func {
+        int  maxBuyPlotCount = 10;    // 最大购买地皮数量
+        int  buyPlotPrice    = 10000; // 购买地皮价格
+        bool inPlotCanFly    = true;  // 地皮内可飞行
+    } func;
 };
 
 extern _Config cfg;
