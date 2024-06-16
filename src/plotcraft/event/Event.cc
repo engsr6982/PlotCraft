@@ -32,91 +32,89 @@ namespace plo::event {
 
 void registerEventListener() {
     mTickScheduler.add<ll::schedule::RepeatTask>(5_tick, []() {
-        std::thread([] {
-            Level& lv = *ll::service::getLevel();
-            lv.forEachPlayer([](Player& p) {
-                if (p.getDimension().mName != "plot") return true; // 不是同一维度
-                if (p.isLoading() || p.isSimulated() || p.isSimulatedPlayer()) return true;
-                TextPacket pkt = TextPacket();
-                pkt.mType      = TextPacketType::Tip;
+        Level& lv = *ll::service::getLevel();
+        lv.forEachPlayer([](Player& p) {
+            if (p.getDimension().mName != "plot") return true; // 不是同一维度
+            if (p.isLoading() || p.isSimulated() || p.isSimulatedPlayer()) return true;
+            TextPacket pkt = TextPacket();
+            pkt.mType      = TextPacketType::Tip;
 
-                // §a✔§r
-                // §c✘§r
+            // §a✔§r
+            // §c✘§r
 
-                // Tip1:
-                // 地皮: (0,1) | (0,0,0) => (16,16,16)
-                // 主人: xxx  |  名称: xxx
-                // 出售: x/√  |  价格: xxx
+            // Tip1:
+            // 地皮: (0,1) | (0,0,0) => (16,16,16)
+            // 主人: xxx  |  名称: xxx
+            // 出售: x/√  |  价格: xxx
 
-                // Tip2:
-                // 地皮: (0,1) | (0,0,0) => (16,16,16)
-                // 主人: 无主  | 价格: xxx
-                // 输入：/plo buy 购买
+            // Tip2:
+            // 地皮: (0,1) | (0,0,0) => (16,16,16)
+            // 主人: 无主  | 价格: xxx
+            // 输入：/plo buy 购买
 
-                // Tip3:
-                // PLUGIN_TITLE | 地皮世界
-                // 输入: /plo 打开地皮菜单
+            // Tip3:
+            // PLUGIN_TITLE | 地皮世界
+            // 输入: /plo 打开地皮菜单
 
 
-                auto plotPos = core::PlotPos(p.getPosition());
-                if (plotPos.isValid()) {
-                    // 获取数据库实例
-                    auto& pdb  = database::PlotDB::getInstance();
-                    auto& impl = pdb.getImpl();
+            auto plotPos = core::PlotPos(p.getPosition());
+            if (plotPos.isValid()) {
+                // 获取数据库实例
+                auto& pdb  = database::PlotDB::getInstance();
+                auto& impl = pdb.getImpl();
 
-                    database::Plot plot;
+                database::Plot plot;
 
-                    auto tryGetPlot = pdb.getCached(pdb.hash(plotPos.toString()), database::PlotDB::CacheType::Plot);
-                    if (tryGetPlot.has_value()) plot = std::get<database::Plot>(*tryGetPlot); // 缓存
-                    else {
-                        auto tryGetPlotDB = impl.getPlot(plotPos.toString()); // 数据库
-                        if (tryGetPlotDB.has_value()) plot = *tryGetPlotDB;
-                    }
-
-                    if (plot.mPlotOwner.isEmpty()) {
-                        // Tip2
-                        pkt.mMessage = fmt::format(
-                            "地皮: {0}\n主人: 无主  |  价格: {1}\n输入：/plo buy 购买",
-                            plotPos.toDebug(),
-                            config::cfg.func.buyPlotPrice
-                        );
-                    } else {
-                        // Tip1
-                        auto& ndb  = database::PlayerNameDB::getInstance();
-                        auto  sale = impl.getSale(plotPos.toString());
-                        if (sale.has_value()) {
-                            // 玩家出售此地皮
-                            pkt.mMessage = fmt::format(
-                                "地皮: {0}\n主人: {1}  |  名称: {2}\n出售: {3}  |  价格: {4}",
-                                plotPos.toDebug(),
-                                ndb.getPlayerName(plot.mPlotOwner),
-                                plot.mPlotName,
-                                "§a✔§r",
-                                sale->mPrice
-                            );
-                        } else {
-                            // 玩家不出售此地皮
-                            pkt.mMessage = fmt::format(
-                                "地皮: {0}\n主人: {1}  |  名称: {2}\n出售: {3}  |  价格: {4}",
-                                plotPos.toDebug(),
-                                ndb.getPlayerName(plot.mPlotOwner),
-                                plot.mPlotName,
-                                "§c✘§r",
-                                "null"
-                            );
-                        }
-                    }
-
-                } else {
-                    // Tip3
-                    pkt.mMessage = fmt::format("{0} | 地皮世界\n输入: /plo 打开地皮菜单", PLUGIN_TITLE);
+                auto tryGetPlot = pdb.getCached(pdb.hash(plotPos.toString()), database::PlotDB::CacheType::Plot);
+                if (tryGetPlot.has_value()) plot = std::get<database::Plot>(*tryGetPlot); // 缓存
+                else {
+                    auto tryGetPlotDB = impl.getPlot(plotPos.toString()); // 数据库
+                    if (tryGetPlotDB.has_value()) plot = *tryGetPlotDB;
                 }
 
-                // sendPacket
-                p.sendNetworkPacket(pkt);
-                return true;
-            });
-        }).detach(); // 扔到新线程执行
+                if (plot.mPlotOwner.isEmpty()) {
+                    // Tip2
+                    pkt.mMessage = fmt::format(
+                        "地皮: {0}\n主人: 无主  |  价格: {1}\n输入：/plo buy 购买",
+                        plotPos.toDebug(),
+                        config::cfg.func.buyPlotPrice
+                    );
+                } else {
+                    // Tip1
+                    auto& ndb  = database::PlayerNameDB::getInstance();
+                    auto  sale = impl.getSale(plotPos.toString());
+                    if (sale.has_value()) {
+                        // 玩家出售此地皮
+                        pkt.mMessage = fmt::format(
+                            "地皮: {0}\n主人: {1}  |  名称: {2}\n出售: {3}  |  价格: {4}",
+                            plotPos.toDebug(),
+                            ndb.getPlayerName(plot.mPlotOwner),
+                            plot.mPlotName,
+                            "§a✔§r",
+                            sale->mPrice
+                        );
+                    } else {
+                        // 玩家不出售此地皮
+                        pkt.mMessage = fmt::format(
+                            "地皮: {0}\n主人: {1}  |  名称: {2}\n出售: {3}  |  价格: {4}",
+                            plotPos.toDebug(),
+                            ndb.getPlayerName(plot.mPlotOwner),
+                            plot.mPlotName,
+                            "§c✘§r",
+                            "null"
+                        );
+                    }
+                }
+
+            } else {
+                // Tip3
+                pkt.mMessage = fmt::format("{0} | 地皮世界\n输入: /plo 打开地皮菜单", PLUGIN_TITLE);
+            }
+
+            // sendPacket
+            p.sendNetworkPacket(pkt);
+            return true;
+        });
     });
     auto& bus = ll::event::EventBus::getInstance();
 
