@@ -25,17 +25,26 @@ inline static std::unordered_map<Level, string> Color = {
     {Level::Success, "§a"}  // green
 };
 
+template <typename... Args>
+inline string format(const string& fmt, Args... args) {
+    try {
+        return fmt::vformat(fmt, fmt::make_format_args(args...));
+    } catch (...) {
+        return fmt;
+    }
+}
+
 // Template function sendText, usage: sendText() or sendText<MsgLevel::Success>().
 template <Level type = Level::Normal, typename... Args>
 inline void sendText(Player& player, const string& fmt, Args&&... args) {
-    player.sendMessage(fmt::format(PLUGIN_TITLE + Color[type] + fmt, args...));
+    player.sendMessage(format(PLUGIN_TITLE + Color[type] + fmt, args...));
 }
 template <Level type = Level::Normal, typename... Args>
 inline void sendText(CommandOutput& output, const string& fmt, Args&&... args) {
     if constexpr (type == Level::Error || type == Level::Fatal) {
-        output.error(fmt::format(PLUGIN_TITLE + Color[type] + fmt, args...));
+        output.error(format(PLUGIN_TITLE + Color[type] + fmt, args...));
     } else {
-        output.success(fmt::format(PLUGIN_TITLE + Color[type] + fmt, args...));
+        output.success(format(PLUGIN_TITLE + Color[type] + fmt, args...));
     }
 }
 template <Level type = Level::Normal, typename... Args>
@@ -58,13 +67,13 @@ inline void sendText(const string& realName, const string& fmt, Args&&... args) 
 template <Level type = Level::Normal, typename... Args>
 inline void sendText(ll::Logger& logger, const string& fmt, Args&&... args) {
     if constexpr (type == Level::Error) {
-        logger.error(fmt::format(PLUGIN_TITLE + Color[type] + fmt, args...));
+        logger.error(format(PLUGIN_TITLE + Color[type] + fmt, args...));
     } else if constexpr (type == Level::Fatal) {
-        logger.fatal(fmt::format(PLUGIN_TITLE + Color[type] + fmt, args...));
+        logger.fatal(format(PLUGIN_TITLE + Color[type] + fmt, args...));
     } else if constexpr (type == Level::Warn) {
-        logger.warn(fmt::format(PLUGIN_TITLE + Color[type] + fmt, args...));
+        logger.warn(format(PLUGIN_TITLE + Color[type] + fmt, args...));
     } else {
-        logger.info(fmt::format(PLUGIN_TITLE + Color[type] + fmt, args...));
+        logger.info(format(PLUGIN_TITLE + Color[type] + fmt, args...));
     }
 }
 
