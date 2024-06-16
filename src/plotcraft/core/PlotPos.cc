@@ -38,10 +38,11 @@ PlotPos::PlotPos(const Vec3& vec3) {
 
     if (localX >= cfg.plotWidth || localZ >= cfg.plotWidth) {
         // Point is on the road
-        minPos = Vec3{0, 0, 0};
-        maxPos = Vec3{0, 0, 0};
-        x      = 0;
-        z      = 0;
+        minPos   = Vec3{0, 0, 0};
+        maxPos   = Vec3{0, 0, 0};
+        x        = 0;
+        z        = 0;
+        mIsValid = false; // 无效的地皮点
     } else {
         x      = gridX;
         z      = gridZ;
@@ -50,6 +51,7 @@ PlotPos::PlotPos(const Vec3& vec3) {
     }
 }
 
+bool PlotPos::isValid() { return mIsValid; }
 
 Vec3 PlotPos::getMin() { return minPos; }
 
