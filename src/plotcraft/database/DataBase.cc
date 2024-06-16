@@ -105,7 +105,7 @@ void PlotDBImpl::initTables() {
             	    "mPlotID"	TEXT NOT NULL UNIQUE,
             	    "mPrice"	INTEGER,
             	    "mSaleTime"	TEXT DEFAULT CURRENT_TIMESTAMP,
-            	    PRIMARY KEY("mPlotID","mSellerPlayer")
+            	    PRIMARY KEY("mPlotID")
                 );
             )");
     }
