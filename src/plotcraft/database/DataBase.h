@@ -200,22 +200,41 @@ private:
     PlotDB& operator=(const PlotDB&) = delete;
 
 public:
-    static PlotDB& getInstance() {
-        static PlotDB instance;
-        return instance;
-    }
+    PlotDBImpl& getImpl();
 
-    bool load() {
-        if (mImpl != nullptr) return true;
-        mImpl = std::make_unique<PlotDBImpl>();
-        return true;
-    }
+    static PlotDB& getInstance();
 
-    PlotDBImpl& getImpl() { return *mImpl; }
+    // 加载数据库
+    bool load();
 
-    static size_t _hash(string const& str) { return std::hash<string>()(str); }
-    static size_t hash(Plot const& plot) { return _hash(plot.mPlotID); }
-    static size_t hash(PlotShare const& share) { return _hash(share.mPlotID + share.mSharedPlayer.asString()); }
+    size_t hash(Plot const& plot);
+    size_t hash(PlotShare const& share);
+
+    // 缓存
+    bool cache(Plot const& plot);
+    bool cache(PlotShare const& share);
+    bool cache(UUID const& uuid);
+
+    enum class CacheType {
+        All,
+        Plot,
+        PlotShare,
+        Admin,
+    };
+
+    bool resetCache(CacheType type = CacheType::All);
+
+    bool hasCached(Plot const& plot);
+    bool hasCached(PlotShare const& share);
+    bool hasCached(UUID const& uuid);
+
+    std::optional<Plot>      getCached(Plot const& plot);
+    std::optional<PlotShare> getCached(PlotShare const& share);
+    std::optional<bool>      getCached(UUID const& uuid);
+
+    bool removeCached(Plot const& plot);
+    bool removeCached(PlotShare const& share);
+    bool removeCached(UUID const& uuid);
 };
 
 } // namespace plotcraft::database

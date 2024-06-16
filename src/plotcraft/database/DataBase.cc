@@ -34,7 +34,7 @@ bool PlayerNameDB::insertPlayer(Player& player) {
 }
 
 
-// ======================= Class PlotDB =======================
+// ======================= Class PlotDBImpl =======================
 #define HandleSQLiteExceptionAndReturn(defv)                                                                           \
     catch (SQLite::Exception const& e) {                                                                               \
         my_plugin::MyPlugin::getInstance().getSelf().getLogger().error(                                                \
@@ -643,6 +643,101 @@ PlotPermission PlotDBImpl::getPlayerPermission(UUID const& uid, PlotID const& pi
         return PlotPermission::None; // 无权限
     }
     HandleSQLiteExceptionAndReturn(PlotPermission::None);
+}
+
+
+// ======================= Class PlotDB =======================
+
+PlotDBImpl& PlotDB::getImpl() { return *mImpl; }
+
+PlotDB& PlotDB::getInstance() {
+    static PlotDB instance;
+    return instance;
+}
+
+// 加载数据库
+bool PlotDB::load() {
+    if (mImpl != nullptr) return true;
+    mImpl = std::make_unique<PlotDBImpl>();
+    return true;
+}
+
+size_t PlotDB::hash(Plot const& plot) { return std::hash<string>()(plot.mPlotID); }
+size_t PlotDB::hash(PlotShare const& share) {
+    return std::hash<string>()(share.mPlotID + share.mSharedPlayer.asString());
+}
+
+// 缓存
+bool PlotDB::cache(Plot const& plot) {
+    mPlots[hash(plot)] = Plot{plot}; // copy
+    return true;
+}
+bool PlotDB::cache(PlotShare const& share) {
+    mPlotShares[hash(share)] = PlotShare{share}; // copy
+    return true;
+}
+bool PlotDB::cache(UUID const& uuid) {
+    mAdmins[uuid] = true; // copy
+    return true;
+}
+
+bool PlotDB::resetCache(CacheType type = CacheType::All) {
+    switch (type) {
+    case CacheType::Plot:
+        mPlots.clear();
+        break;
+    case CacheType::PlotShare:
+        mPlotShares.clear();
+        break;
+    case CacheType::Admin:
+        mAdmins.clear();
+        break;
+    default:
+        mPlots.clear();
+        mPlotShares.clear();
+        mAdmins.clear();
+        break;
+    }
+    return true;
+}
+
+bool PlotDB::hasCached(Plot const& plot) { return mPlots.find(hash(plot)) != mPlots.end(); }
+bool PlotDB::hasCached(PlotShare const& share) { return mPlotShares.find(hash(share)) != mPlotShares.end(); }
+bool PlotDB::hasCached(UUID const& uuid) { return mAdmins.find(uuid) != mAdmins.end(); }
+
+std::optional<Plot> PlotDB::getCached(Plot const& plot) {
+    auto it = mPlots.find(hash(plot));
+    if (it == mPlots.end()) return std::nullopt;
+    return it->second;
+}
+std::optional<PlotShare> PlotDB::getCached(PlotShare const& share) {
+    auto it = mPlotShares.find(hash(share));
+    if (it == mPlotShares.end()) return std::nullopt;
+    return it->second;
+}
+std::optional<bool> PlotDB::getCached(UUID const& uuid) {
+    auto it = mAdmins.find(uuid);
+    if (it == mAdmins.end()) return std::nullopt;
+    return it->second;
+}
+
+bool PlotDB::removeCached(Plot const& plot) {
+    auto it = mPlots.find(hash(plot));
+    if (it == mPlots.end()) return false;
+    mPlots.erase(it);
+    return true;
+}
+bool PlotDB::removeCached(PlotShare const& share) {
+    auto it = mPlotShares.find(hash(share));
+    if (it == mPlotShares.end()) return false;
+    mPlotShares.erase(it);
+    return true;
+}
+bool PlotDB::removeCached(UUID const& uuid) {
+    auto it = mAdmins.find(uuid);
+    if (it == mAdmins.end()) return false;
+    mAdmins.erase(it);
+    return true;
 }
 
 
