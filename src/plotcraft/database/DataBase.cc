@@ -1,4 +1,9 @@
 #include "DataBase.h"
+#include "fmt/color.h"
+#include "plotcraft/utils/Date.h"
+#include <cstddef>
+#include <stdexcept>
+
 
 namespace plotcraft::database {
 
@@ -139,6 +144,7 @@ bool PlotDBImpl::addAdmin(UUID const& uuid) {
         SQLite::Statement query(*mSQLite, "INSERT INTO PlotAdmins (mUUID) VALUES (?)");
         query.bind(1, uuid.asString());
         query.exec();
+        PlotDB::getInstance().cache(uuid); // cache
         return true;
     }
     HandleSQLiteExceptionAndReturn(false);
@@ -149,6 +155,7 @@ bool PlotDBImpl::removeAdmin(UUID const& uuid) {
         SQLite::Statement query(*mSQLite, "DELETE FROM PlotAdmins WHERE mUUID = ?");
         query.bind(1, uuid.asString());
         query.exec();
+        PlotDB::getInstance().removeCached(uuid); // cache
         return true;
     }
     HandleSQLiteExceptionAndReturn(false);
@@ -186,6 +193,7 @@ bool PlotDBImpl::addPlot(PlotPos& pos, UUID const& uid, string const& name) {
         query.bind(4, pos.x);
         query.bind(5, pos.z);
         query.exec();
+        PlotDB::getInstance().cache(Plot{pos.toString(), name, uid, pos.x, pos.z}); // cache
         return true;
     }
     HandleSQLiteExceptionAndReturn(false);
@@ -195,6 +203,9 @@ bool PlotDBImpl::removePlot(PlotID const& pid) {
         SQLite::Statement query(*mSQLite, "DELETE FROM Plots WHERE mPlotID = ?");
         query.bind(1, pid);
         query.exec();
+        // cache
+        auto& db = PlotDB::getInstance();
+        db.removeCached(db.hash(pid), PlotDB::CacheType::Plot);
         return true;
     }
     HandleSQLiteExceptionAndReturn(false);
@@ -205,6 +216,7 @@ bool PlotDBImpl::updatePlotOwner(PlotID const& pid, UUID const& newOwner) {
         query.bind(1, newOwner.asString());
         query.bind(2, pid);
         query.exec();
+        PlotDB::getInstance().updateCachedPlotOwner(pid, newOwner); // cache
         return true;
     }
     HandleSQLiteExceptionAndReturn(false);
@@ -216,6 +228,7 @@ bool PlotDBImpl::updatePlotName(PlotID const& pid, string const& newName) {
         query.bind(1, newName);
         query.bind(2, pid);
         query.exec();
+        PlotDB::getInstance().updateCachedPlotName(pid, newName); // cache
         return true;
     }
     HandleSQLiteExceptionAndReturn(false);
@@ -231,6 +244,7 @@ std::optional<Plot> PlotDBImpl::getPlot(PlotID const& id) {
         plot.mPlotOwner = UUID::fromString(query.getColumn("mPlotOwner").getText());
         plot.mPlotX     = query.getColumn("mPlotX").getInt();
         plot.mPlotZ     = query.getColumn("mPlotZ").getInt();
+        PlotDB::getInstance().cache(plot); // cache
         return plot;
     }
     return std::nullopt;
@@ -247,6 +261,7 @@ Plots PlotDBImpl::getPlots(UUID const& uid) {
         plot.mPlotOwner = UUID::fromString(query.getColumn("mPlotOwner").getText());
         plot.mPlotX     = query.getColumn("mPlotX").getInt();
         plot.mPlotZ     = query.getColumn("mPlotZ").getInt();
+        PlotDB::getInstance().cache(plot); // cache
         plots.push_back(plot);
     }
     return plots;
@@ -262,6 +277,7 @@ Plots PlotDBImpl::getPlots() {
         plot.mPlotOwner = UUID::fromString(query.getColumn("mPlotOwner").getText());
         plot.mPlotX     = query.getColumn("mPlotX").getInt();
         plot.mPlotZ     = query.getColumn("mPlotZ").getInt();
+        PlotDB::getInstance().cache(plot); // cache
         plots.push_back(plot);
     }
     return plots;
@@ -293,6 +309,7 @@ bool PlotDBImpl::addShareInfo(PlotID const& id, UUID const& targetPlayer) {
         query.bind(1, id);
         query.bind(2, targetPlayer.asString());
         query.exec();
+        PlotDB::getInstance().cache(PlotShare{id, targetPlayer, plo::utils::Date{}.toString()}); // cache
         return true;
     }
     HandleSQLiteExceptionAndReturn(false);
@@ -303,6 +320,7 @@ bool PlotDBImpl::removeSharedInfo(PlotID const& id, UUID const& uid) {
         query.bind(1, id);
         query.bind(2, uid.asString());
         query.exec();
+        PlotDB::getInstance().removeCached(PlotShare{id, uid, ""}); // cache
         return true;
     }
     HandleSQLiteExceptionAndReturn(false);
@@ -312,6 +330,7 @@ bool PlotDBImpl::resetPlotShareInfo(PlotID const& id) {
         SQLite::Statement query(*mSQLite, "DELETE FROM PlotShares WHERE mPlotID = ?");
         query.bind(1, id);
         query.exec();
+        PlotDB::getInstance().resetCache(PlotDB::CacheType::PlotShare); // cache (因为key是player + id，无法精确匹配)
         return true;
     }
     HandleSQLiteExceptionAndReturn(false);
@@ -325,6 +344,7 @@ std::optional<PlotShare> PlotDBImpl::getSharedPlot(PlotID const& id, UUID const&
         share.mPlotID       = query.getColumn("mPlotID").getText();
         share.mSharedPlayer = UUID::fromString(query.getColumn("mSharedPlayer").getText());
         share.mSharedTime   = query.getColumn("mSharedTime").getText();
+        PlotDB::getInstance().cache(share); // cache
         return share;
     }
     return std::nullopt;
@@ -338,6 +358,7 @@ PlotShares PlotDBImpl::getSharedPlots(PlotID const& id) {
         share.mPlotID       = query.getColumn("mPlotID").getText();
         share.mSharedPlayer = UUID::fromString(query.getColumn("mSharedPlayer").getText());
         share.mSharedTime   = query.getColumn("mSharedTime").getText();
+        PlotDB::getInstance().cache(share); // cache
         shares.push_back(share);
     }
     return shares;
@@ -351,6 +372,7 @@ PlotShares PlotDBImpl::getSharedPlots(UUID const& uid) {
         share.mPlotID       = query.getColumn("mPlotID").getText();
         share.mSharedPlayer = UUID::fromString(query.getColumn("mSharedPlayer").getText());
         share.mSharedTime   = query.getColumn("mSharedTime").getText();
+        PlotDB::getInstance().cache(share); // cache
         shares.push_back(share);
     }
     return shares;
@@ -364,6 +386,7 @@ PlotShares PlotDBImpl::getSharedPlots() {
         share.mPlotID       = query.getColumn("mPlotID").getText();
         share.mSharedPlayer = UUID::fromString(query.getColumn("mSharedPlayer").getText());
         share.mSharedTime   = query.getColumn("mSharedTime").getText();
+        PlotDB::getInstance().cache(share); // cache
         shares.push_back(share);
     }
     return shares;
@@ -666,6 +689,7 @@ size_t PlotDB::hash(Plot const& plot) { return std::hash<string>()(plot.mPlotID)
 size_t PlotDB::hash(PlotShare const& share) {
     return std::hash<string>()(share.mPlotID + share.mSharedPlayer.asString());
 }
+size_t PlotDB::hash(PlotID const& pid) { return std::hash<string>()(pid); }
 
 // 缓存
 bool PlotDB::cache(Plot const& plot) {
@@ -680,8 +704,29 @@ bool PlotDB::cache(UUID const& uuid) {
     mAdmins[uuid] = true; // copy
     return true;
 }
+bool PlotDB::cache(size_t const& key, CacheType type, DynamicCache const& data) {
+    switch (type) {
+    case CacheType::Plot:
+        mPlots[key] = std::get<Plot>(data); // copy
+        break;
+    case CacheType::PlotShare:
+        mPlotShares[key] = std::get<PlotShare>(data); // copy
+        break;
+    case CacheType::Admin:
+        mAdmins[key] = std::get<bool>(data); // copy
+        break;
+    default:
+        my_plugin::MyPlugin::getInstance().getSelf().getLogger().error(
+            "Fail in {}, Invalid cache type: {}",
+            __FUNCTION__,
+            static_cast<int>(type)
+        );
+        return false;
+    }
+    return true;
+}
 
-bool PlotDB::resetCache(CacheType type = CacheType::All) {
+bool PlotDB::resetCache(CacheType type) {
     switch (type) {
     case CacheType::Plot:
         mPlots.clear();
@@ -704,6 +749,23 @@ bool PlotDB::resetCache(CacheType type = CacheType::All) {
 bool PlotDB::hasCached(Plot const& plot) { return mPlots.find(hash(plot)) != mPlots.end(); }
 bool PlotDB::hasCached(PlotShare const& share) { return mPlotShares.find(hash(share)) != mPlotShares.end(); }
 bool PlotDB::hasCached(UUID const& uuid) { return mAdmins.find(uuid) != mAdmins.end(); }
+bool PlotDB::hasCached(size_t const& key, CacheType type) {
+    switch (type) {
+    case CacheType::Plot:
+        return mPlots.find(key) != mPlots.end();
+    case CacheType::PlotShare:
+        return mPlotShares.find(key) != mPlotShares.end();
+    case CacheType::Admin:
+        return mAdmins.find(key) != mAdmins.end();
+    default:
+        my_plugin::MyPlugin::getInstance().getSelf().getLogger().error(
+            "Fail in {}, Invalid cache type: {}",
+            __FUNCTION__,
+            static_cast<int>(type)
+        );
+        return false;
+    }
+}
 
 std::optional<Plot> PlotDB::getCached(Plot const& plot) {
     auto it = mPlots.find(hash(plot));
@@ -719,6 +781,34 @@ std::optional<bool> PlotDB::getCached(UUID const& uuid) {
     auto it = mAdmins.find(uuid);
     if (it == mAdmins.end()) return std::nullopt;
     return it->second;
+}
+std::optional<PlotDB::DynamicCache> PlotDB::getCached(size_t const& key, CacheType type) {
+    DynamicCache val;
+    switch (type) {
+    case CacheType::Plot: {
+        auto it = mPlots.find(key);
+        if (it == mPlots.end()) return std::nullopt;
+        val = it->second;
+    } break;
+    case CacheType::PlotShare: {
+        auto it = mPlotShares.find(key);
+        if (it == mPlotShares.end()) return std::nullopt;
+        val = it->second;
+    } break;
+    case CacheType::Admin: {
+        auto it = mAdmins.find(key);
+        if (it == mAdmins.end()) return std::nullopt;
+        val = it->second;
+    } break;
+    default:
+        my_plugin::MyPlugin::getInstance().getSelf().getLogger().error(
+            "Fail in {}, Invalid cache type: {}",
+            __FUNCTION__,
+            static_cast<int>(type)
+        );
+        return std::nullopt;
+    }
+    return val;
 }
 
 bool PlotDB::removeCached(Plot const& plot) {
@@ -737,6 +827,42 @@ bool PlotDB::removeCached(UUID const& uuid) {
     auto it = mAdmins.find(uuid);
     if (it == mAdmins.end()) return false;
     mAdmins.erase(it);
+    return true;
+}
+bool PlotDB::removeCached(size_t const& key, CacheType type) {
+    switch (type) {
+    case CacheType::Plot:
+        mPlots.erase(key);
+        break;
+    case CacheType::PlotShare:
+        mPlotShares.erase(key);
+        break;
+    case CacheType::Admin:
+        mAdmins.erase(key);
+        break;
+    default:
+        my_plugin::MyPlugin::getInstance().getSelf().getLogger().error(
+            "Fail in {}, Invalid cache type: {}",
+            __FUNCTION__,
+            static_cast<int>(type)
+        );
+        return false;
+    }
+    return true;
+}
+
+
+// update cache api
+bool PlotDB::updateCachedPlotName(PlotID const& pid, string const& newName) {
+    auto it = mPlots.find(hash(pid));
+    if (it == mPlots.end()) return false;
+    it->second.mPlotName = string(newName);
+    return true;
+}
+bool PlotDB::updateCachedPlotOwner(PlotID const& pid, UUID const& newOwner) {
+    auto it = mPlots.find(hash(pid));
+    if (it == mPlots.end()) return false;
+    it->second.mPlotOwner = UUID(newOwner);
     return true;
 }
 

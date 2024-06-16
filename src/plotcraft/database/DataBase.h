@@ -13,6 +13,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <variant>
 
 
 using string = std::string;
@@ -187,12 +188,12 @@ public:
 // Class: PlotDB
 class PlotDB {
 private:
-    // 三张高频表的缓存
-    std::unordered_map<size_t, Plot>      mPlots;      // 缓存地皮信息
-    std::unordered_map<size_t, PlotShare> mPlotShares; // 缓存共享信息
-    std::unordered_map<UUID, bool>        mAdmins;     // 缓存管理员信息
+    // 高频表的缓存
+    std::unordered_map<size_t, Plot>      mPlots;      // 缓存地皮信息 key: hash(PlotID)
+    std::unordered_map<size_t, PlotShare> mPlotShares; // 缓存共享信息 key: hash(PlotID + SharedPlayer)
+    std::unordered_map<UUID, bool>        mAdmins;     // 缓存管理员信息 key: UUID
 
-    std::unique_ptr<PlotDBImpl> mImpl; // 数据库操作实现
+    std::unique_ptr<PlotDBImpl> mImpl; // 数据库实例
 
     // 禁止拷贝构造函数
     PlotDB()                         = default;
@@ -209,12 +210,9 @@ public:
 
     size_t hash(Plot const& plot);
     size_t hash(PlotShare const& share);
+    size_t hash(PlotID const& pid);
 
-    // 缓存
-    bool cache(Plot const& plot);
-    bool cache(PlotShare const& share);
-    bool cache(UUID const& uuid);
-
+    // Cache API
     enum class CacheType {
         All,
         Plot,
@@ -224,17 +222,31 @@ public:
 
     bool resetCache(CacheType type = CacheType::All);
 
+    using DynamicCache = std::variant<Plot, PlotShare, bool>;
+
+    bool cache(Plot const& plot);
+    bool cache(PlotShare const& share);
+    bool cache(UUID const& uuid);
+    bool cache(size_t const& key, CacheType type, DynamicCache const& data);
+
     bool hasCached(Plot const& plot);
     bool hasCached(PlotShare const& share);
     bool hasCached(UUID const& uuid);
+    bool hasCached(size_t const& key, CacheType type);
 
-    std::optional<Plot>      getCached(Plot const& plot);
-    std::optional<PlotShare> getCached(PlotShare const& share);
-    std::optional<bool>      getCached(UUID const& uuid);
+    std::optional<Plot>         getCached(Plot const& plot);
+    std::optional<PlotShare>    getCached(PlotShare const& share);
+    std::optional<bool>         getCached(UUID const& uuid);
+    std::optional<DynamicCache> getCached(size_t const& key, CacheType type);
 
     bool removeCached(Plot const& plot);
     bool removeCached(PlotShare const& share);
     bool removeCached(UUID const& uuid);
+    bool removeCached(size_t const& key, CacheType type);
+
+    // 部分缓存更新方法
+    bool updateCachedPlotName(PlotID const& pid, string const& newName);
+    bool updateCachedPlotOwner(PlotID const& pid, UUID const& newOwner);
 };
 
 } // namespace plotcraft::database
