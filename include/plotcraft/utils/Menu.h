@@ -2,6 +2,7 @@
 #include "mc/world/actor/player/Player.h"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"
+#include "plotcraft/Macro.h"
 #include <functional>
 #include <memory>
 #include <string>
@@ -29,15 +30,15 @@ struct Menu {
     string                  content = "";
     std::vector<ButtonItem> buttons = {};
 
-    void                         sendTo(Player& player);
-    static std::unique_ptr<Menu> fromJSON(const json& json);
-    static std::unique_ptr<Menu> fromJsonFile(const string path);
-    static void                  fromJsonFile(Player& player);
+    PLAPI void                         sendTo(Player& player);
+    PLAPI static std::unique_ptr<Menu> fromJSON(const json& json);
+    PLAPI static std::unique_ptr<Menu> fromJsonFile(const string path);
+    PLAPI static void                  fromJsonFile(Player& player);
 
     // static members
-    static path                                                     rootDir;
-    static std::unordered_map<string, std::function<void(Player&)>> functions;
-    static bool                                                     hasFunction(const string name);
+    PLAPI static path                                                     rootDir;
+    PLAPI static std::unordered_map<string, std::function<void(Player&)>> functions;
+    PLAPI static bool                                                     hasFunction(const string name);
 };
 
 } // namespace plo::utils

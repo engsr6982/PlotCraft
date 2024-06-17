@@ -39,6 +39,7 @@
 #include "mc/world/level/block/actor/BlockActor.h"
 #include "mc/world/level/chunk/LevelChunk.h"
 #include "mc/world/level/dimension/Dimension.h"
+#include "plotcraft/Macro.h"
 #include <ll/api/service/Bedrock.h>
 #include <ll/api/service/ServerInfo.h>
 #include <ll/api/service/Service.h>
@@ -58,15 +59,15 @@ using string = std::string;
 
 namespace plo::mc {
 
-inline Block const& getBlock(BlockPos& bp, int dimid) {
+PLAPI inline Block const& getBlock(BlockPos& bp, int dimid) {
     return ll::service::getLevel()->getDimension(dimid)->getBlockSourceFromMainChunkSource().getBlock(bp);
 }
-inline Block const& getBlock(int y, BlockPos bp, int dimid) {
+PLAPI inline Block const& getBlock(int y, BlockPos bp, int dimid) {
     bp.y = y;
     return getBlock(bp, dimid);
 }
 
-inline void executeCommand(const string& cmd, Player* player = nullptr) {
+PLAPI inline void executeCommand(const string& cmd, Player* player = nullptr) {
     if (player) {
         // player
         CommandContext ctx = CommandContext(cmd, std::make_unique<PlayerCommandOrigin>(PlayerCommandOrigin(*player)));
@@ -85,7 +86,7 @@ inline void executeCommand(const string& cmd, Player* player = nullptr) {
         ll::service::getMinecraft()->getCommands().executeCommand(ctx);
     }
 }
-inline std::pair<bool, string> executeCommandEx(const string& cmd) {
+PLAPI inline std::pair<bool, string> executeCommandEx(const string& cmd) {
     std::pair<bool, std::string> result;
     auto                         origin =
         ServerCommandOrigin("Server", ll::service::getLevel()->asServer(), CommandPermissionLevel::Internal, 0);

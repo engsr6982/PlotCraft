@@ -1,6 +1,7 @@
 #pragma once
 #include "ll/api/event/Event.h"
 #include "mc/world/actor/player/Player.h"
+#include "plotcraft/Macro.h"
 #include "plotcraft/PlotPos.h"
 
 
@@ -13,10 +14,10 @@ private:
     Player* mPlayer; // 玩家指针
 
 public:
-    PlayerEnterPlot(const PlotPos& pos, Player* player);
+    PLAPI PlayerEnterPlot(const PlotPos& pos, Player* player);
 
-    Player* getPlayer() const;
-    PlotPos getPos() const;
+    PLAPI Player* getPlayer() const;
+    PLAPI PlotPos getPos() const;
 };
 
 
@@ -26,10 +27,10 @@ private:
     Player* mPlayer; // 玩家指针
 
 public:
-    PlayerLeavePlot(const PlotPos& pos, Player* player);
+    PLAPI PlayerLeavePlot(const PlotPos& pos, Player* player);
 
-    Player* getPlayer() const;
-    PlotPos getPos() const;
+    PLAPI Player* getPlayer() const;
+    PLAPI PlotPos getPos() const;
 };
 
 

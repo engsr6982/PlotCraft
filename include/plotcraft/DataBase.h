@@ -4,6 +4,7 @@
 #include "ll/api/data/KeyValueDB.h"
 #include "mc/deps/core/mce/UUID.h"
 #include "mc/world/actor/player/Player.h"
+#include "plotcraft/Macro.h"
 #include "plotcraft/PlotPos.h"
 #include <cstddef>
 #include <memory>
@@ -35,16 +36,16 @@ private:
     PlayerNameDB& operator=(const PlayerNameDB&) = delete;
 
 public:
-    static PlayerNameDB& getInstance();
-    bool                 initPlayerNameDB();
+    PLAPI static PlayerNameDB& getInstance();
+    PLAPI bool                 initPlayerNameDB();
 
-    bool hasPlayer(string const& realName);
-    bool hasPlayer(mce::UUID const& uuid);
+    PLAPI bool hasPlayer(string const& realName);
+    PLAPI bool hasPlayer(mce::UUID const& uuid);
 
-    std::optional<string>    getPlayerName(mce::UUID const& uuid);
-    std::optional<mce::UUID> getPlayerUUID(string const& realName);
+    PLAPI std::optional<string> getPlayerName(mce::UUID const& uuid);
+    PLAPI std::optional<mce::UUID> getPlayerUUID(string const& realName);
 
-    bool insertPlayer(Player& player);
+    PLAPI bool insertPlayer(Player& player);
 };
 
 
@@ -102,8 +103,8 @@ private:
     bool                              isInit = false;
 
 
-    void initTables();
-    bool initSQLite();
+    PLAPI void initTables();
+    PLAPI bool initSQLite();
 
 public:
     PlotDBImpl(); // 构造函数(自动Init)
@@ -114,71 +115,71 @@ public:
 
 
     // PlotAdmins
-    bool              hasAdmin(UUID const& uuid);
-    bool              isAdmin(UUID const& uuid);
-    bool              addAdmin(UUID const& uuid);
-    bool              removeAdmin(UUID const& uuid);
-    std::vector<UUID> getAdmins();
+    PLAPI bool hasAdmin(UUID const& uuid);
+    PLAPI bool isAdmin(UUID const& uuid);
+    PLAPI bool addAdmin(UUID const& uuid);
+    PLAPI bool removeAdmin(UUID const& uuid);
+    PLAPI std::vector<UUID> getAdmins();
 
     // Plots
-    bool hasPlot(PlotID const& pid);
-    bool isPlotOwner(PlotID const& pid, UUID const& uid);
-    bool addPlot(PlotPos& pos, UUID const& uid, string const& name);
-    bool removePlot(PlotID const& pid);
-    bool updatePlotOwner(PlotID const& pid, UUID const& newOwner);
-    bool updatePlotName(PlotID const& pid, string const& newName);
+    PLAPI bool hasPlot(PlotID const& pid);
+    PLAPI bool isPlotOwner(PlotID const& pid, UUID const& uid);
+    PLAPI bool addPlot(PlotPos& pos, UUID const& uid, string const& name);
+    PLAPI bool removePlot(PlotID const& pid);
+    PLAPI bool updatePlotOwner(PlotID const& pid, UUID const& newOwner);
+    PLAPI bool updatePlotName(PlotID const& pid, string const& newName);
 
-    std::optional<Plot> getPlot(PlotID const& id);
+    PLAPI std::optional<Plot> getPlot(PlotID const& id);
 
-    Plots getPlots(UUID const& uid);
-    Plots getPlots();
+    PLAPI Plots getPlots(UUID const& uid);
+    PLAPI Plots getPlots();
 
 
     // PlotShares
-    bool hasPlotShared(PlotID const& id);
-    bool isPlotSharedPlayer(PlotID const& id, UUID const& uid);
-    bool addShareInfo(PlotID const& id, UUID const& targetPlayer);
-    bool removeSharedInfo(PlotID const& id, UUID const& uid);
-    bool resetPlotShareInfo(PlotID const& id); // 重置共享信息
+    PLAPI bool hasPlotShared(PlotID const& id);
+    PLAPI bool isPlotSharedPlayer(PlotID const& id, UUID const& uid);
+    PLAPI bool addShareInfo(PlotID const& id, UUID const& targetPlayer);
+    PLAPI bool removeSharedInfo(PlotID const& id, UUID const& uid);
+    PLAPI bool resetPlotShareInfo(PlotID const& id); // 重置共享信息
 
-    std::optional<PlotShare> getSharedPlot(PlotID const& id, UUID const& uid);
+    PLAPI std::optional<PlotShare> getSharedPlot(PlotID const& id, UUID const& uid);
 
-    PlotShares getSharedPlots(PlotID const& id);
-    PlotShares getSharedPlots(UUID const& uid);
-    PlotShares getSharedPlots();
+    PLAPI PlotShares getSharedPlots(PlotID const& id);
+    PLAPI PlotShares getSharedPlots(UUID const& uid);
+    PLAPI PlotShares getSharedPlots();
 
 
     // PlotCommenets
-    bool hasComment(CommentID const& cid);
-    bool isCommentPlayer(CommentID const& cid, UUID const& uid); // 判断某个评论是否是某个玩家的
-    bool addComment(PlotID const& pid, UUID const& uid, string const& content);
-    bool removeComment(CommentID const& cid);                        // 删除某个评论
-    bool removeComments(PlotID const& pid);                          // 删除某个地皮的所有评论
-    bool removeComments(UUID const& uid);                            // 删除某个玩家的所有评论
-    bool updateComment(CommentID const& cid, string const& content); // 更新某个评论的内容
+    PLAPI bool hasComment(CommentID const& cid);
+    PLAPI bool isCommentPlayer(CommentID const& cid, UUID const& uid); // 判断某个评论是否是某个玩家的
+    PLAPI bool addComment(PlotID const& pid, UUID const& uid, string const& content);
+    PLAPI bool removeComment(CommentID const& cid);                        // 删除某个评论
+    PLAPI bool removeComments(PlotID const& pid);                          // 删除某个地皮的所有评论
+    PLAPI bool removeComments(UUID const& uid);                            // 删除某个玩家的所有评论
+    PLAPI bool updateComment(CommentID const& cid, string const& content); // 更新某个评论的内容
 
-    std::optional<PlotComment> getComment(CommentID const& cid);
+    PLAPI std::optional<PlotComment> getComment(CommentID const& cid);
 
-    PlotCommenets getComments(PlotID const& pid, UUID const& uid);
-    PlotCommenets getComments(PlotID const& pid);
-    PlotCommenets getComments(UUID const& uid);
-    PlotCommenets getComments();
+    PLAPI PlotCommenets getComments(PlotID const& pid, UUID const& uid);
+    PLAPI PlotCommenets getComments(PlotID const& pid);
+    PLAPI PlotCommenets getComments(UUID const& uid);
+    PLAPI PlotCommenets getComments();
 
 
     // PlotSales
-    bool hasSale(PlotID const& pid);
-    bool addSale(PlotID const& pid, int price);
-    bool removeSale(PlotID const& pid);
-    bool updateSale(PlotID const& pid, int price);
+    PLAPI bool hasSale(PlotID const& pid);
+    PLAPI bool addSale(PlotID const& pid, int price);
+    PLAPI bool removeSale(PlotID const& pid);
+    PLAPI bool updateSale(PlotID const& pid, int price);
 
-    std::optional<PlotSale> getSale(PlotID const& pid);
-    PlotSales               getSales();
+    PLAPI std::optional<PlotSale> getSale(PlotID const& pid);
+    PLAPI PlotSales               getSales();
 
     // 从出售中购买地皮
-    bool buyPlotFromSale(PlotID const& pid, UUID const& buyer, bool resetShares = true);
+    PLAPI bool buyPlotFromSale(PlotID const& pid, UUID const& buyer, bool resetShares = true);
 
     // 获取玩家权限等级
-    PlotPermission getPlayerPermission(UUID const& uid, PlotID const& pid, bool ignoreAdmin = false);
+    PLAPI PlotPermission getPlayerPermission(UUID const& uid, PlotID const& pid, bool ignoreAdmin = false);
 };
 
 
@@ -186,14 +187,12 @@ public:
 using DynamicCache = std::variant<Plot, PlotShare, bool>;
 class PlotDB {
 private:
-    // 高频表的缓存
     std::unordered_map<size_t, Plot>      mPlots;      // 缓存地皮信息 key: hash(PlotID)
     std::unordered_map<size_t, PlotShare> mPlotShares; // 缓存共享信息 key: hash(PlotID + SharedPlayer(UUID))
     std::unordered_map<UUID, bool>        mAdmins;     // 缓存管理员信息 key: UUID
 
     std::unique_ptr<PlotDBImpl> mImpl; // 数据库实例
 
-    // 禁止拷贝构造函数
     PlotDB()                         = default;
     PlotDB(const PlotDB&)            = delete;
     PlotDB& operator=(const PlotDB&) = delete;
@@ -206,40 +205,40 @@ public:
         Admin,
     };
 
-    PlotDBImpl&    getImpl();
-    static PlotDB& getInstance();
+    PLAPI PlotDBImpl&    getImpl();
+    PLAPI static PlotDB& getInstance();
 
-    bool load();
-    bool initCache(CacheType type = CacheType::All);
-    bool resetCache(CacheType type = CacheType::All);
+    PLAPI bool load();
+    PLAPI bool initCache(CacheType type = CacheType::All);
+    PLAPI bool resetCache(CacheType type = CacheType::All);
 
-    size_t hash(PlotID const& pid);                  // Plot
-    size_t hash(PlotID const& pid, UUID const& uid); // PlotShare
+    PLAPI size_t hash(PlotID const& pid);                  // Plot
+    PLAPI size_t hash(PlotID const& pid, UUID const& uid); // PlotShare
 
-    bool cache(Plot const& plot);                                            // Plot
-    bool cache(PlotShare const& share);                                      // PlotShare
-    bool cache(UUID const& uuid);                                            // PlotAdmin
-    bool cache(size_t const& key, CacheType type, DynamicCache const& data); // Custom
+    PLAPI bool cache(Plot const& plot);                                            // Plot
+    PLAPI bool cache(PlotShare const& share);                                      // PlotShare
+    PLAPI bool cache(UUID const& uuid);                                            // PlotAdmin
+    PLAPI bool cache(size_t const& key, CacheType type, DynamicCache const& data); // Custom
 
-    bool hasCached(PlotID const& pid);                  // Plot
-    bool hasCached(PlotID const& pid, UUID const& uid); // PlotShare
-    bool hasCached(UUID const& uuid);                   // PlotAdmin
-    bool hasCached(size_t const& key, CacheType type);  // Custom
+    PLAPI bool hasCached(PlotID const& pid);                  // Plot
+    PLAPI bool hasCached(PlotID const& pid, UUID const& uid); // PlotShare
+    PLAPI bool hasCached(UUID const& uuid);                   // PlotAdmin
+    PLAPI bool hasCached(size_t const& key, CacheType type);  // Custom
 
-    std::optional<Plot>         getCached(PlotID const& id);                  // Plot
-    std::optional<PlotShare>    getCached(PlotID const& id, UUID const& uid); // PlotShare
-    std::optional<bool>         getCached(UUID const& uuid);                  // PlotAdmin
-    std::optional<DynamicCache> getCached(size_t const& key, CacheType type); // Custom
+    PLAPI std::optional<Plot> getCached(PlotID const& id);                          // Plot
+    PLAPI std::optional<PlotShare> getCached(PlotID const& id, UUID const& uid);    // PlotShare
+    PLAPI std::optional<bool> getCached(UUID const& uuid);                          // PlotAdmin
+    PLAPI std::optional<DynamicCache> getCached(size_t const& key, CacheType type); // Custom
 
-    bool removeCached(PlotID const& pid);                  // Plot
-    bool removeCached(PlotID const& pid, UUID const& uid); // PlotShare
-    bool removeCached(UUID const& uuid);                   // PlotAdmin
-    bool removeCached(size_t const& key, CacheType type);  // Custom
+    PLAPI bool removeCached(PlotID const& pid);                  // Plot
+    PLAPI bool removeCached(PlotID const& pid, UUID const& uid); // PlotShare
+    PLAPI bool removeCached(UUID const& uuid);                   // PlotAdmin
+    PLAPI bool removeCached(size_t const& key, CacheType type);  // Custom
 
 
-    bool updateCachedPlotName(PlotID const& pid, string const& newName); // Plot
-    bool updateCachedPlotOwner(PlotID const& pid, UUID const& newOwner); // Plot
-    PlotPermission
+    PLAPI bool updateCachedPlotName(PlotID const& pid, string const& newName); // Plot
+    PLAPI bool updateCachedPlotOwner(PlotID const& pid, UUID const& newOwner); // Plot
+    PLAPI PlotPermission
     getPermission(UUID const& uuid, PlotID const& pid, bool ignoreAdmin = false, bool ignoreCache = false);
 };
 

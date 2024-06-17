@@ -4,6 +4,7 @@
 #include "ll/api/service/Bedrock.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/level/Level.h"
+#include "plotcraft/Macro.h"
 #include <mc/server/commands/CommandOutput.h>
 #include <stdexcept>
 #include <string>
@@ -26,7 +27,7 @@ inline static std::unordered_map<Level, string> Color = {
 };
 
 template <typename... Args>
-inline string format(const string& fmt, Args... args) {
+PLAPI inline string format(const string& fmt, Args... args) {
     try {
         return fmt::vformat(fmt, fmt::make_format_args(args...));
     } catch (...) {
@@ -36,11 +37,11 @@ inline string format(const string& fmt, Args... args) {
 
 // Template function sendText, usage: sendText() or sendText<MsgLevel::Success>().
 template <Level type = Level::Normal, typename... Args>
-inline void sendText(Player& player, const string& fmt, Args&&... args) {
+PLAPI inline void sendText(Player& player, const string& fmt, Args&&... args) {
     player.sendMessage(format(PLUGIN_TITLE + Color[type] + fmt, args...));
 }
 template <Level type = Level::Normal, typename... Args>
-inline void sendText(CommandOutput& output, const string& fmt, Args&&... args) {
+PLAPI inline void sendText(CommandOutput& output, const string& fmt, Args&&... args) {
     if constexpr (type == Level::Error || type == Level::Fatal) {
         output.error(format(PLUGIN_TITLE + Color[type] + fmt, args...));
     } else {
@@ -48,7 +49,7 @@ inline void sendText(CommandOutput& output, const string& fmt, Args&&... args) {
     }
 }
 template <Level type = Level::Normal, typename... Args>
-inline void sendText(Player* player, const string& fmt, Args&&... args) {
+PLAPI inline void sendText(Player* player, const string& fmt, Args&&... args) {
     if (player) {
         return sendText<type>(*player, fmt, args...);
     } else {
@@ -56,7 +57,7 @@ inline void sendText(Player* player, const string& fmt, Args&&... args) {
     }
 }
 template <Level type = Level::Normal, typename... Args>
-inline void sendText(const string& realName, const string& fmt, Args&&... args) {
+PLAPI inline void sendText(const string& realName, const string& fmt, Args&&... args) {
     auto level = ll::service::getLevel();
     if (level.has_value()) {
         return sendText<type>(level->getPlayer(realName), fmt, args...);
@@ -65,7 +66,7 @@ inline void sendText(const string& realName, const string& fmt, Args&&... args) 
     }
 }
 template <Level type = Level::Normal, typename... Args>
-inline void sendText(ll::Logger& logger, const string& fmt, Args&&... args) {
+PLAPI inline void sendText(ll::Logger& logger, const string& fmt, Args&&... args) {
     if constexpr (type == Level::Error) {
         logger.error(format(PLUGIN_TITLE + Color[type] + fmt, args...));
     } else if constexpr (type == Level::Fatal) {

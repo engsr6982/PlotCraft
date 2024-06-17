@@ -12,30 +12,30 @@ public:
     Vec3 maxPos;         // 地皮大端坐标
     bool mIsValid{true}; // 地皮是否有效
 
-    PLOAPI PlotPos();
+    PLAPI PlotPos();
 
-    PLOAPI PlotPos(int x, int z);
+    PLAPI PlotPos(int x, int z);
 
-    PLOAPI PlotPos(const Vec3& vec3);
+    PLAPI PlotPos(const Vec3& vec3);
 
     // 地皮是否有效(无效则代表该坐标没有对应的地皮)
-    PLOAPI bool isValid();
+    PLAPI bool isValid();
 
-    PLOAPI Vec3 getMin();
+    PLAPI Vec3 getMin();
 
-    PLOAPI Vec3 getMax();
+    PLAPI Vec3 getMax();
 
-    PLOAPI string toString();
+    PLAPI string toString();
 
-    PLOAPI string toDebug();
+    PLAPI string toDebug();
 
-    PLOAPI bool isPosInPlot(const Vec3& vec3);
+    PLAPI bool isPosInPlot(const Vec3& vec3);
 
-    PLOAPI std::vector<PlotPos> getAdjacentPlots();
+    PLAPI std::vector<PlotPos> getAdjacentPlots();
 
     // 重载比较运算符
-    PLOAPI bool operator==(const PlotPos& other) const;
-    PLOAPI bool operator!=(const PlotPos& other) const;
+    PLAPI bool operator==(const PlotPos& other) const;
+    PLAPI bool operator!=(const PlotPos& other) const;
 };
 
 

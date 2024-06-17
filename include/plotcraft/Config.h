@@ -1,5 +1,6 @@
 #pragma once
 #include "ll/api/Config.h"
+#include "plotcraft/Macro.h"
 #include "plotcraft/utils/Moneys.h"
 #include <string>
 
@@ -28,8 +29,8 @@ struct _Config {
     } func;
 };
 
-extern _Config cfg;
+PLAPI extern _Config cfg;
 
-void loadConfig();
+PLAPI void loadConfig();
 
 } // namespace plo::config

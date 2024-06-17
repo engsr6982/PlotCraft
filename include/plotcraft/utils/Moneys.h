@@ -3,6 +3,7 @@
 #include "Utils.h"
 #include "mc/deps/core/mce/UUID.h"
 #include "mc/world/actor/player/Player.h"
+#include "plotcraft/Macro.h"
 
 using string = std::string;
 
@@ -22,29 +23,29 @@ private:
     string mScoreName;
 
 public:
-    ScoreBoardMoney(const string& scoreName = "");
+    PLAPI ScoreBoardMoney(const string& scoreName = "");
 
-    void setScoreName(const string& scoreName);
+    PLAPI void setScoreName(const string& scoreName);
 
-    int getScore(Player* player);
-    int getScore(Player& player);
-    int getScore(mce::UUID uuid);
-    int getScore(const string& realName);
+    PLAPI int getScore(Player* player);
+    PLAPI int getScore(Player& player);
+    PLAPI int getScore(mce::UUID uuid);
+    PLAPI int getScore(const string& realName);
 
-    bool setScore(Player* player, int score);
-    bool setScore(Player& player, int score);
-    bool setScore(mce::UUID uuid, int score);
-    bool setScore(const string& realName, int score);
+    PLAPI bool setScore(Player* player, int score);
+    PLAPI bool setScore(Player& player, int score);
+    PLAPI bool setScore(mce::UUID uuid, int score);
+    PLAPI bool setScore(const string& realName, int score);
 
-    bool addScore(Player* player, int score);
-    bool addScore(Player& player, int score);
-    bool addScore(mce::UUID uuid, int score);
-    bool addScore(const string& realName, int score);
+    PLAPI bool addScore(Player* player, int score);
+    PLAPI bool addScore(Player& player, int score);
+    PLAPI bool addScore(mce::UUID uuid, int score);
+    PLAPI bool addScore(const string& realName, int score);
 
-    bool reduceScore(Player* player, int score);
-    bool reduceScore(Player& player, int score);
-    bool reduceScore(mce::UUID uuid, int score);
-    bool reduceScore(const string& realName, int score);
+    PLAPI bool reduceScore(Player* player, int score);
+    PLAPI bool reduceScore(Player& player, int score);
+    PLAPI bool reduceScore(mce::UUID uuid, int score);
+    PLAPI bool reduceScore(const string& realName, int score);
 };
 
 
@@ -56,44 +57,43 @@ private:
     string     mMoneyName;                      // 货币名称
 
     Moneys()                         = default;
-    ~Moneys()                        = default;
     Moneys(const Moneys&)            = delete;
     Moneys& operator=(const Moneys&) = delete;
 
-    void throwUnknownType(Player* player = nullptr);
+    PLAPI void throwUnknownType(Player* player = nullptr);
 
 public:
-    static Moneys& getInstance();
+    PLAPI static Moneys& getInstance();
     // 单例模式，服务器启动后请调用此方法初始化
-    bool updateConfig(MoneysConfig config);
+    PLAPI bool updateConfig(MoneysConfig config);
 
-    long long getMoney(Player& player);
-    long long getMoney(Player* player);
-    long long getMoney(mce::UUID uuid);
-    long long getMoney(const string& realName);
+    PLAPI long long getMoney(Player& player);
+    PLAPI long long getMoney(Player* player);
+    PLAPI long long getMoney(mce::UUID uuid);
+    PLAPI long long getMoney(const string& realName);
 
-    bool setMoney(Player& player, long long money);
-    bool setMoney(Player* player, long long money);
-    bool setMoney(mce::UUID uuid, long long money);
-    bool setMoney(const string& realName, long long money);
+    PLAPI bool setMoney(Player& player, long long money);
+    PLAPI bool setMoney(Player* player, long long money);
+    PLAPI bool setMoney(mce::UUID uuid, long long money);
+    PLAPI bool setMoney(const string& realName, long long money);
 
-    bool addMoney(Player& player, long long money);
-    bool addMoney(Player* player, long long money);
-    bool addMoney(mce::UUID uuid, long long money);
-    bool addMoney(const string& realName, long long money);
+    PLAPI bool addMoney(Player& player, long long money);
+    PLAPI bool addMoney(Player* player, long long money);
+    PLAPI bool addMoney(mce::UUID uuid, long long money);
+    PLAPI bool addMoney(const string& realName, long long money);
 
     // ! 此 API 已封装经济不足提示，无需手动发送
-    bool reduceMoney(Player& player, long long money);
-    bool reduceMoney(Player* player, long long money);
-    bool reduceMoney(mce::UUID uuid, long long money);
-    bool reduceMoney(const string& realName, long long money);
+    PLAPI bool reduceMoney(Player& player, long long money);
+    PLAPI bool reduceMoney(Player* player, long long money);
+    PLAPI bool reduceMoney(mce::UUID uuid, long long money);
+    PLAPI bool reduceMoney(const string& realName, long long money);
 
-    string getMoneySpendTipStr(Player& player, long long money);
-    string getMoneySpendTipStr(Player* player, long long money);
-    string getMoneySpendTipStr(mce::UUID uuid, long long money);
-    string getMoneySpendTipStr(const string& realName, long long money);
+    PLAPI string getMoneySpendTipStr(Player& player, long long money);
+    PLAPI string getMoneySpendTipStr(Player* player, long long money);
+    PLAPI string getMoneySpendTipStr(mce::UUID uuid, long long money);
+    PLAPI string getMoneySpendTipStr(const string& realName, long long money);
 
-    void sendMoneySpendTip(Player& player, long long money); // 发送经济不足提示
+    PLAPI void sendMoneySpendTip(Player& player, long long money); // 发送经济不足提示
 };
 
 } // namespace plo::utils

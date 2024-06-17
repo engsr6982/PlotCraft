@@ -1,4 +1,5 @@
 #pragma once
+#include "plotcraft/Macro.h"
 #include <fmt/format.h>
 #include <iostream>
 #include <ll/api/form/CustomForm.h>
@@ -7,11 +8,12 @@
 #include <string>
 #include <vector>
 
+
 using string = std::string;
 
 namespace plo::utils {
 
-inline string join(const std::vector<string>& vec, const string splitter = ", ") {
+PLAPI inline string join(const std::vector<string>& vec, const string splitter = ", ") {
     if (vec.empty()) return "";
     return std::accumulate(
         std::next(vec.begin()),
@@ -21,7 +23,7 @@ inline string join(const std::vector<string>& vec, const string splitter = ", ")
     );
 }
 
-inline string join(const std::vector<int>& vec, const string splitter = ", ") {
+PLAPI inline string join(const std::vector<int>& vec, const string splitter = ", ") {
     if (vec.empty()) return "";
     return std::accumulate(
         std::next(vec.begin()),
@@ -31,7 +33,7 @@ inline string join(const std::vector<int>& vec, const string splitter = ", ") {
     );
 }
 
-inline string toJson(const std::unordered_map<string, double>& map) {
+PLAPI inline string toJson(const std::unordered_map<string, double>& map) {
     string json = "{";
     for (const auto& pair : map) {
         json += "\"" + pair.first + "\":" + std::to_string(pair.second) + ",";
@@ -40,7 +42,7 @@ inline string toJson(const std::unordered_map<string, double>& map) {
     return json;
 }
 
-inline string toJson(const std::unordered_map<string, int>& map) {
+PLAPI inline string toJson(const std::unordered_map<string, int>& map) {
     string json = "{";
     for (const auto& pair : map) {
         json += "\"" + pair.first + "\":" + std::to_string(pair.second) + ",";
@@ -49,14 +51,14 @@ inline string toJson(const std::unordered_map<string, int>& map) {
     return json;
 }
 
-inline bool some(const std::vector<string>& vec, const string& str) {
+PLAPI inline bool some(const std::vector<string>& vec, const string& str) {
     if (vec.empty()) {
         return false;
     }
     return std::find(vec.begin(), vec.end(), str) != vec.end();
 }
 
-inline void DebugFormPrint(const ll::form::CustomFormResult& dt) {
+PLAPI inline void DebugFormPrint(const ll::form::CustomFormResult& dt) {
 #ifdef DEBUG
     std::cout << "\033[0m\033[1;35m"
               << "======================================================================================"
