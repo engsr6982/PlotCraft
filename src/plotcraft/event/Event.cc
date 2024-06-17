@@ -1,5 +1,6 @@
 #include "Event.h"
 #include "ll/api/event/player/PlayerDestroyBlockEvent.h"
+#include "ll/api/event/player/PlayerPlaceBlockEvent.h"
 #include "mc/_HeaderOutputPredefine.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
@@ -23,10 +24,11 @@ plo::core::PlotPos get(string const& realName) {
 
 
 // Global variables
-ll::schedule::GameTickScheduler mTickScheduler;                   // Tick调度
-ll::event::ListenerPtr          mPlayerJoinEventListener;         // 玩家进入服务器
-ll::event::ListenerPtr          mSpawningMobEventListener;        // 生物生成
-ll::event::ListenerPtr          mPlayerDestroyBlockEventListener; // 玩家破坏方块
+ll::schedule::GameTickScheduler mTickScheduler;                    // Tick调度
+ll::event::ListenerPtr          mPlayerJoinEventListener;          // 玩家进入服务器
+ll::event::ListenerPtr          mSpawningMobEventListener;         // 生物尝试生成
+ll::event::ListenerPtr          mPlayerDestroyBlockEventListener;  // 玩家尝试破坏方块
+ll::event::ListenerPtr          mPlayerPlaceingBlockEventListener; // 玩家尝试放置方块
 
 namespace plo::event {
 
@@ -152,10 +154,7 @@ bool registerEventListener() {
 
     mPlayerDestroyBlockEventListener =
         bus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([](ll::event::PlayerDestroyBlockEvent& e) {
-            if (e.self().getDimensionId() != getPlotDim()) {
-                e.cancel(); // 被破坏的方块不在地皮世界
-                return true;
-            };
+            if (e.self().getDimensionId() != getPlotDim()) return true; // 被破坏的方块不在地皮世界
             auto pos = e.pos();
             auto pps = core::PlotPos(pos);
 
@@ -178,8 +177,30 @@ bool registerEventListener() {
             return true;
         });
 
+    mPlayerPlaceingBlockEventListener =
+        bus.emplaceListener<ll::event::PlayerPlacingBlockEvent>([](ll::event::PlayerPlacingBlockEvent& e) {
+            if (e.self().getDimensionId() != getPlotDim()) return true;
+            auto pos = e.pos(); // 放置方块的位置
+            auto pps = core::PlotPos(pos);
+
+            using PlotPermission = database::PlotPermission;
+            auto level           = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
+
+#ifdef DEBUG
+            e.self().sendMessage(
+                "[Debug] 放置方块: " + pos.toString() + ", 权限: " + std::to_string(static_cast<int>(level))
+            );
+#endif
+
+            if (pps.isValid()) {
+                if (level == PlotPermission::None) e.cancel(); // 拦截 None
+            } else {
+                if (level != PlotPermission::Admin) e.cancel(); // 拦截非 Admin
+            }
+            return true;
+        });
+
     // TODO:
-    // onPlaceBlock
     // onUseItemOn
     // onAttackBlock
     // onAttackEntity
@@ -213,6 +234,8 @@ bool unRegisterEventListener() {
     auto& bus = ll::event::EventBus::getInstance();
     bus.removeListener(mPlayerJoinEventListener);
     bus.removeListener(mSpawningMobEventListener);
+    bus.removeListener(mPlayerDestroyBlockEventListener);
+    bus.removeListener(mPlayerPlaceingBlockEventListener);
     return true;
 }
 
