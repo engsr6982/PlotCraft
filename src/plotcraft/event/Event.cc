@@ -10,14 +10,14 @@ using ll::chrono_literals::operator""_tick;
 
 // 辅助表，用于实现自定义Event
 namespace pt {
-std::unordered_map<string, plo::core::PlotPos> mIsInPlot; // 玩家是否在地皮中
+std::unordered_map<string, plo::PlotPos> mIsInPlot; // 玩家是否在地皮中
 
 bool has(string const& realName) { return mIsInPlot.find(realName) != mIsInPlot.end(); }
-void set(string realName, plo::core::PlotPos pos) { mIsInPlot[realName] = pos; }
+void set(string realName, plo::PlotPos pos) { mIsInPlot[realName] = pos; }
 
-plo::core::PlotPos get(string const& realName) {
+plo::PlotPos get(string const& realName) {
     auto it = mIsInPlot.find(realName);
-    if (it == mIsInPlot.end()) return plo::core::PlotPos{};
+    if (it == mIsInPlot.end()) return plo::PlotPos{};
     return it->second;
 }
 } // namespace pt
@@ -63,7 +63,7 @@ bool registerEventListener() {
                 输入: /plo 打开地皮菜单
              */
             auto& bus     = ll::event::EventBus::getInstance();
-            auto  plotPos = core::PlotPos(p.getPosition());
+            auto  plotPos = PlotPos(p.getPosition());
             if (plotPos.isValid()) {
                 if (auto _pos = pt::get(p.getRealName()); _pos != plotPos) {
                     // 玩家进入地皮
@@ -156,7 +156,7 @@ bool registerEventListener() {
         bus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([](ll::event::PlayerDestroyBlockEvent& e) {
             if (e.self().getDimensionId() != getPlotDim()) return true; // 被破坏的方块不在地皮世界
             auto pos = e.pos();
-            auto pps = core::PlotPos(pos);
+            auto pps = PlotPos(pos);
 
             using PlotPermission = database::PlotPermission;
             auto level           = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
@@ -181,7 +181,7 @@ bool registerEventListener() {
         bus.emplaceListener<ll::event::PlayerPlacingBlockEvent>([](ll::event::PlayerPlacingBlockEvent& e) {
             if (e.self().getDimensionId() != getPlotDim()) return true;
             auto pos = e.pos(); // 放置方块的位置
-            auto pps = core::PlotPos(pos);
+            auto pps = PlotPos(pos);
 
             using PlotPermission = database::PlotPermission;
             auto level           = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());

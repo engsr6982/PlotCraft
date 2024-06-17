@@ -9,29 +9,27 @@ namespace plo::event {
 
 class PlayerEnterPlot final : public ll::event::Event {
 private:
-    plo::core::PlotPos mPos;    // 地皮坐标
-    Player*            mPlayer; // 玩家指针
+    PlotPos mPos;    // 地皮坐标
+    Player* mPlayer; // 玩家指针
 
 public:
-    PlayerEnterPlot(const plo::core::PlotPos& pos, Player* player);
+    PlayerEnterPlot(const PlotPos& pos, Player* player);
 
     Player* getPlayer() const;
-
-    plo::core::PlotPos getPos() const;
+    PlotPos getPos() const;
 };
 
 
 class PlayerLeavePlot final : public ll::event::Event {
 private:
-    plo::core::PlotPos mPos;    // 地皮坐标
-    Player*            mPlayer; // 玩家指针
+    PlotPos mPos;    // 地皮坐标
+    Player* mPlayer; // 玩家指针
 
 public:
-    PlayerLeavePlot(const plo::core::PlotPos& pos, Player* player);
+    PlayerLeavePlot(const PlotPos& pos, Player* player);
 
     Player* getPlayer() const;
-
-    plo::core::PlotPos getPos() const;
+    PlotPos getPos() const;
 };
 
 

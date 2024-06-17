@@ -1,11 +1,11 @@
-#include "PlotPos.h"
+#include "plotcraft/PlotPos.h"
 #include "fmt/core.h"
 #include "fmt/format.h"
-#include "plotcraft/config/Config.h"
+#include "plotcraft/Config.h"
 #include <cmath>
 
 
-namespace plo::core {
+namespace plo {
 
 /*
     基准点：Vec3{0,0,0}
@@ -82,4 +82,4 @@ bool PlotPos::operator==(const PlotPos& other) const {
 bool PlotPos::operator!=(const PlotPos& other) const { return !(*this == other); }
 
 
-} // namespace plo::core
+} // namespace plo

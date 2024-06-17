@@ -1,8 +1,13 @@
-#include "DataBase.h"
+#include "plotcraft/DataBase.h"
+#include "SQLiteCpp/Exception.h"
+#include "SQLiteCpp/SQLiteCpp.h"
 #include "fmt/color.h"
 #include "plotcraft/utils/Date.h"
+#include "plugin/MyPlugin.h"
 #include <cstddef>
+#include <cstdint>
 #include <stdexcept>
+
 
 
 namespace plo::database {

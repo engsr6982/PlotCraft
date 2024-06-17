@@ -1,7 +1,7 @@
-#include "Menu.h"
-#include "Mc.h"
-#include "Text.h"
+#include "plotcraft/utils/Menu.h"
 #include "ll/api/form/SimpleForm.h"
+#include "plotcraft/utils/Mc.h"
+#include "plotcraft/utils/Text.h"
 #include "plugin/MyPlugin.h"
 #include <functional>
 #include <memory>

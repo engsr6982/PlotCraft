@@ -18,14 +18,15 @@
 #include "mc/world/level/Level.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
-#include "plot/PlayerPlotEvent.h"
-#include "plotcraft/config/Config.h"
-#include "plotcraft/core/PlotPos.h"
-#include "plotcraft/database/DataBase.h"
+#include "plotcraft/Config.h"
+#include "plotcraft/DataBase.h"
+#include "plotcraft/PlotPos.h"
+#include "plotcraft/event/PlayerPlotEvent.h"
 #include "plugin/MyPlugin.h"
 #include <string>
 #include <thread>
 #include <unordered_map>
+
 
 namespace plo::event {
 

@@ -1,5 +1,5 @@
 #include "PlotGenerator.h"
-#include "plotcraft/config/Config.h"
+#include "plotcraft/Config.h"
 
 #include "fmt/format.h"
 #include "mc/deps/core/data/DividedPos2d.h"

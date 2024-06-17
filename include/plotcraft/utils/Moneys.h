@@ -1,18 +1,10 @@
 #pragma once
 #include "Date.h"
 #include "Utils.h"
-#include "ll/api/form/SimpleForm.h"
-#include "ll/api/i18n/I18n.h"
-#include "ll/api/service/Bedrock.h"
 #include "mc/deps/core/mce/UUID.h"
 #include "mc/world/actor/player/Player.h"
-#include "mc/world/level/Level.h"
-#include <memory>
-#include <stdexcept>
 
 using string = std::string;
-using ll::i18n_literals::operator""_tr;
-using SimpleForm = ll::form::SimpleForm;
 
 namespace plo::utils {
 
@@ -72,7 +64,7 @@ private:
 
 public:
     static Moneys& getInstance();
-
+    // 单例模式，服务器启动后请调用此方法初始化
     bool updateConfig(MoneysConfig config);
 
     long long getMoney(Player& player);

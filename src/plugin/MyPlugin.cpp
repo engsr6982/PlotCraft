@@ -16,10 +16,10 @@
 #include "mc/world/Minecraft.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 
+#include "plotcraft/Config.h"
+#include "plotcraft/DataBase.h"
 #include "plotcraft/command/Command.h"
-#include "plotcraft/config/Config.h"
 #include "plotcraft/core/PlotDimension.h"
-#include "plotcraft/database/DataBase.h"
 #include "plotcraft/event/Event.h"
 #include "plotcraft/utils/Mc.h"
 

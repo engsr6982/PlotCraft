@@ -1,10 +1,9 @@
 #pragma once
-#include "../config/Config.h"
-#include "Macro.h"
 #include "mc/math/Vec3.h"
+#include "plotcraft/Config.h"
+#include "plotcraft/Macro.h"
 
-namespace plo::core {
-
+namespace plo {
 
 class PlotPos {
 public:
@@ -40,4 +39,4 @@ public:
 };
 
 
-} // namespace plo::core
+} // namespace plo

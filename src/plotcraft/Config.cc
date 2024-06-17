@@ -1,4 +1,4 @@
-#include "Config.h"
+#include "plotcraft/Config.h"
 #include "ll/api/Config.h"
 #include "plugin/MyPlugin.h"
 #include <filesystem>

@@ -1,15 +1,11 @@
 #pragma once
 #include "SQLiteCpp/Database.h"
-#include "SQLiteCpp/Exception.h"
-#include "SQLiteCpp/SQLiteCpp.h"
 #include "SQLiteCpp/Statement.h"
 #include "ll/api/data/KeyValueDB.h"
 #include "mc/deps/core/mce/UUID.h"
 #include "mc/world/actor/player/Player.h"
-#include "plotcraft/core/PlotPos.h"
-#include "plugin/MyPlugin.h"
+#include "plotcraft/PlotPos.h"
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -19,7 +15,6 @@
 
 
 using string = std::string;
-using namespace plo::core;
 
 namespace plo::database {
 

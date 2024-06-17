@@ -4,8 +4,8 @@
 #include "mc/server/commands/CommandOriginType.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 
-#include "plotcraft/config/Config.h"
-#include "plotcraft/database/DataBase.h"
+#include "plotcraft/Config.h"
+#include "plotcraft/DataBase.h"
 #include "plotcraft/utils/Text.h"
 
 
