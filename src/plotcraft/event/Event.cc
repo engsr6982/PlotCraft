@@ -201,29 +201,27 @@ bool registerEventListener() {
         });
 
     // TODO:
-    // onUseItemOn
-    // onAttackBlock
-    // onAttackEntity
-    // onChangeArmorStand
-    // onTakeItem
-    // onDropItem
-    // onBlockInteracted
-    // onUseFrameBlock
-    // onSpawnProjectile
-    // onMobHurt
-    // onStepOnPressurePlate
-    // onRide
-    // onWitherBossDestroy
-    // onFarmLandDecay
-    // onPistonTryPush
-    // onFireSpread
-    // onEat
-    // onRedStoneUpdate
-    // onStartDestroyBlock
-    // onBlockExplode
-    // onEntityExplode
-
-
+    // onUseItemOn              玩家对方块使用物品（点击右键）
+    // onAttackBlock            玩家攻击方块
+    // onAttackEntity           玩家攻击实体
+    // onChangeArmorStand       操作盔甲架
+    // onTakeItem               玩家捡起物品
+    // onDropItem               玩家丢出物品
+    // onBlockInteracted        方块接受玩家互动
+    // onUseFrameBlock          操作物品展示框
+    // onSpawnProjectile        弹射物创建
+    // onMobHurt                生物受伤（包括玩家）
+    // onStepOnPressurePlate    生物踩压力板
+    // onRide                   生物骑乘
+    // onWitherBossDestroy      凋灵破坏方块
+    // onFarmLandDecay          耕地退化
+    // onPistonTryPush          活塞尝试推动
+    // onFireSpread             火焰蔓延
+    // onEat                    玩家正在吃食物
+    // onRedStoneUpdate         发生红石更新
+    // onBlockExplode           发生由方块引起的爆炸
+    // onEntityExplode          发生由实体引起的爆炸
+    // onLiquidFlow             液体方块流动
     return true;
 }
 
