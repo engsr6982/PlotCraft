@@ -160,6 +160,14 @@ bool PlotDBImpl::removeAdmin(UUID const& uuid) {
     }
     HandleSQLiteExceptionAndReturn(false);
 }
+std::vector<UUID> PlotDBImpl::getAdmins() {
+    std::vector<UUID> admins;
+    SQLite::Statement query(*mSQLite, "SELECT mUUID FROM PlotAdmins");
+    while (query.executeStep()) {
+        admins.push_back(UUID::fromString(query.getColumn(0).getText()));
+    }
+    return admins;
+}
 
 
 // ======================= Plots APIs =======================
@@ -203,9 +211,7 @@ bool PlotDBImpl::removePlot(PlotID const& pid) {
         SQLite::Statement query(*mSQLite, "DELETE FROM Plots WHERE mPlotID = ?");
         query.bind(1, pid);
         query.exec();
-        // cache
-        auto& db = PlotDB::getInstance();
-        db.removeCached(db.hash(pid), PlotDB::CacheType::Plot);
+        PlotDB::getInstance().removeCached(pid); // cache
         return true;
     }
     HandleSQLiteExceptionAndReturn(false);
@@ -320,7 +326,7 @@ bool PlotDBImpl::removeSharedInfo(PlotID const& id, UUID const& uid) {
         query.bind(1, id);
         query.bind(2, uid.asString());
         query.exec();
-        PlotDB::getInstance().removeCached(PlotShare{id, uid, ""}); // cache
+        PlotDB::getInstance().removeCached(id, uid); // cache
         return true;
     }
     HandleSQLiteExceptionAndReturn(false);
@@ -671,33 +677,90 @@ PlotPermission PlotDBImpl::getPlayerPermission(UUID const& uid, PlotID const& pi
 
 // ======================= Class PlotDB =======================
 
-PlotDBImpl& PlotDB::getImpl() { return *mImpl; }
+PlotPermission PlotDB::getPermission(UUID const& uuid, PlotID const& pid, bool ignoreAdmin, bool ignoreCache) {
+    if (ignoreCache) return getImpl().getPlayerPermission(uuid, pid, ignoreAdmin);
+    auto plot  = getCached(pid);
+    auto share = getCached(pid, uuid);
+    auto admin = getCached(uuid);
+    if (!ignoreAdmin && admin) return PlotPermission::Admin;
+    if (plot && plot->mPlotOwner == uuid) return PlotPermission::Owner;
+    if (share && share->mSharedPlayer == uuid) return PlotPermission::Shared;
+    return PlotPermission::None;
+}
 
-PlotDB& PlotDB::getInstance() {
+
+PlotDBImpl& PlotDB::getImpl() { return *mImpl; }
+PlotDB&     PlotDB::getInstance() {
     static PlotDB instance;
     return instance;
 }
 
-// 加载数据库
+
 bool PlotDB::load() {
     if (mImpl != nullptr) return true;
     mImpl = std::make_unique<PlotDBImpl>();
+    initCache(); // 初始化缓存
+    return true;
+}
+bool PlotDB::resetCache(CacheType type) {
+    switch (type) {
+    case CacheType::Plot:
+        mPlots.clear();
+        initCache(CacheType::Plot);
+        break;
+    case CacheType::PlotShare:
+        mPlotShares.clear();
+        initCache(CacheType::PlotShare);
+        break;
+    case CacheType::Admin:
+        mAdmins.clear();
+        initCache(CacheType::Admin);
+        break;
+    default:
+        mPlots.clear();
+        mPlotShares.clear();
+        mAdmins.clear();
+        initCache();
+        break;
+    }
+    return true;
+}
+bool PlotDB::initCache(CacheType type) {
+    static bool initialized = false;
+    if (initialized) return true;
+    auto plots  = mImpl->getPlots();
+    auto shares = mImpl->getSharedPlots();
+    auto admins = mImpl->getAdmins();
+    // init plots
+    if (type == CacheType::Plot || type == CacheType::All)
+        for (auto const& plot : plots) {
+            cache(plot);
+        }
+    // init shares
+    if (type == CacheType::PlotShare || type == CacheType::All)
+        for (auto const& share : shares) {
+            cache(share);
+        }
+    // init admins
+    if (type == CacheType::Admin || type == CacheType::All)
+        for (auto const& admin : admins) {
+            cache(admin);
+        }
+    initialized = true;
     return true;
 }
 
-size_t PlotDB::hash(Plot const& plot) { return std::hash<string>()(plot.mPlotID); }
-size_t PlotDB::hash(PlotShare const& share) {
-    return std::hash<string>()(share.mPlotID + share.mSharedPlayer.asString());
-}
-size_t PlotDB::hash(PlotID const& pid) { return std::hash<string>()(pid); }
 
-// 缓存
+size_t PlotDB::hash(PlotID const& pid) { return std::hash<string>()(pid); }
+size_t PlotDB::hash(PlotID const& pid, UUID const& uid) { return std::hash<string>()(pid + uid.asString()); }
+
+
 bool PlotDB::cache(Plot const& plot) {
-    mPlots[hash(plot)] = Plot{plot}; // copy
+    mPlots[hash(plot.mPlotID)] = Plot{plot}; // copy
     return true;
 }
 bool PlotDB::cache(PlotShare const& share) {
-    mPlotShares[hash(share)] = PlotShare{share}; // copy
+    mPlotShares[hash(share.mPlotID, share.mSharedPlayer)] = PlotShare{share}; // copy
     return true;
 }
 bool PlotDB::cache(UUID const& uuid) {
@@ -726,28 +789,11 @@ bool PlotDB::cache(size_t const& key, CacheType type, DynamicCache const& data) 
     return true;
 }
 
-bool PlotDB::resetCache(CacheType type) {
-    switch (type) {
-    case CacheType::Plot:
-        mPlots.clear();
-        break;
-    case CacheType::PlotShare:
-        mPlotShares.clear();
-        break;
-    case CacheType::Admin:
-        mAdmins.clear();
-        break;
-    default:
-        mPlots.clear();
-        mPlotShares.clear();
-        mAdmins.clear();
-        break;
-    }
-    return true;
-}
 
-bool PlotDB::hasCached(Plot const& plot) { return mPlots.find(hash(plot)) != mPlots.end(); }
-bool PlotDB::hasCached(PlotShare const& share) { return mPlotShares.find(hash(share)) != mPlotShares.end(); }
+bool PlotDB::hasCached(PlotID const& pid) { return mPlots.find(hash(pid)) != mPlots.end(); }
+bool PlotDB::hasCached(PlotID const& pid, UUID const& uid) {
+    return mPlotShares.find(hash(pid, uid)) != mPlotShares.end();
+}
 bool PlotDB::hasCached(UUID const& uuid) { return mAdmins.find(uuid) != mAdmins.end(); }
 bool PlotDB::hasCached(size_t const& key, CacheType type) {
     switch (type) {
@@ -767,13 +813,14 @@ bool PlotDB::hasCached(size_t const& key, CacheType type) {
     }
 }
 
-std::optional<Plot> PlotDB::getCached(Plot const& plot) {
-    auto it = mPlots.find(hash(plot));
+
+std::optional<Plot> PlotDB::getCached(PlotID const& id) {
+    auto it = mPlots.find(hash(id));
     if (it == mPlots.end()) return std::nullopt;
     return it->second;
 }
-std::optional<PlotShare> PlotDB::getCached(PlotShare const& share) {
-    auto it = mPlotShares.find(hash(share));
+std::optional<PlotShare> PlotDB::getCached(PlotID const& id, UUID const& uid) {
+    auto it = mPlotShares.find(hash(id, uid));
     if (it == mPlotShares.end()) return std::nullopt;
     return it->second;
 }
@@ -782,7 +829,7 @@ std::optional<bool> PlotDB::getCached(UUID const& uuid) {
     if (it == mAdmins.end()) return std::nullopt;
     return it->second;
 }
-std::optional<PlotDB::DynamicCache> PlotDB::getCached(size_t const& key, CacheType type) {
+std::optional<DynamicCache> PlotDB::getCached(size_t const& key, CacheType type) {
     DynamicCache val;
     switch (type) {
     case CacheType::Plot: {
@@ -811,14 +858,15 @@ std::optional<PlotDB::DynamicCache> PlotDB::getCached(size_t const& key, CacheTy
     return val;
 }
 
-bool PlotDB::removeCached(Plot const& plot) {
-    auto it = mPlots.find(hash(plot));
+
+bool PlotDB::removeCached(PlotID const& pid) {
+    auto it = mPlots.find(hash(pid));
     if (it == mPlots.end()) return false;
     mPlots.erase(it);
     return true;
 }
-bool PlotDB::removeCached(PlotShare const& share) {
-    auto it = mPlotShares.find(hash(share));
+bool PlotDB::removeCached(PlotID const& pid, UUID const& uid) {
+    auto it = mPlotShares.find(hash(pid, uid));
     if (it == mPlotShares.end()) return false;
     mPlotShares.erase(it);
     return true;
@@ -852,7 +900,6 @@ bool PlotDB::removeCached(size_t const& key, CacheType type) {
 }
 
 
-// update cache api
 bool PlotDB::updateCachedPlotName(PlotID const& pid, string const& newName) {
     auto it = mPlots.find(hash(pid));
     if (it == mPlots.end()) return false;
