@@ -23,6 +23,8 @@
 #include "plotcraft/event/Event.h"
 #include "plotcraft/utils/Mc.h"
 
+#include "remotecall/RemoteApi.h"
+#include "remotecall/RemoteEvent.h"
 
 namespace my_plugin {
 
@@ -59,8 +61,12 @@ bool MyPlugin::enable() {
     // 注册MCAPI
     logger.info("Try registering command、event listener、dimension...");
     more_dimensions::CustomDimensionManager::getInstance().addDimension<plo::core::PlotDimension>("plot");
-    if (!plo::event::registerEventListener()) return false; // 注册事件监听器
-    plo::command::registerCommand();                        // 注册命令
+    plo::event::registerEventListener(); // 注册事件监听器
+    plo::command::registerCommand();     // 注册命令
+
+    // 导出远程调用API
+    plo::remotecall::exportPLApi();
+    plo::remotecall::exportPLEventApi();
 
     return true;
 }
