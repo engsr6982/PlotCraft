@@ -682,9 +682,15 @@ PlotPermission PlotDB::getPermission(UUID const& uuid, PlotID const& pid, bool i
     auto plot  = getCached(pid);
     auto share = getCached(pid, uuid);
     auto admin = getCached(uuid);
-    if (!ignoreAdmin && admin) return PlotPermission::Admin;
-    if (plot && plot->mPlotOwner == uuid) return PlotPermission::Owner;
-    if (share && share->mSharedPlayer == uuid) return PlotPermission::Shared;
+    if (admin.has_value()) {
+        if (!ignoreAdmin && admin.value()) return PlotPermission::Admin;
+    }
+    if (plot.has_value()) {
+        if (plot->mPlotOwner == uuid) return PlotPermission::Owner;
+    }
+    if (share.has_value()) {
+        if (share->mSharedPlayer == uuid) return PlotPermission::Shared;
+    }
     return PlotPermission::None;
 }
 

@@ -18,6 +18,7 @@ public:
 
     PlotPos(const Vec3& vec3);
 
+    // 地皮是否有效(无效则代表该坐标没有对应的地皮)
     bool isValid();
 
     Vec3 getMin();

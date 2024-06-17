@@ -1,5 +1,8 @@
 #include "Event.h"
-
+#include "ll/api/event/player/PlayerDestroyBlockEvent.h"
+#include "mc/_HeaderOutputPredefine.h"
+#include "mc/world/level/dimension/Dimension.h"
+#include "mc/world/level/dimension/VanillaDimensions.h"
 
 using string = std::string;
 using ll::chrono_literals::operator""_tick;
@@ -20,24 +23,22 @@ plo::core::PlotPos get(string const& realName) {
 
 
 // Global variables
-ll::schedule::GameTickScheduler mTickScheduler;            // Tick调度
-ll::event::ListenerPtr          mPlayerJoinEventListener;  // 玩家加入事件监听器
-ll::event::ListenerPtr          mSpawningMobEventListener; // 生物出生事件监听器
+ll::schedule::GameTickScheduler mTickScheduler;                   // Tick调度
+ll::event::ListenerPtr          mPlayerJoinEventListener;         // 玩家进入服务器
+ll::event::ListenerPtr          mSpawningMobEventListener;        // 生物生成
+ll::event::ListenerPtr          mPlayerDestroyBlockEventListener; // 玩家破坏方块
 
 namespace plo::event {
 
-static int PlotDimensionID = -1;
+DimensionType getPlotDim() { return VanillaDimensions::fromString("plot"); }
 
 bool registerEventListener() {
-    // 缓存地皮维度
-    PlotDimensionID = VanillaDimensions::fromString("plot");
-    if (PlotDimensionID == -1) throw std::runtime_error("Failed to cache plot dimension ID");
-
     // 注册Tick调度(实现Tip、Event等)
     mTickScheduler.add<ll::schedule::RepeatTask>(4_tick, []() {
-        Level& lv = *ll::service::getLevel();
-        lv.forEachPlayer([](Player& p) {
-            if (p.getDimensionId() != PlotDimensionID) return true; // 不是同一维度
+        auto lv = ll::service::getLevel()->getDimension(getPlotDim());
+        if (!lv) return; // 空指针
+        lv->forEachPlayer([](Player& p) {
+            if (p.getDimensionId() != getPlotDim()) return true; // 不是地皮世界，跳过
             if (p.isLoading() || p.isSimulated() || p.isSimulatedPlayer()) return true;
             TextPacket pkt = TextPacket();
             pkt.mType      = TextPacketType::Tip;
@@ -145,11 +146,39 @@ bool registerEventListener() {
     });
 
     mSpawningMobEventListener = bus.emplaceListener<ll::event::SpawningMobEvent>([](ll::event::SpawningMobEvent& e) {
-        if (e.blockSource().getDimensionId() == PlotDimensionID) return false; // 拦截地皮世界生物生成
+        if (e.blockSource().getDimensionId() == getPlotDim()) e.cancel(); // 拦截地皮世界生物生成
         return true;
     });
+
+    mPlayerDestroyBlockEventListener =
+        bus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([](ll::event::PlayerDestroyBlockEvent& e) {
+            if (e.self().getDimensionId() != getPlotDim()) {
+                e.cancel(); // 被破坏的方块不在地皮世界
+                return true;
+            };
+            auto pos = e.pos();
+            auto pps = core::PlotPos(pos);
+
+            using PlotPermission = database::PlotPermission;
+            auto level           = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
+
+#ifdef DEBUG
+            e.self().sendMessage(
+                "[Debug] 破坏方块: " + pos.toString() + ", 权限: " + std::to_string(static_cast<int>(level))
+            );
+#endif
+
+            if (pps.isValid()) {
+                // 破坏目标在地皮内
+                if (level == PlotPermission::None) e.cancel(); // 拦截 None
+            } else {
+                // 破坏目标不在地皮内
+                if (level != PlotPermission::Admin) e.cancel(); // 拦截非 Admin
+            }
+            return true;
+        });
+
     // TODO:
-    // onDestroyBlock
     // onPlaceBlock
     // onUseItemOn
     // onAttackBlock

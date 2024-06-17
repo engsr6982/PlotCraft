@@ -121,7 +121,7 @@ inline string CommandOriginTypeToString(CommandOriginType type) {
                 __allowedTypesStr << CommandOriginTypeToString(__allowedType);                                         \
                 __first = false;                                                                                       \
             }                                                                                                          \
-            output.error("§c{0}此命令仅限 {1} 使用!"_tr(MSG_TITLE, __allowedTypesStr.str()));                          \
+            output.error("§c{0}此命令仅限 {1} 使用!"_tr(PLUGIN_TITLE, __allowedTypesStr.str()));                       \
             return;                                                                                                    \
         }                                                                                                              \
     }
