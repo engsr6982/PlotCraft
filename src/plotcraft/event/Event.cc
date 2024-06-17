@@ -145,7 +145,7 @@ bool registerEventListener() {
     });
 
     mSpawningMobEventListener = bus.emplaceListener<ll::event::SpawningMobEvent>([](ll::event::SpawningMobEvent& e) {
-        if (e.blockSource().getDimensionId() != PlotDimensionID) return false; // 拦截地皮世界生物生成
+        if (e.blockSource().getDimensionId() == PlotDimensionID) return false; // 拦截地皮世界生物生成
         return true;
     });
     // TODO:
