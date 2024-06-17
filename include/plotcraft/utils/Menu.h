@@ -1,3 +1,4 @@
+#pragma once
 #include "mc/world/actor/player/Player.h"
 #include "nlohmann/json.hpp"
 #include "nlohmann/json_fwd.hpp"

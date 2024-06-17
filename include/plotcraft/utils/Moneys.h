@@ -1,3 +1,4 @@
+#pragma once
 #include "Date.h"
 #include "Utils.h"
 #include "ll/api/form/SimpleForm.h"

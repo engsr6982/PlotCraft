@@ -1,6 +1,7 @@
+#pragma once
 #include "ll/api/event/Event.h"
 #include "mc/world/actor/player/Player.h"
-#include "plotcraft/core/PlotPos.h"
+#include "plotcraft/PlotPos.h"
 
 
 namespace plo::event {
