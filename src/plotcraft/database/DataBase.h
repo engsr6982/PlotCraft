@@ -1,3 +1,4 @@
+#pragma once
 #include "SQLiteCpp/Database.h"
 #include "SQLiteCpp/Exception.h"
 #include "SQLiteCpp/SQLiteCpp.h"

@@ -16,10 +16,12 @@
 #include "mc/world/Minecraft.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 
+#include "plotcraft/command/Command.h"
 #include "plotcraft/config/Config.h"
 #include "plotcraft/core/PlotDimension.h"
 #include "plotcraft/database/DataBase.h"
 #include "plotcraft/event/Event.h"
+#include "plotcraft/utils/Mc.h"
 
 
 namespace my_plugin {
@@ -36,6 +38,8 @@ bool MyPlugin::load() {
     logger.consoleLevel = 5; // 调试模式下输出详细日志
 #endif
 
+    // 初始化数据（非MCAPI）
+    logger.info("Try loading config、database...");
     plo::config::loadConfig();
     plo::database::PlayerNameDB::getInstance().initPlayerNameDB();
     plo::database::PlotDB::getInstance().load();
@@ -43,28 +47,20 @@ bool MyPlugin::load() {
     return true;
 }
 
+
 bool MyPlugin::enable() {
     auto& logger = getSelf().getLogger();
     logger.info("Enabling...");
 
-    // 注册自定义维度
-    logger.info("Registering plot dimension...");
-    more_dimensions::CustomDimensionManager::getInstance().addDimension<plo::core::PlotDimension>("plot");
-
-    plo::event::registerEventListener();
-
 #ifdef DEBUG
-    CommandContext ctx = CommandContext(
-        "gamerule showcoordinates true",
-        std::make_unique<ServerCommandOrigin>(
-            "Server",
-            ll::service::getLevel()->asServer(),
-            CommandPermissionLevel::Owner,
-            0
-        )
-    );
-    ll::service::getMinecraft()->getCommands().executeCommand(ctx, false);
+    plo::mc::executeCommand("gamerule showcoordinates true");
 #endif
+
+    // 注册MCAPI
+    logger.info("Try registering command、event listener、dimension...");
+    more_dimensions::CustomDimensionManager::getInstance().addDimension<plo::core::PlotDimension>("plot");
+    if (!plo::event::registerEventListener()) return false; // 注册事件监听器
+    plo::command::registerCommand();                        // 注册命令
 
     return true;
 }

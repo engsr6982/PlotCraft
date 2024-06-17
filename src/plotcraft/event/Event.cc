@@ -1,27 +1,4 @@
 #include "Event.h"
-#include "fmt/format.h"
-#include "ll/api/chrono/GameChrono.h"
-#include "ll/api/event/EventBus.h"
-#include "ll/api/event/ListenerBase.h"
-#include "ll/api/event/player/PlayerJoinEvent.h"
-#include "ll/api/event/world/SpawnMobEvent.h"
-#include "ll/api/schedule/Scheduler.h"
-#include "ll/api/schedule/Task.h"
-#include "ll/api/service/Bedrock.h"
-#include "mc/common/wrapper/optional_ref.h"
-#include "mc/enums/TextPacketType.h"
-#include "mc/network/packet/TextPacket.h"
-#include "mc/world/actor/player/Player.h"
-#include "mc/world/level/Level.h"
-#include "mc/world/level/dimension/Dimension.h"
-#include "plot/PlayerPlotEvent.h"
-#include "plotcraft/config/Config.h"
-#include "plotcraft/core/PlotPos.h"
-#include "plotcraft/database/DataBase.h"
-#include "plugin/MyPlugin.h"
-#include <string>
-#include <thread>
-#include <unordered_map>
 
 
 using string = std::string;
@@ -49,33 +26,39 @@ ll::event::ListenerPtr          mSpawningMobEventListener; // 生物出生事件
 
 namespace plo::event {
 
+static int PlotDimensionID = -1;
 
-void registerEventListener() {
+bool registerEventListener() {
+    // 缓存地皮维度
+    PlotDimensionID = VanillaDimensions::fromString("plot");
+    if (PlotDimensionID == -1) throw std::runtime_error("Failed to cache plot dimension ID");
+
+    // 注册Tick调度(实现Tip、Event等)
     mTickScheduler.add<ll::schedule::RepeatTask>(4_tick, []() {
         Level& lv = *ll::service::getLevel();
         lv.forEachPlayer([](Player& p) {
-            if (p.getDimension().mName != "plot") return true; // 不是同一维度
+            if (p.getDimensionId() != PlotDimensionID) return true; // 不是同一维度
             if (p.isLoading() || p.isSimulated() || p.isSimulatedPlayer()) return true;
             TextPacket pkt = TextPacket();
             pkt.mType      = TextPacketType::Tip;
+            /*
+                §a✔§r
+                §c✘§r
 
-            // §a✔§r
-            // §c✘§r
+                Tip1:
+                地皮: (0,1) | (0,0,0) => (16,16,16)
+                主人: xxx  |  名称: xxx
+                出售: x/√  |  价格: xxx
 
-            // Tip1:
-            // 地皮: (0,1) | (0,0,0) => (16,16,16)
-            // 主人: xxx  |  名称: xxx
-            // 出售: x/√  |  价格: xxx
+                Tip2:
+                地皮: (0,1) | (0,0,0) => (16,16,16)
+                主人: 无主  | 价格: xxx
+                输入：/plo buy 购买
 
-            // Tip2:
-            // 地皮: (0,1) | (0,0,0) => (16,16,16)
-            // 主人: 无主  | 价格: xxx
-            // 输入：/plo buy 购买
-
-            // Tip3:
-            // PLUGIN_TITLE | 地皮世界
-            // 输入: /plo 打开地皮菜单
-
+                Tip3:
+                PLUGIN_TITLE | 地皮世界
+                输入: /plo 打开地皮菜单
+             */
             auto& bus     = ll::event::EventBus::getInstance();
             auto  plotPos = core::PlotPos(p.getPosition());
             if (plotPos.isValid()) {
@@ -83,7 +66,9 @@ void registerEventListener() {
                     // 玩家进入地皮
                     bus.publish(PlayerEnterPlot(plotPos, &p)); // 玩家进入地皮，当前位置有效，使用当前位置
                     pt::set(p.getRealName(), plotPos);         // 更新玩家位置
+#ifdef DEBUG
                     p.sendMessage("[Debug] 进入地皮: " + plotPos.toDebug());
+#endif
                 }
                 // 获取数据库实例
                 auto& pdb  = database::PlotDB::getInstance();
@@ -137,7 +122,9 @@ void registerEventListener() {
                     // 玩家离开地皮
                     bus.publish(PlayerLeavePlot(_pos2, &p)); // 玩家离开地皮，当前位置无效，使用上次位置
                     pt::set(p.getRealName(), plotPos);       // 更新玩家位置
+#ifdef DEBUG
                     p.sendMessage("[Debug] 离开地皮: " + _pos2.toDebug());
+#endif
                 }
                 // Tip3
                 pkt.mMessage = fmt::format("{0} | 地皮世界\n输入: /plo 打开地皮菜单", PLUGIN_TITLE);
@@ -158,18 +145,46 @@ void registerEventListener() {
     });
 
     mSpawningMobEventListener = bus.emplaceListener<ll::event::SpawningMobEvent>([](ll::event::SpawningMobEvent& e) {
-        if (e.blockSource().getDimension().mName != "plot") return false; // 拦截地皮世界生物生成
+        if (e.blockSource().getDimensionId() != PlotDimensionID) return false; // 拦截地皮世界生物生成
         return true;
     });
+    // TODO:
+    // onDestroyBlock
+    // onPlaceBlock
+    // onUseItemOn
+    // onAttackBlock
+    // onAttackEntity
+    // onChangeArmorStand
+    // onTakeItem
+    // onDropItem
+    // onBlockInteracted
+    // onUseFrameBlock
+    // onSpawnProjectile
+    // onMobHurt
+    // onStepOnPressurePlate
+    // onRide
+    // onWitherBossDestroy
+    // onFarmLandDecay
+    // onPistonTryPush
+    // onFireSpread
+    // onEat
+    // onRedStoneUpdate
+    // onStartDestroyBlock
+    // onBlockExplode
+    // onEntityExplode
+
+
+    return true;
 }
 
 
-void unRegisterEventListener() {
+bool unRegisterEventListener() {
     mTickScheduler.clear();
 
     auto& bus = ll::event::EventBus::getInstance();
     bus.removeListener(mPlayerJoinEventListener);
     bus.removeListener(mSpawningMobEventListener);
+    return true;
 }
 
 
