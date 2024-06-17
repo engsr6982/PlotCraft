@@ -9,8 +9,7 @@ add_requires(
     "levilamina 0.12.4",
     "more-dimensions 0.3.1",
     "sqlitecpp 3.2.1",
-    "legacymoney 0.7.0",
-    "legacyremotecall 0.7.0"
+    "legacymoney 0.7.0"
 )
 
 if not has_config("vs_runtime") then
@@ -37,10 +36,9 @@ target("PlotCraft") -- Change this to your plugin name.
     )
     add_packages(
         "levilamina",
-        "sqlitecpp",
-        "legacymoney",
         "more-dimensions",
-        "legacyremotecall"
+        "sqlitecpp",
+        "legacymoney"
     )
     add_files("src/**.cpp", "src/**.cc")
     add_includedirs(
