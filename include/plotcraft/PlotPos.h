@@ -5,6 +5,9 @@
 
 namespace plo {
 
+// Disable C4244
+#pragma warning(disable : 4244)
+
 class PlotPos {
 public:
     int  x, z;           // 地皮坐标
