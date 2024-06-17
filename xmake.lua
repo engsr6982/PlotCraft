@@ -31,7 +31,8 @@ target("PlotCraft") -- Change this to your plugin name.
     add_defines(
         "NOMINMAX",
         "UNICODE",
-        "_HAS_CXX23=1"
+        "_HAS_CXX23=1",
+        "PLOT_EXPORTS" -- Export PlotCraft
     )
     add_packages(
         "levilamina",
@@ -40,7 +41,10 @@ target("PlotCraft") -- Change this to your plugin name.
         "legacymoney"
     )
     add_files("src/**.cpp", "src/**.cc")
-    add_includedirs("src")
+    add_includedirs(
+        "src",
+        "include"
+    )
     add_shflags("/DELAYLOAD:bedrock_server.dll") -- To use symbols provided by SymbolProvider.
     set_exceptions("none") -- To avoid conflicts with /EHa.
     set_kind("shared")
