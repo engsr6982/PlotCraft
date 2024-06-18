@@ -63,6 +63,7 @@ Vec3 PlotPos::getMin() { return minPos; }
 Vec3 PlotPos::getMax() { return maxPos; }
 
 string PlotPos::toString() { return fmt::format("({0},{1})", x, z); }
+string PlotPos::getPlotID() { return toString(); }
 
 string PlotPos::toDebug() { return fmt::format("{0} | {1} => {2}", toString(), minPos.toString(), maxPos.toString()); }
 

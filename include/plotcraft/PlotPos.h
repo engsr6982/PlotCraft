@@ -30,6 +30,8 @@ public:
 
     PLAPI string toString();
 
+    PLAPI string getPlotID();
+
     PLAPI string toDebug();
 
     PLAPI bool isPosInPlot(const Vec3& vec3);

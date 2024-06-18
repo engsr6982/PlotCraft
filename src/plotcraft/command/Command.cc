@@ -2,10 +2,13 @@
 #include "ll/api/command/CommandRegistrar.h"
 #include "mc/server/commands/CommandOrigin.h"
 #include "mc/server/commands/CommandOriginType.h"
+#include "mc/server/commands/CommandPositionFloat.h"
+#include "mc/server/commands/CommandVersion.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 
 #include "plotcraft/Config.h"
 #include "plotcraft/DataBase.h"
+#include "plotcraft/gui/index.h"
 #include "plotcraft/utils/Text.h"
 
 
@@ -65,6 +68,28 @@ const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, Par
 };
 
 
+struct ParamPlot {
+    CommandPositionFloat pos;
+};
+const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output, ParamPlot const& param) {
+    CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
+    Player& player = *static_cast<Player*>(origin.getEntity());
+    PlotPos pos    = PlotPos{param.pos.getPosition(CommandVersion::CurrentVersion, origin)};
+    if (pos.isValid()) {
+        gui::plot(player, pos);
+    } else {
+        sendText<Level::Error>(output, "无效的地皮坐标!");
+    }
+};
+
+
+const auto LambdaDefault = [](CommandOrigin const& origin, CommandOutput& output) {
+    CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
+    Player& player = *static_cast<Player*>(origin.getEntity());
+    gui::index(player);
+};
+
+
 bool registerCommand() {
     auto& cmd = ll::command::CommandRegistrar::getInstance().getOrCreateCommand("plo", "PlotCraft");
 
@@ -74,9 +99,11 @@ bool registerCommand() {
     // plo go <overworld|plot>
     cmd.overload<ParamGo>().text("go").required("dim").execute(LambdaGo);
 
-    // plo plot  当前地皮菜单
+    // plo plot [<x> <y> <z>]  当前地皮菜单
+    cmd.overload<ParamPlot>().text("plot").optional("pos").execute(LambdaPlot);
 
     // plo  全局地皮菜单
+    cmd.overload().execute(LambdaDefault);
 
     return true;
 }
