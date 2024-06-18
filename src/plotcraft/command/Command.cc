@@ -60,9 +60,10 @@ const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, Par
     Player& player = *static_cast<Player*>(origin.getEntity());
     if (param.dim == ParamGo::overworld) {
         // auto& dim = player.getDimension();
+        // TODO：手动查找安全坐标
         player.teleport(player.getExpectedSpawnPosition(), player.getSpawnDimension()); // 传送到重生点
     } else {
-        player.teleport(Vec3{0, config::cfg.generator.generatorY + 2, 0}, VanillaDimensions::fromString("plot"));
+        player.teleport(Vec3{0, -58, 0}, VanillaDimensions::fromString("plot"));
     }
 };
 

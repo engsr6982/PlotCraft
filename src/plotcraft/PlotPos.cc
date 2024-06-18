@@ -26,7 +26,7 @@ PlotPos::PlotPos() : x(0), z(0), mIsValid(false) {
 PlotPos::PlotPos(int x, int z) : x(x), z(z) {
     auto& cfg       = config::cfg.generator;
     int   totalSize = cfg.plotWidth + cfg.roadWidth;
-    minPos          = Vec3{x * totalSize, cfg.generatorY, z * totalSize};
+    minPos          = Vec3{x * totalSize, -64, z * totalSize};
     maxPos          = Vec3{minPos.x + cfg.plotWidth - 1, 320, minPos.z + cfg.plotWidth - 1};
 }
 
@@ -51,7 +51,7 @@ PlotPos::PlotPos(const Vec3& vec3) {
     } else {
         x      = gridX;
         z      = gridZ;
-        minPos = Vec3{x * totalSize, cfg.generatorY, z * totalSize};
+        minPos = Vec3{x * totalSize, -64, z * totalSize};
         maxPos = Vec3{minPos.x + cfg.plotWidth - 1, 320, minPos.z + cfg.plotWidth - 1};
     }
 }

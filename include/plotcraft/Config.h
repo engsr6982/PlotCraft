@@ -10,12 +10,11 @@ using string = std::string;
 namespace plo::config {
 
 struct _Config {
-    int version = 1;
+    int version = 2;
 
     struct _Generator {
-        int plotWidth  = 64;  // 地皮大小
-        int roadWidth  = 5;   // 道路宽度
-        int generatorY = -61; // 生成层
+        int plotWidth = 64; // 地皮大小
+        int roadWidth = 5;  // 道路宽度
 
         string roadBlock   = "minecraft:cherry_planks";
         string fillBlock   = "minecraft:grass_block";
