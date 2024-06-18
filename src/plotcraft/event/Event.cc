@@ -1,14 +1,19 @@
 #include "Event.h"
 #include "ll/api/event/player/PlayerDestroyBlockEvent.h"
+#include "ll/api/event/player/PlayerInteractBlockEvent.h"
 #include "ll/api/event/player/PlayerPlaceBlockEvent.h"
+#include "ll/api/event/player/PlayerUseItemOnEvent.h"
 #include "mc/_HeaderOutputPredefine.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
+#include "plotcraft/utils/Text.h"
+#include "plotcraft/utils/Utils.h"
+
 
 using string = std::string;
 using ll::chrono_literals::operator""_tick;
+using PlotPermission = plo::database::PlotPermission;
 
-// 辅助表，用于实现自定义Event
 namespace pt {
 std::unordered_map<string, plo::PlotPos> mIsInPlot; // 玩家是否在地皮中
 
@@ -29,6 +34,7 @@ ll::event::ListenerPtr          mPlayerJoinEventListener;          // 玩家进�
 ll::event::ListenerPtr          mSpawningMobEventListener;         // 生物尝试生成
 ll::event::ListenerPtr          mPlayerDestroyBlockEventListener;  // 玩家尝试破坏方块
 ll::event::ListenerPtr          mPlayerPlaceingBlockEventListener; // 玩家尝试放置方块
+ll::event::ListenerPtr          mPlayerUseItemOnEventListener;     // 玩家对方块使用物品（点击右键）
 
 namespace plo::event {
 
@@ -139,10 +145,8 @@ bool registerEventListener() {
         });
     });
 
-
     // Listen Minecraft events
-    auto& bus = ll::event::EventBus::getInstance();
-
+    auto& bus                = ll::event::EventBus::getInstance();
     mPlayerJoinEventListener = bus.emplaceListener<ll::event::PlayerJoinEvent>([](ll::event::PlayerJoinEvent& e) {
         database::PlayerNameDB::getInstance().insertPlayer(e.self());
     });
@@ -155,11 +159,9 @@ bool registerEventListener() {
     mPlayerDestroyBlockEventListener =
         bus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([](ll::event::PlayerDestroyBlockEvent& e) {
             if (e.self().getDimensionId() != getPlotDim()) return true; // 被破坏的方块不在地皮世界
-            auto pos = e.pos();
-            auto pps = PlotPos(pos);
-
-            using PlotPermission = database::PlotPermission;
-            auto level           = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
+            auto pos   = e.pos();
+            auto pps   = PlotPos(pos);
+            auto level = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
 
 #ifdef DEBUG
             e.self().sendMessage(
@@ -180,11 +182,9 @@ bool registerEventListener() {
     mPlayerPlaceingBlockEventListener =
         bus.emplaceListener<ll::event::PlayerPlacingBlockEvent>([](ll::event::PlayerPlacingBlockEvent& e) {
             if (e.self().getDimensionId() != getPlotDim()) return true;
-            auto pos = e.pos(); // 放置方块的位置
-            auto pps = PlotPos(pos);
-
-            using PlotPermission = database::PlotPermission;
-            auto level           = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
+            auto pos   = e.pos(); // 放置方块的位置
+            auto pps   = PlotPos(pos);
+            auto level = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
 
 #ifdef DEBUG
             e.self().sendMessage(
@@ -200,8 +200,35 @@ bool registerEventListener() {
             return true;
         });
 
+    mPlayerUseItemOnEventListener =
+        bus.emplaceListener<ll::event::PlayerUseItemOnEvent>([](ll::event::PlayerUseItemOnEvent& e) {
+            if (e.self().getDimensionId() != getPlotDim()) return true;
+            auto pos   = e.clickPos(); // 点击的位置
+            auto pps   = PlotPos(pos); // 获取点击位置的地皮坐标
+            auto level = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
+
+            // 忽略的物品
+            static std::vector<string> ignoreItems = {"minecraft:clock"};
+            if (utils::some(ignoreItems, e.item().getTypeName())) return true; // 忽略钟（兼容菜单插件）
+
+#ifdef DEBUG
+            e.self().sendMessage(utils::format(
+                "[Debug] 使用物品: {0}, 位置: {1}, 权限: {2}",
+                e.item().getTypeName(),
+                pos.toString(),
+                std::to_string(static_cast<int>(level))
+            ));
+#endif
+
+            if (pps.isValid()) {
+                if (level == PlotPermission::None) e.cancel(); // 地皮内, 拦截 None
+            } else {
+                if (level != PlotPermission::Admin) e.cancel(); // 地皮外, 拦截非 Admin
+            }
+            return true;
+        });
+
     // TODO:
-    // onUseItemOn              玩家对方块使用物品（点击右键）
     // onAttackBlock            玩家攻击方块
     // onAttackEntity           玩家攻击实体
     // onChangeArmorStand       操作盔甲架
@@ -234,6 +261,7 @@ bool unRegisterEventListener() {
     bus.removeListener(mSpawningMobEventListener);
     bus.removeListener(mPlayerDestroyBlockEventListener);
     bus.removeListener(mPlayerPlaceingBlockEventListener);
+    bus.removeListener(mPlayerUseItemOnEventListener);
     return true;
 }
 
