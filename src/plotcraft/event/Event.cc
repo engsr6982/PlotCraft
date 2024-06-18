@@ -44,6 +44,9 @@ ll::event::ListenerPtr          mPlayerAttackEventListener;        // 玩家攻�
 ll::event::ListenerPtr          mPlayerPickUpItemEventListener;    // 玩家捡起物品
 ll::event::ListenerPtr          mPlayerInteractBlockEventListener; // 方块接受玩家互动
 
+ll::event::ListenerPtr mPlayerLeavePlotEventListener; // 玩家离开地皮
+ll::event::ListenerPtr mPlayerEnterPlotEventListener; // 玩家进入地皮
+
 namespace plo::event {
 
 DimensionType getPlotDim() { return VanillaDimensions::fromString("plot"); }
@@ -83,7 +86,6 @@ bool registerEventListener() {
                     // 玩家进入地皮
                     bus.publish(PlayerEnterPlot(plotPos, &p)); // 玩家进入地皮，当前位置有效，使用当前位置
                     pt::set(p.getRealName(), plotPos);         // 更新玩家位置
-                    p.setAbility(::AbilitiesIndex::MayFly, true); // 地皮内允许飞行
 #ifdef DEBUG
                     p.sendMessage("[Debug] 进入地皮: " + plotPos.toDebug());
 #endif
@@ -140,7 +142,6 @@ bool registerEventListener() {
                     // 玩家离开地皮
                     bus.publish(PlayerLeavePlot(_pos2, &p)); // 玩家离开地皮，当前位置无效，使用上次位置
                     pt::set(p.getRealName(), plotPos);       // 更新玩家位置
-                    p.setAbility(::AbilitiesIndex::MayFly, false); // 地皮外禁用飞行
 #ifdef DEBUG
                     p.sendMessage("[Debug] 离开地皮: " + _pos2.toDebug());
 #endif
@@ -312,6 +313,29 @@ bool registerEventListener() {
             }
             return true;
         });
+
+
+    // 监听自己插件的事件
+    mPlayerLeavePlotEventListener = bus.emplaceListener<PlayerLeavePlot>([](PlayerLeavePlot& e) {
+        auto pl = e.getPlayer();
+        if (pl == nullptr) return;
+        auto pps   = PlotPos(pl->getPosition());
+        auto level = database::PlotDB::getInstance().getPermission(pl->getUuid(), pps.toString());
+
+        if (!pps.isValid() && level != PlotPermission::Admin) {
+            pl->setAbility(::AbilitiesIndex::MayFly, false);
+        }
+    });
+    mPlayerEnterPlotEventListener = bus.emplaceListener<PlayerEnterPlot>([](PlayerEnterPlot& e) {
+        auto pl = e.getPlayer();
+        if (pl == nullptr) return;
+        auto pps   = PlotPos(pl->getPosition());
+        auto level = database::PlotDB::getInstance().getPermission(pl->getUuid(), pps.toString());
+
+        if (pps.isValid() && level != PlotPermission::None) {
+            pl->setAbility(::AbilitiesIndex::MayFly, true);
+        }
+    });
 
     // TODO:
     // onMobHurt                生物受伤（包括玩家）
