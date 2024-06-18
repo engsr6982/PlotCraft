@@ -1,8 +1,12 @@
 #include "Event.h"
+#include "ll/api/event/ListenerBase.h"
+#include "ll/api/event/player/PlayerAttackEvent.h"
 #include "ll/api/event/player/PlayerDestroyBlockEvent.h"
 #include "ll/api/event/player/PlayerInteractBlockEvent.h"
+#include "ll/api/event/player/PlayerPickUpItemEvent.h"
 #include "ll/api/event/player/PlayerPlaceBlockEvent.h"
 #include "ll/api/event/player/PlayerUseItemOnEvent.h"
+#include "ll/api/event/world/FireSpreadEvent.h"
 #include "mc/_HeaderOutputPredefine.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
@@ -35,6 +39,10 @@ ll::event::ListenerPtr          mSpawningMobEventListener;         // 生物尝�
 ll::event::ListenerPtr          mPlayerDestroyBlockEventListener;  // 玩家尝试破坏方块
 ll::event::ListenerPtr          mPlayerPlaceingBlockEventListener; // 玩家尝试放置方块
 ll::event::ListenerPtr          mPlayerUseItemOnEventListener;     // 玩家对方块使用物品（点击右键）
+ll::event::ListenerPtr          mFireSpreadEventListener;          // 火焰蔓延
+ll::event::ListenerPtr          mPlayerAttackEventListener;        // 玩家攻击实体
+ll::event::ListenerPtr          mPlayerPickUpItemEventListener;    // 玩家捡起物品
+ll::event::ListenerPtr          mPlayerInteractBlockEventListener; // 方块接受玩家互动
 
 namespace plo::event {
 
@@ -228,27 +236,98 @@ bool registerEventListener() {
             return true;
         });
 
+    mFireSpreadEventListener = bus.emplaceListener<ll::event::FireSpreadEvent>([](ll::event::FireSpreadEvent& e) {
+        if (e.blockSource().getDimensionId() == getPlotDim()) e.cancel(); // 拦截地皮世界火焰蔓延
+        return true;
+    });
+
+    mPlayerAttackEventListener = bus.emplaceListener<ll::event::PlayerAttackEvent>([](ll::event::PlayerAttackEvent& e) {
+        if (e.self().getDimensionId() != getPlotDim()) return true; // 玩家不在地皮世界
+        auto pos   = e.target().getPosition();                      // 攻击的实体位置
+        auto pps   = PlotPos(pos);
+        auto level = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
+
+#ifdef DEBUG
+        e.self().sendMessage(utils::format(
+            "[Debug] 玩家攻击: {0}, 位置: {1}, 权限: {2}",
+            e.target().getEntityLocNameString(),
+            pos.toString(),
+            std::to_string(static_cast<int>(level))
+        ));
+#endif
+
+        if (pps.isValid()) {
+            if (level == PlotPermission::None) e.cancel(); // 拦截 None
+        } else {
+            if (level != PlotPermission::Admin) e.cancel(); // 拦截非 Admin
+        }
+        return true;
+    });
+
+    mPlayerPickUpItemEventListener =
+        bus.emplaceListener<ll::event::PlayerPickUpItemEvent>([](ll::event::PlayerPickUpItemEvent& e) {
+            if (e.self().getDimensionId() != getPlotDim()) return true; // 玩家不在地皮世界
+            auto pos   = e.itemActor().getPosition();                   // 要捡起的物品实体位置
+            auto pps   = PlotPos(pos);
+            auto level = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
+
+#ifdef DEBUG
+            e.self().sendMessage(utils::format(
+                "[Debug] 玩家捡起物品: {0}, 位置: {1}, 权限: {2}",
+                e.itemActor().getEntityLocNameString(),
+                pos.toString(),
+                std::to_string(static_cast<int>(level))
+            ));
+#endif
+            // 拦截规范：
+            // 地皮内的属于地皮所有者和共享者
+            // 地皮外的属于全体玩家
+            if (pps.isValid()) {
+                if (level == PlotPermission::None) e.cancel(); // 拦截 None
+            }
+            return true;
+        });
+
+    mPlayerInteractBlockEventListener =
+        bus.emplaceListener<ll::event::PlayerInteractBlockEvent>([](ll::event::PlayerInteractBlockEvent& e) {
+            if (e.self().getDimensionId() != getPlotDim()) return true;
+            auto pos   = e.pos(); // 交互的方块位置
+            auto pps   = PlotPos(pos);
+            auto level = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
+
+#ifdef DEBUG
+            e.self().sendMessage(utils::format(
+                "[Debug] 玩家交互方块: {0}, 位置: {1}, 权限: {2}",
+                e.block().getBlockName(),
+                pos.toString(),
+                std::to_string(static_cast<int>(level))
+            ));
+#endif
+
+            if (pps.isValid()) {
+                if (level == PlotPermission::None) e.cancel(); // 拦截 None
+            } else {
+                if (level != PlotPermission::Admin) e.cancel(); // 拦截非 Admin
+            }
+            return true;
+        });
+
     // TODO:
-    // onAttackBlock            玩家攻击方块
-    // onAttackEntity           玩家攻击实体
-    // onChangeArmorStand       操作盔甲架
-    // onTakeItem               玩家捡起物品
-    // onDropItem               玩家丢出物品
-    // onBlockInteracted        方块接受玩家互动
-    // onUseFrameBlock          操作物品展示框
-    // onSpawnProjectile        弹射物创建
     // onMobHurt                生物受伤（包括玩家）
-    // onStepOnPressurePlate    生物踩压力板
-    // onRide                   生物骑乘
-    // onWitherBossDestroy      凋灵破坏方块
-    // onFarmLandDecay          耕地退化
-    // onPistonTryPush          活塞尝试推动
-    // onFireSpread             火焰蔓延
-    // onEat                    玩家正在吃食物
-    // onRedStoneUpdate         发生红石更新
-    // onBlockExplode           发生由方块引起的爆炸
-    // onEntityExplode          发生由实体引起的爆炸
-    // onLiquidFlow             液体方块流动
+    // onAttackBlock            玩家攻击方块           [lse]
+    // onChangeArmorStand       操作盔甲架             [lse]
+    // onDropItem               玩家丢出物品           [lse]
+    // onUseFrameBlock          操作物品展示框         [lse]
+    // onSpawnProjectile        弹射物创建             [lse]
+    // onStepOnPressurePlate    生物踩压力板           [lse]
+    // onRide                   生物骑乘               [lse]
+    // onWitherBossDestroy      凋灵破坏方块           [lse]
+    // onFarmLandDecay          耕地退化               [lse]
+    // onPistonTryPush          活塞尝试推动           [lse]
+    // onRedStoneUpdate         发生红石更新           [lse]
+    // onBlockExplode           发生由方块引起的爆炸    [lse]
+    // onEntityExplode          发生由实体引起的爆炸    [lse]
+    // onLiquidFlow             液体方块流动           [lse]
     return true;
 }
 
@@ -262,6 +341,10 @@ bool unRegisterEventListener() {
     bus.removeListener(mPlayerDestroyBlockEventListener);
     bus.removeListener(mPlayerPlaceingBlockEventListener);
     bus.removeListener(mPlayerUseItemOnEventListener);
+    bus.removeListener(mFireSpreadEventListener);
+    bus.removeListener(mPlayerAttackEventListener);
+    bus.removeListener(mPlayerPickUpItemEventListener);
+    bus.removeListener(mPlayerInteractBlockEventListener);
     return true;
 }
 
