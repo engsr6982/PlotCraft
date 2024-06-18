@@ -74,6 +74,10 @@ bool registerCommand() {
     // plo go <overworld|plot>
     cmd.overload<ParamGo>().text("go").required("dim").execute(LambdaGo);
 
+    // plo plot  当前地皮菜单
+
+    // plo  全局地皮菜单
+
     return true;
 }
 

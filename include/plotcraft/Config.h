@@ -13,8 +13,8 @@ struct _Config {
     int version = 1;
 
     struct _Generator {
-        int plotWidth  = 16;  // 地皮大小
-        int roadWidth  = 3;   // 道路宽度
+        int plotWidth  = 64;  // 地皮大小
+        int roadWidth  = 5;   // 道路宽度
         int generatorY = -61; // 生成层
 
         string roadBlock   = "minecraft:cherry_planks";
