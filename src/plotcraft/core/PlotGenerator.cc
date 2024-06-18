@@ -68,28 +68,6 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
     levelchunk.setBlockVolume(mPrototype, 0); // 设置基础地形
 
 
-#ifdef DEBUG
-    static bool log = false;
-    if (!log) {
-        auto               a = mPrototype.mBlocks.begin();
-        auto               b = mPrototype.mBlocks.end();
-        std::ostringstream oss;
-        oss << "mPrototype.mWidth: " << mPrototype.mWidth << std::endl;
-        oss << "mPrototype.mHeight: " << mPrototype.mHeight << std::endl;
-        oss << "mPrototype.mDepth: " << mPrototype.mDepth << std::endl;
-        oss << "mPrototype.mDimensionBottom: " << mPrototype.mDimensionBottom << std::endl;
-        if (mPrototype.mInitBlock != nullptr)
-            oss << "mPrototype.mInitBlock: " << mPrototype.mInitBlock->getName().c_str() << std::endl;
-        if (a != nullptr)
-            if ((*a) != nullptr) oss << "mPrototype.mBlocks.mBegin: " << (*a)->getName().c_str() << std::endl;
-        if (b != nullptr)
-            if ((*b) != nullptr) oss << "mPrototype.mBlocks.mEnd: " << (*b)->getName().c_str() << std::endl;
-        log = true;
-        std::cout << oss.str() << std::endl;
-    }
-#endif
-
-
     // 计算当前区块的全局坐标
     int startX = chunkPos.x * 16;
     int startZ = chunkPos.z * 16;
