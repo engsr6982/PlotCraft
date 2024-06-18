@@ -1,3 +1,4 @@
+#ifdef GEN_1
 #pragma once
 
 #include "mc/deps/core/data/DividedPos2d.h"
@@ -62,3 +63,5 @@ public:
 };
 
 } // namespace plo::core
+
+#endif // GEN_1

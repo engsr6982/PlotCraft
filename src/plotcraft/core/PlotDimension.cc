@@ -1,5 +1,4 @@
 #include "PlotDimension.h"
-#include "PlotGenerator.h"
 
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/DimensionConversionData.h"
@@ -15,6 +14,14 @@
 #include "mc/world/level/levelgen/structure/StructureSetRegistry.h"
 #include "mc/world/level/levelgen/structure/VillageFeature.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
+
+#ifdef GEN_1
+#include "PlotGenerator.h"
+#endif
+
+#ifdef GEN_2
+#include "PlotGenerator2.h"
+#endif
 
 
 namespace plo::core {

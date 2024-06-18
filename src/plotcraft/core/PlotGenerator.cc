@@ -1,3 +1,4 @@
+#ifdef GEN_1
 #include "PlotGenerator.h"
 #include "plotcraft/Config.h"
 
@@ -194,3 +195,4 @@ void PlotGenerator::garbageCollectBlueprints(buffer_span<ChunkPos> activeChunks)
 };
 
 } // namespace plo::core
+#endif // GEN_1

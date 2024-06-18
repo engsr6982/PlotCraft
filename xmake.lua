@@ -55,6 +55,7 @@ target("PlotCraft") -- Change this to your plugin name.
         add_defines("DEBUG")
     end
 
+    add_defines("GEN_2")
     add_defines("PLUGIN_NAME=\"PlotCraft\"")
     add_defines("PLUGIN_TITLE=\"§6[§aPlotCraft§6]§r \"")
 
