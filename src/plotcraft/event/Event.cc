@@ -8,6 +8,8 @@
 #include "ll/api/event/player/PlayerUseItemOnEvent.h"
 #include "ll/api/event/world/FireSpreadEvent.h"
 #include "mc/_HeaderOutputPredefine.h"
+#include "mc/enums/GameType.h"
+#include "mc/world/gamemode/GameMode.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "plotcraft/utils/Text.h"
@@ -319,6 +321,8 @@ bool registerEventListener() {
     mPlayerLeavePlotEventListener = bus.emplaceListener<PlayerLeavePlot>([](PlayerLeavePlot& e) {
         auto pl = e.getPlayer();
         if (pl == nullptr) return;
+        if (pl->getPlayerGameType() == GameType::Creative || pl->getPlayerGameType() == GameType::Spectator)
+            return; // 不处理创造模式和旁观模式
         auto pps   = PlotPos(pl->getPosition());
         auto level = database::PlotDB::getInstance().getPermission(pl->getUuid(), pps.toString());
 
@@ -329,6 +333,8 @@ bool registerEventListener() {
     mPlayerEnterPlotEventListener = bus.emplaceListener<PlayerEnterPlot>([](PlayerEnterPlot& e) {
         auto pl = e.getPlayer();
         if (pl == nullptr) return;
+        if (pl->getPlayerGameType() == GameType::Creative || pl->getPlayerGameType() == GameType::Spectator)
+            return; // 不处理创造模式和旁观模式
         auto pps   = PlotPos(pl->getPosition());
         auto level = database::PlotDB::getInstance().getPermission(pl->getUuid(), pps.toString());
 
