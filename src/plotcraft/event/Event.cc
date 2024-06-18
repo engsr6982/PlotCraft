@@ -83,6 +83,7 @@ bool registerEventListener() {
                     // 玩家进入地皮
                     bus.publish(PlayerEnterPlot(plotPos, &p)); // 玩家进入地皮，当前位置有效，使用当前位置
                     pt::set(p.getRealName(), plotPos);         // 更新玩家位置
+                    p.setAbility(::AbilitiesIndex::MayFly, true); // 地皮内允许飞行
 #ifdef DEBUG
                     p.sendMessage("[Debug] 进入地皮: " + plotPos.toDebug());
 #endif
@@ -139,6 +140,7 @@ bool registerEventListener() {
                     // 玩家离开地皮
                     bus.publish(PlayerLeavePlot(_pos2, &p)); // 玩家离开地皮，当前位置无效，使用上次位置
                     pt::set(p.getRealName(), plotPos);       // 更新玩家位置
+                    p.setAbility(::AbilitiesIndex::MayFly, false); // 地皮外禁用飞行
 #ifdef DEBUG
                     p.sendMessage("[Debug] 离开地皮: " + _pos2.toDebug());
 #endif

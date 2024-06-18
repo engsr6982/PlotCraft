@@ -76,4 +76,5 @@ bool registerCommand() {
 
     return true;
 }
+
 } // namespace plo::command
