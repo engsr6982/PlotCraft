@@ -17,6 +17,6 @@ namespace plo::gui {
 
 void index(Player& player);
 
-void plot(Player& player, PlotPos const plotPos);
+void plot(Player& player, PlotPos plotPos);
 
 } // namespace plo::gui

@@ -59,9 +59,8 @@ const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, Par
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
     if (param.dim == ParamGo::overworld) {
-        auto& dim = player.getDimension();
-        auto  sp  = dim.getSpawnPos();
-        player.teleport(Vec3{sp.x, dim.getSpawnYPosition(), sp.z}, 0); // 传送到重生点
+        // auto& dim = player.getDimension();
+        player.teleport(player.getExpectedSpawnPosition(), player.getSpawnDimension()); // 传送到重生点
     } else {
         player.teleport(Vec3{0, config::cfg.generator.generatorY + 2, 0}, VanillaDimensions::fromString("plot"));
     }

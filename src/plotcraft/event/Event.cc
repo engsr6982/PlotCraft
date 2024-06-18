@@ -109,6 +109,7 @@ bool registerEventListener() {
                 if (plot.mPlotOwner.isEmpty()) {
                     // Tip2
                     pkt.mMessage = fmt::format(
+                        // TODO：修改命令
                         "地皮: {0}\n主人: 无主  |  价格: {1}\n输入：/plo buy 购买",
                         plotPos.toDebug(),
                         config::cfg.func.buyPlotPrice
@@ -150,6 +151,7 @@ bool registerEventListener() {
 #endif
                 }
                 // Tip3
+                // TODO: 修改命令
                 pkt.mMessage = fmt::format("{0} | 地皮世界\n输入: /plo 打开地皮菜单", PLUGIN_TITLE);
             }
 
