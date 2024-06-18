@@ -12,6 +12,7 @@
 #include "mc/world/gamemode/GameMode.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
+#include "plotcraft/Config.h"
 #include "plotcraft/utils/Text.h"
 #include "plotcraft/utils/Utils.h"
 
@@ -318,30 +319,32 @@ bool registerEventListener() {
 
 
     // 监听自己插件的事件
-    mPlayerLeavePlotEventListener = bus.emplaceListener<PlayerLeavePlot>([](PlayerLeavePlot& e) {
-        auto pl = e.getPlayer();
-        if (pl == nullptr) return;
-        if (pl->getPlayerGameType() == GameType::Creative || pl->getPlayerGameType() == GameType::Spectator)
-            return; // 不处理创造模式和旁观模式
-        auto pps   = PlotPos(pl->getPosition());
-        auto level = database::PlotDB::getInstance().getPermission(pl->getUuid(), pps.toString());
+    if (config::cfg.func.inPlotCanFly) {
+        mPlayerLeavePlotEventListener = bus.emplaceListener<PlayerLeavePlot>([](PlayerLeavePlot& e) {
+            auto pl = e.getPlayer();
+            if (pl == nullptr) return;
+            if (pl->getPlayerGameType() == GameType::Creative || pl->getPlayerGameType() == GameType::Spectator)
+                return; // 不处理创造模式和旁观模式
+            auto pps   = PlotPos(pl->getPosition());
+            auto level = database::PlotDB::getInstance().getPermission(pl->getUuid(), pps.toString());
 
-        if (!pps.isValid() && level != PlotPermission::Admin) {
-            pl->setAbility(::AbilitiesIndex::MayFly, false);
-        }
-    });
-    mPlayerEnterPlotEventListener = bus.emplaceListener<PlayerEnterPlot>([](PlayerEnterPlot& e) {
-        auto pl = e.getPlayer();
-        if (pl == nullptr) return;
-        if (pl->getPlayerGameType() == GameType::Creative || pl->getPlayerGameType() == GameType::Spectator)
-            return; // 不处理创造模式和旁观模式
-        auto pps   = PlotPos(pl->getPosition());
-        auto level = database::PlotDB::getInstance().getPermission(pl->getUuid(), pps.toString());
+            if (!pps.isValid() && level != PlotPermission::Admin) {
+                pl->setAbility(::AbilitiesIndex::MayFly, false);
+            }
+        });
+        mPlayerEnterPlotEventListener = bus.emplaceListener<PlayerEnterPlot>([](PlayerEnterPlot& e) {
+            auto pl = e.getPlayer();
+            if (pl == nullptr) return;
+            if (pl->getPlayerGameType() == GameType::Creative || pl->getPlayerGameType() == GameType::Spectator)
+                return; // 不处理创造模式和旁观模式
+            auto pps   = PlotPos(pl->getPosition());
+            auto level = database::PlotDB::getInstance().getPermission(pl->getUuid(), pps.toString());
 
-        if (pps.isValid() && level != PlotPermission::None) {
-            pl->setAbility(::AbilitiesIndex::MayFly, true);
-        }
-    });
+            if (pps.isValid() && level != PlotPermission::None) {
+                pl->setAbility(::AbilitiesIndex::MayFly, true);
+            }
+        });
+    }
 
     // TODO:
     // onMobHurt                生物受伤（包括玩家）
