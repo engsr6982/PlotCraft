@@ -72,6 +72,10 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
     int startX = chunkPos.x * 16;
     int startZ = chunkPos.z * 16;
 
+    // 计算边框偏移量
+    int borderOffsetX = (gen.plotWidth + gen.roadWidth) % gen.plotWidth - 1;
+    int borderOffsetZ = (gen.plotWidth + gen.roadWidth) % gen.plotWidth - 1;
+
     // 遍历区块内的每个方块位置
     for (int x = 0; x < 16; x++) {
         for (int z = 0; z < 16; z++) {
@@ -87,7 +91,7 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
             if (gridX >= gen.plotWidth || gridZ >= gen.plotWidth) {
                 // 道路
                 levelchunk.setBlock(ChunkBlockPos{BlockPos(x, mGeneratorY, z), -64}, roadBlock, blockSource, nullptr);
-            } else if (gridX == gen.roadWidth - 3 || gridZ == gen.roadWidth - 3 || gridX == gen.plotWidth - 1 || gridZ == gen.plotWidth - 1) {
+            } else if (gridX == borderOffsetX || gridZ == borderOffsetZ || gridX == gen.plotWidth - 1 || gridZ == gen.plotWidth - 1) {
                 // 边框
                 levelchunk
                     .setBlock(ChunkBlockPos{BlockPos(x, mGeneratorY + 1, z), -64}, borderBlock, blockSource, nullptr);
