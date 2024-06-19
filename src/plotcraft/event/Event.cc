@@ -5,7 +5,6 @@
 #include "ll/api/event/player/PlayerInteractBlockEvent.h"
 #include "ll/api/event/player/PlayerPickUpItemEvent.h"
 #include "ll/api/event/player/PlayerPlaceBlockEvent.h"
-#include "ll/api/event/player/PlayerUseItemOnEvent.h"
 #include "ll/api/event/world/FireSpreadEvent.h"
 #include "mc/_HeaderOutputPredefine.h"
 #include "mc/enums/GameType.h"
@@ -217,7 +216,7 @@ bool registerEventListener() {
         });
 
     mPlayerUseItemOnEventListener =
-        bus.emplaceListener<ll::event::PlayerUseItemOnEvent>([](ll::event::PlayerUseItemOnEvent& e) {
+        bus.emplaceListener<ll::event::PlayerInteractBlockEvent>([](ll::event::PlayerInteractBlockEvent& e) {
             if (e.self().getDimensionId() != getPlotDim()) return true;
             auto pos   = e.clickPos(); // 点击的位置
             auto pps   = PlotPos(pos); // 获取点击位置的地皮坐标
@@ -299,7 +298,7 @@ bool registerEventListener() {
     mPlayerInteractBlockEventListener =
         bus.emplaceListener<ll::event::PlayerInteractBlockEvent>([](ll::event::PlayerInteractBlockEvent& e) {
             if (e.self().getDimensionId() != getPlotDim()) return true;
-            auto pos   = e.pos(); // 交互的方块位置
+            auto pos   = e.blockPos(); // 交互的方块位置
             auto pps   = PlotPos(pos);
             auto level = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
 
