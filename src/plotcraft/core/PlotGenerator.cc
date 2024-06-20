@@ -56,25 +56,21 @@ int positiveMod(int value, int modulus) {
 
 void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateReplacementDataLoad */) {
     auto& gen = config::cfg.generator;
+
     // 方块配置
     const Block& roadBlock   = *Block::tryGetFromRegistry(gen.roadBlock, 0);
     const Block& fillBlock   = *Block::tryGetFromRegistry(gen.fillBlock, 0);
     const Block& borderBlock = *Block::tryGetFromRegistry(gen.borderBlock, 0);
 
     // 生成/计算
-    auto& chunkPos = levelchunk.getPosition();
-
-    auto blockSource = &getDimension().getBlockSourceFromMainChunkSource();
+    auto& chunkPos    = levelchunk.getPosition();
+    auto  blockSource = &getDimension().getBlockSourceFromMainChunkSource();
     levelchunk.setBlockVolume(mPrototype, 0); // 设置基础地形
 
 
     // 计算当前区块的全局坐标
     int startX = chunkPos.x * 16;
     int startZ = chunkPos.z * 16;
-
-    // 计算边框偏移量
-    int borderOffsetX = (gen.plotWidth + gen.roadWidth) % gen.plotWidth - 1;
-    int borderOffsetZ = (gen.plotWidth + gen.roadWidth) % gen.plotWidth - 1;
 
     // 遍历区块内的每个方块位置
     for (int x = 0; x < 16; x++) {
@@ -91,7 +87,8 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
             if (gridX >= gen.plotWidth || gridZ >= gen.plotWidth) {
                 // 道路
                 levelchunk.setBlock(ChunkBlockPos{BlockPos(x, mGeneratorY, z), -64}, roadBlock, blockSource, nullptr);
-            } else if (gridX == borderOffsetX || gridZ == borderOffsetZ || gridX == gen.plotWidth - 1 || gridZ == gen.plotWidth - 1) {
+                //      北和西（靠近0,0,0）         南和东（地皮对角）
+            } else if (gridX == 0 || gridZ == 0 || gridX == gen.plotWidth - 1 || gridZ == gen.plotWidth - 1) {
                 // 边框
                 levelchunk
                     .setBlock(ChunkBlockPos{BlockPos(x, mGeneratorY + 1, z), -64}, borderBlock, blockSource, nullptr);

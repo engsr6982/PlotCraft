@@ -18,7 +18,7 @@ namespace plo::core {
 
 class PlotGenerator : public FlatWorldGenerator {
 public:
-    int mGeneratorY = -666; // 地皮生成层
+    int mGeneratorY; // 地皮生成层
 
     PlotGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON);
 
