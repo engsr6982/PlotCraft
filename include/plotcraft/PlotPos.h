@@ -36,6 +36,10 @@ public:
 
     PLAPI bool isPosInPlot(const Vec3& vec3);
 
+    PLAPI void tryFixMinAndMaxPos();
+
+    PLAPI bool isPosOnBorder(const Vec3& vec3);
+
     PLAPI std::vector<PlotPos> getAdjacentPlots();
 
     // 重载比较运算符

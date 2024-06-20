@@ -186,7 +186,10 @@ bool registerEventListener() {
 
             if (pps.isValid()) {
                 // 破坏目标在地皮内
-                if (level == PlotPermission::None) e.cancel(); // 拦截 None
+                if (pps.isPosOnBorder(pos)) {
+                    if (level != PlotPermission::Admin) e.cancel(); // 拦截非 Admin 破坏边界方块
+                    else utils::sendText<utils::Level::Warn>(e.self(), "请勿破坏地皮边框!");
+                } else if (level == PlotPermission::None) e.cancel(); // 拦截 None
             } else {
                 // 破坏目标不在地皮内
                 if (level != PlotPermission::Admin) e.cancel(); // 拦截非 Admin

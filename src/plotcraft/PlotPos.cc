@@ -76,11 +76,36 @@ std::vector<PlotPos> PlotPos::getAdjacentPlots() {
 }
 
 
+bool PlotPos::isPosOnBorder(const Vec3& vec3) {
+    if (vec3.y < -64 || vec3.y > 320) {
+        return false;
+    }
+
+    tryFixMinAndMaxPos();
+
+    //  X 和 Z 坐标是否在边框上
+    bool onXBorder = (vec3.x == minPos.x || vec3.x == maxPos.x);
+    bool onZBorder = (vec3.z == minPos.z || vec3.z == maxPos.z);
+
+    //  X 和 Z 坐标是否在地皮范围内
+    bool withinXRange = (vec3.x >= minPos.x && vec3.x <= maxPos.x);
+    bool withinZRange = (vec3.z >= minPos.z && vec3.z <= maxPos.z);
+
+    // 判断是否在边框上
+    return (onXBorder && withinXRange) || (onZBorder && withinZRange);
+}
+
+
+void PlotPos::tryFixMinAndMaxPos() {
+    if (minPos.x > maxPos.x) std::swap(minPos.x, maxPos.x);
+    if (minPos.y > maxPos.y) std::swap(minPos.y, maxPos.y);
+    if (minPos.z > maxPos.z) std::swap(minPos.z, maxPos.z);
+}
+
+
+bool PlotPos::operator!=(const PlotPos& other) const { return !(*this == other); }
 bool PlotPos::operator==(const PlotPos& other) const {
     return x == other.x && z == other.z && minPos == other.minPos && maxPos == other.maxPos;
 }
-
-bool PlotPos::operator!=(const PlotPos& other) const { return !(*this == other); }
-
 
 } // namespace plo
