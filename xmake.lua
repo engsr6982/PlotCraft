@@ -16,6 +16,9 @@ if not has_config("vs_runtime") then
     set_runtimes("MD")
 end
 
+option("gen2")
+    set_default(false)
+
 target("PlotCraft") -- Change this to your plugin name.
     add_cxflags(
         "/EHa",
@@ -55,7 +58,13 @@ target("PlotCraft") -- Change this to your plugin name.
         add_defines("DEBUG")
     end
 
-    add_defines("GEN_1")
+    -- 地皮生成器选择
+    if get_config("gen2") then
+        add_defines("GEN_2")
+    else 
+        add_defines("GEN_1")
+    end
+
     add_defines("PLUGIN_NAME=\"PlotCraft\"")
     add_defines("PLUGIN_TITLE=\"§6[§aPlotCraft§6]§r \"")
 
