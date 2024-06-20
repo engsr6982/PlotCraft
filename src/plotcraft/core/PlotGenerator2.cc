@@ -1,3 +1,4 @@
+#include <cstdio>
 #ifdef GEN_2
 #include "PlotGenerator2.h"
 
@@ -13,10 +14,10 @@ namespace plo::core {
 PlotGenerator::PlotGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON)
 : FlatWorldGenerator(dimension, seed, generationOptionsJSON) {
 
-    int _i = 0;
-    for (auto* block : mPrototypeBlocks) {
-        std::cout << "[" + std::to_string(_i++) + "] " + block->getName().getString() << std::endl;
-    }
+    // int _i = 0;
+    // for (auto* block : mPrototypeBlocks) {
+    //     std::cout << "[" + std::to_string(_i++) + "] " + block->getName().getString() << std::endl;
+    // }
     // 此for循环打印得出：
     // mPrototypeBlocks 穷举了 16*16*16 区域的方块
     // 0    -> bedrock
@@ -110,6 +111,16 @@ PlotGenerator::PlotGenerator(Dimension& dimension, uint seed, Json::Value const&
     }
 }
 
+#ifdef DEBUG
+
+#define DLOG(x) printf(x);
+
+#else
+
+#define DLOG(x)
+
+#endif
+
 void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool) {
     auto chunkPos = levelchunk.getPosition();
 
@@ -127,14 +138,17 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool) {
     // 控制生成道路
     if (pos_x == 0) {
         if (pos_z == 0) {
+            DLOG("w_n_angle");
             buffer.mBegin = &*w_n_angle.begin(); // 处理西北角
             buffer.mEnd   = &*w_n_angle.end();
             levelchunk.setBlockVolume(BlockVolume(buffer, 16, height, 16, defaultBlock, minHeight), 0);
         } else if (pos_z == (n - 1)) {
+            DLOG("s_w_angle");
             buffer.mBegin = &*s_w_angle.begin(); // 处理西南角
             buffer.mEnd   = &*s_w_angle.end();
             levelchunk.setBlockVolume(BlockVolume(buffer, 16, height, 16, defaultBlock, minHeight), 0);
         } else {
+            DLOG("west_side");
             buffer.mBegin = &*west_side.begin(); // 处理西边
             buffer.mEnd   = &*west_side.end();
             levelchunk.setBlockVolume(BlockVolume(buffer, 16, height, 16, defaultBlock, minHeight), 0);
@@ -142,23 +156,28 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool) {
 
     } else if (pos_x == (n - 1)) {
         if (pos_z == 0) {
+            DLOG("n_e_angle");
             buffer.mBegin = &*n_e_angle.begin(); // 处理东北角
             buffer.mEnd   = &*n_e_angle.end();
             levelchunk.setBlockVolume(BlockVolume(buffer, 16, height, 16, defaultBlock, minHeight), 0);
         } else if (pos_z == (n - 1)) {
+            DLOG("e_s_angle");
             buffer.mBegin = &*e_s_angle.begin(); // 处理东南角
             buffer.mEnd   = &*e_s_angle.end();
             levelchunk.setBlockVolume(BlockVolume(buffer, 16, height, 16, defaultBlock, minHeight), 0);
         } else {
+            DLOG("east_side");
             buffer.mBegin = &*east_side.begin(); // 处理东边
             buffer.mEnd   = &*east_side.end();
             levelchunk.setBlockVolume(BlockVolume(buffer, 16, height, 16, defaultBlock, minHeight), 0);
         }
     } else if (pos_z == 0) {
+        DLOG("north_side");
         buffer.mBegin = &*north_side.begin(); // 处理北边
         buffer.mEnd   = &*north_side.end();
         levelchunk.setBlockVolume(BlockVolume(buffer, 16, height, 16, defaultBlock, minHeight), 0);
     } else if (pos_z == (n - 1)) {
+        DLOG("south_side");
         buffer.mBegin = &*south_side.begin(); // 处理南边
         buffer.mEnd   = &*south_side.end();
         levelchunk.setBlockVolume(BlockVolume(buffer, 16, height, 16, defaultBlock, minHeight), 0);

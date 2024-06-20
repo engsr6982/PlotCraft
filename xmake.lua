@@ -16,8 +16,9 @@ if not has_config("vs_runtime") then
     set_runtimes("MD")
 end
 
-option("gen2")
-    set_default(false)
+option("gen")
+    set_default(1)
+    set_values(1, 2)
 
 target("PlotCraft") -- Change this to your plugin name.
     add_cxflags(
@@ -59,7 +60,7 @@ target("PlotCraft") -- Change this to your plugin name.
     end
 
     -- 地皮生成器选择
-    if get_config("gen2") then
+    if get_config("gen") == 2 then
         add_defines("GEN_2")
     else 
         add_defines("GEN_1")
