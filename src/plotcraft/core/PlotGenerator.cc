@@ -16,6 +16,9 @@
 #include "mc/world/level/block/BlockLegacy.h"
 #include "mc/world/level/block/BlockVolume.h"
 #include "mc/world/level/block/actor/BlockActor.h"
+#include "mc/world/level/block/registry/BlockTypeRegistry.h"
+#include "mc/world/level/block/utils/BedrockBlockNames.h"
+#include "mc/world/level/block/utils/VanillaBlockTypeIds.h"
 #include "mc/world/level/chunk/ChunkViewSource.h"
 #include "mc/world/level/chunk/LevelChunk.h"
 #include "mc/world/level/chunk/PostprocessingManager.h"
@@ -31,15 +34,33 @@ PlotGenerator::PlotGenerator(Dimension& dimension, uint seed, Json::Value const&
     mBiome       = getLevel().getBiomeRegistry().lookupByHash(VanillaBiomeNames::Plains);
     mBiomeSource = std::make_unique<FixedBiomeSource>(*mBiome);
 
-    // 动态确定生成层
-    int y = -64;
-    for (auto bl : mPrototypeBlocks) {
-        if (bl->getTypeName() == "minecraft:air") {
-            mGeneratorY = y;
-            break;
-        }
-        y++;
+    auto& gen = config::cfg.generator;
+
+
+    // 初始化方块指针
+    mBlock_Air     = &BlockTypeRegistry::getDefaultBlockState("minecraft:air");
+    mBlock_Dirt    = &BlockTypeRegistry::getDefaultBlockState("minecraft:dirt");
+    mBlock_Grass   = &BlockTypeRegistry::getDefaultBlockState("minecraft:grass_block");
+    mBlock_Bedrock = &BlockTypeRegistry::getDefaultBlockState("minecraft:bedrock");
+    mBlock_Road    = &BlockTypeRegistry::getDefaultBlockState(gen.roadBlock.c_str());
+    mBlock_Fill    = &BlockTypeRegistry::getDefaultBlockState(gen.fillBlock.c_str());
+    mBlock_Border  = &BlockTypeRegistry::getDefaultBlockState(gen.borderBlock.c_str());
+    // 检查用户输入
+    if (!mBlock_Road || !mBlock_Fill || !mBlock_Border) {
+        throw std::runtime_error("Invalid block type");
     }
+
+    mTemplateSubChunk_0 = TemplateSubChunk(4096, mBlock_Dirt);
+    mTemplateSubChunk_1 = TemplateSubChunk(4096, mBlock_Dirt);
+
+    // 设置基岩
+    // int next = 0;
+    // for (int i = 0; i < 16; i++) {
+    //     mTemplateSubChunk_0[next]  = mBlock_Bedrock;
+    //     next                      += 16; // 下一个方块的位置
+    // }
+
+    mGeneratorY = -60; // 地面高度
 }
 
 
@@ -57,16 +78,24 @@ int positiveMod(int value, int modulus) {
 void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateReplacementDataLoad */) {
     auto& gen = config::cfg.generator;
 
-    // 方块配置
-    const Block& roadBlock   = *Block::tryGetFromRegistry(gen.roadBlock, 0);
-    const Block& fillBlock   = *Block::tryGetFromRegistry(gen.fillBlock, 0);
-    const Block& borderBlock = *Block::tryGetFromRegistry(gen.borderBlock, 0);
+    auto blockSource = &mDimension->getBlockSourceFromMainChunkSource();
+    // auto minHeight   = mDimension->getMinHeight();
+
+    // 生成基础地形
+    // buffer_span_mut<Block const*> buffer;
+    // buffer.mBegin = &*mTemplateSubChunk_0.begin();
+    // buffer.mEnd   = &*mTemplateSubChunk_0.end();
+    // levelchunk.setBlockVolume(BlockVolume{buffer, 16, 16, 16, *mBlock_Air, minHeight}, 0);
+    // 模板2
+    // buffer_span_mut<Block const*> buffer2;
+    // buffer2.mBegin = &*mTemplateSubChunk_1.begin();
+    // buffer2.mEnd   = &*mTemplateSubChunk_1.end();
+    // levelchunk.setBlockVolume(BlockVolume{buffer2, 16, 16, 16, *mBlock_Air, minHeight}, 16);
+
+    levelchunk.setBlockVolume(mPrototype, 0);
 
     // 生成/计算
-    auto& chunkPos    = levelchunk.getPosition();
-    auto  blockSource = &getDimension().getBlockSourceFromMainChunkSource();
-    levelchunk.setBlockVolume(mPrototype, 0); // 设置基础地形
-
+    auto& chunkPos = levelchunk.getPosition();
 
     // 计算当前区块的全局坐标
     int startX = chunkPos.x * 16;
@@ -86,15 +115,21 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
             // 判断是否为道路或边框
             if (gridX >= gen.plotWidth || gridZ >= gen.plotWidth) {
                 // 道路
-                levelchunk.setBlock(ChunkBlockPos{BlockPos(x, mGeneratorY, z), -64}, roadBlock, blockSource, nullptr);
+                levelchunk
+                    .setBlock(ChunkBlockPos{BlockPos(x, mGeneratorY, z), -64}, *mBlock_Road, blockSource, nullptr);
                 //      北和西（靠近0,0,0）         南和东（地皮对角）
             } else if (gridX == 0 || gridZ == 0 || gridX == gen.plotWidth - 1 || gridZ == gen.plotWidth - 1) {
                 // 边框
-                levelchunk
-                    .setBlock(ChunkBlockPos{BlockPos(x, mGeneratorY + 1, z), -64}, borderBlock, blockSource, nullptr);
+                levelchunk.setBlock(
+                    ChunkBlockPos{BlockPos(x, mGeneratorY + 1, z), -64},
+                    *mBlock_Border,
+                    blockSource,
+                    nullptr
+                );
             } else {
                 // 地皮内部
-                levelchunk.setBlock(ChunkBlockPos{BlockPos(x, mGeneratorY, z), -64}, fillBlock, blockSource, nullptr);
+                levelchunk
+                    .setBlock(ChunkBlockPos{BlockPos(x, mGeneratorY, z), -64}, *mBlock_Fill, blockSource, nullptr);
             }
         }
     }
