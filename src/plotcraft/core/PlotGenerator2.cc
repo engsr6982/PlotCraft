@@ -1,6 +1,7 @@
 #include <cstdio>
 #ifdef GEN_2
 #include "PlotGenerator2.h"
+#include "plotcraft/Config.h"
 
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/registry/BlockTypeRegistry.h"
@@ -13,11 +14,11 @@ namespace plo::core {
 
 PlotGenerator::PlotGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON)
 : FlatWorldGenerator(dimension, seed, generationOptionsJSON) {
+    auto& gen = config::cfg.generator;
+    chunk_n   = gen.plotChunkSize;
 
-
-    mBlock_GrassPath      = &BlockTypeRegistry::getDefaultBlockState(VanillaBlockTypeIds::GrassPath);
-    mBlock_StoneBlockSlab = &BlockTypeRegistry::getDefaultBlockState(VanillaBlockTypeIds::StoneSlab2);
-
+    mBlock_GrassPath      = &BlockTypeRegistry::getDefaultBlockState(gen.roadBlock.c_str());
+    mBlock_StoneBlockSlab = &BlockTypeRegistry::getDefaultBlockState(gen.borderBlock.c_str());
 
     auto height = mPrototype.mHeight; // 16
     for (int i = 0; i < 16; i++) {

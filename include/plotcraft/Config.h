@@ -10,8 +10,9 @@ using string = std::string;
 namespace plo::config {
 
 struct _Config {
-    int version = 2;
+    int version = 3;
 
+#ifdef GEN_1
     struct _Generator {
         int plotWidth = 64; // 地皮大小
         int roadWidth = 5;  // 道路宽度
@@ -20,6 +21,17 @@ struct _Config {
         string fillBlock   = "minecraft:grass_block";
         string borderBlock = "minecraft:stone_block_slab";
     } generator;
+#endif
+
+#ifdef GEN_2
+    struct _Generator {
+        int plotChunkSize = 3; // 地皮区块
+
+        string roadBlock   = "minecraft:cherry_planks";
+        string borderBlock = "minecraft:stone_block_slab";
+    } generator;
+#endif
+
     utils::MoneysConfig moneys; // 经济系统配置
     struct _Func {
         int  maxBuyPlotCount = 10;    // 最大购买地皮数量
