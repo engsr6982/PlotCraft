@@ -1,3 +1,5 @@
+#include "mc/world/level/block/Block.h"
+#include <memory>
 #ifdef GEN_1
 #pragma once
 
@@ -16,26 +18,29 @@ class ChunkPos;
 
 namespace plo::core {
 
-using TemplateSubChunk = std::vector<Block const*>;
+using TemplateSubChunkVector = std::vector<Block const*>;
 
 class PlotGenerator : public FlatWorldGenerator {
 public:
-    int mGeneratorY; // 地皮生成层
-
     Block const* mBlock_Dirt;    // 初始方块：泥土
     Block const* mBlock_Grass;   // 初始方块：草
     Block const* mBlock_Bedrock; // 初始方块：地基
-    Block const* mBlock_Air;     // 初始方块：空气
 
     Block const* mBlock_Road;   // 道路方块
     Block const* mBlock_Border; // 边框方块
     Block const* mBlock_Fill;   // 填充方块
 
-    TemplateSubChunk mTemplateSubChunk_0; // 地形模板：第0层  [1]: 基岩 [2~16]: 泥土
-    TemplateSubChunk mTemplateSubChunk_1; // 地形模板：第1层  [1~15]: 泥土 [16]: 草
+
+    int mSubChunkNum = 4; // 子区块数量
+    int mGeneratorY;      // 地皮生成层
+
+    TemplateSubChunkVector                    mVector_Bedrock1_Dirt15; // 模板：1层基岩 + 15层泥土
+    TemplateSubChunkVector                    mVector_Dirt16;          // 模板：16层泥土
+    TemplateSubChunkVector                    mVector_Dirt15_Grass1;   // 模板：15层泥土 + 1层草
+    std::vector<std::unique_ptr<BlockVolume>> mTemplateSubChunks;      // 子区块地形模板
+
 
     PlotGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON);
-
     void loadChunk(LevelChunk& levelchunk, bool forceImmediateReplacementDataLoad);
 };
 

@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <memory>
+#include <vector>
 #ifdef GEN_1
 #include "PlotGenerator.h"
 #include "plotcraft/Config.h"
@@ -38,7 +41,6 @@ PlotGenerator::PlotGenerator(Dimension& dimension, uint seed, Json::Value const&
 
 
     // 初始化方块指针
-    mBlock_Air     = &BlockTypeRegistry::getDefaultBlockState("minecraft:air");
     mBlock_Dirt    = &BlockTypeRegistry::getDefaultBlockState("minecraft:dirt");
     mBlock_Grass   = &BlockTypeRegistry::getDefaultBlockState("minecraft:grass_block");
     mBlock_Bedrock = &BlockTypeRegistry::getDefaultBlockState("minecraft:bedrock");
@@ -50,17 +52,35 @@ PlotGenerator::PlotGenerator(Dimension& dimension, uint seed, Json::Value const&
         throw std::runtime_error("Invalid block type");
     }
 
-    mTemplateSubChunk_0 = TemplateSubChunk(4096, mBlock_Dirt);
-    mTemplateSubChunk_1 = TemplateSubChunk(4096, mBlock_Dirt);
+    mGeneratorY = -64 + (mSubChunkNum * 16) - 1;
 
-    // 设置基岩
-    // int next = 0;
-    // for (int i = 0; i < 16; i++) {
-    //     mTemplateSubChunk_0[next]  = mBlock_Bedrock;
-    //     next                      += 16; // 下一个方块的位置
-    // }
+    // 子区块模板方块
+    mVector_Dirt16          = TemplateSubChunkVector(4096, mBlock_Dirt);
+    mVector_Bedrock1_Dirt15 = TemplateSubChunkVector(4096, mBlock_Dirt);
+    mVector_Dirt15_Grass1   = TemplateSubChunkVector(4096, mBlock_Dirt);
 
-    mGeneratorY = -60; // 地面高度
+
+    for (size_t i = 0; i < 256; ++i) {
+        mVector_Bedrock1_Dirt15[i * 16]      = mBlock_Bedrock; // 将每个子区块的第一个方块设置为基岩
+        mVector_Dirt15_Grass1[(i * 16) + 15] = mBlock_Grass;   // 将每个子区块的第15方块设置为草方块
+    }
+
+
+    // 生成4个模板子区块Volume
+    for (int i = 0; i < mSubChunkNum; i++) {
+        // 拷贝原有的 BlockVolume 而不使用构造函数（使用构造函数不生效，原因未知）
+        auto ptr            = std::make_unique<BlockVolume>(mPrototype);
+        ptr->mBlocks.mBegin = &*mVector_Dirt16.begin(); // 指向 mVector_Dirt
+        ptr->mBlocks.mEnd   = &*mVector_Dirt16.end();
+        mTemplateSubChunks.push_back(std::move(ptr));
+    }
+    // 确保有基岩和草方块
+    auto begin            = mTemplateSubChunks[0].get();
+    begin->mBlocks.mBegin = &*mVector_Bedrock1_Dirt15.begin(); // 指向 mVector_Bedrock1_Dirt15
+    begin->mBlocks.mEnd   = &*mVector_Bedrock1_Dirt15.end();
+    auto end              = mTemplateSubChunks[mSubChunkNum - 1].get();
+    end->mBlocks.mEnd     = &*mVector_Dirt15_Grass1.end(); // 指向 mVector_Dirt15_Grass1
+    end->mBlocks.mBegin   = &*mVector_Dirt15_Grass1.begin();
 }
 
 
@@ -79,20 +99,14 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
     auto& gen = config::cfg.generator;
 
     auto blockSource = &mDimension->getBlockSourceFromMainChunkSource();
-    // auto minHeight   = mDimension->getMinHeight();
 
-    // 生成基础地形
-    // buffer_span_mut<Block const*> buffer;
-    // buffer.mBegin = &*mTemplateSubChunk_0.begin();
-    // buffer.mEnd   = &*mTemplateSubChunk_0.end();
-    // levelchunk.setBlockVolume(BlockVolume{buffer, 16, 16, 16, *mBlock_Air, minHeight}, 0);
-    // 模板2
-    // buffer_span_mut<Block const*> buffer2;
-    // buffer2.mBegin = &*mTemplateSubChunk_1.begin();
-    // buffer2.mEnd   = &*mTemplateSubChunk_1.end();
-    // levelchunk.setBlockVolume(BlockVolume{buffer2, 16, 16, 16, *mBlock_Air, minHeight}, 16);
+    // 生成模板地形
+    int next = 0;
+    for (int i = 0; i < mSubChunkNum; i++) {
+        levelchunk.setBlockVolume(*mTemplateSubChunks[i].get(), next);
+        next += 16;
+    }
 
-    levelchunk.setBlockVolume(mPrototype, 0);
 
     // 生成/计算
     auto& chunkPos = levelchunk.getPosition();
@@ -127,9 +141,9 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
                     nullptr
                 );
             } else {
-                // 地皮内部
-                levelchunk
-                    .setBlock(ChunkBlockPos{BlockPos(x, mGeneratorY, z), -64}, *mBlock_Fill, blockSource, nullptr);
+                // 地皮内部(使用模板地形生成的草方块)
+                // levelchunk
+                //     .setBlock(ChunkBlockPos{BlockPos(x, mGeneratorY, z), -64}, *mBlock_Fill, blockSource, nullptr);
             }
         }
     }
