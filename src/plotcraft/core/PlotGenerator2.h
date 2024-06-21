@@ -1,3 +1,4 @@
+#include "mc/world/level/block/BlockVolume.h"
 #ifdef GEN_2
 #pragma once
 
@@ -17,7 +18,20 @@ public:
     std::vector<Block const*> e_s_angle  = mPrototypeBlocks; // 东南角的方块
     std::vector<Block const*> s_w_angle  = mPrototypeBlocks; // 西南角的方块
     std::vector<Block const*> w_n_angle  = mPrototypeBlocks; // 西北角的方块
-    std::vector<Block const*> backup_    = mPrototypeBlocks; // 备份方块
+
+
+    Block const* mBlock_GrassPath;      // 草径
+    Block const* mBlock_StoneBlockSlab; // 石砖台阶
+
+
+    BlockVolume mVol_East_Side  = mPrototype; // 东
+    BlockVolume mVol_South_Side = mPrototype; // 南
+    BlockVolume mVol_West_Side  = mPrototype; // 西
+    BlockVolume mVol_North_Side = mPrototype; // 北
+    BlockVolume mVol_NE_Angle   = mPrototype; // 东北
+    BlockVolume mVol_ES_Angle   = mPrototype; // 东南
+    BlockVolume mVol_SW_Angle   = mPrototype; // 西南
+    BlockVolume mVol_WN_Angle   = mPrototype; // 西北
 
     PlotGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON);
 

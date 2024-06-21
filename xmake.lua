@@ -60,10 +60,10 @@ target("PlotCraft") -- Change this to your plugin name.
     end
 
     -- 地皮生成器选择
-    if get_config("gen") == 2 then
-        add_defines("GEN_2")
-    else 
+    if get_config("gen") == 1 then
         add_defines("GEN_1")
+    else 
+        add_defines("GEN_2")
     end
 
     add_defines("PLUGIN_NAME=\"PlotCraft\"")
