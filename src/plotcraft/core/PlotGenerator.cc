@@ -41,9 +41,9 @@ PlotGenerator::PlotGenerator(Dimension& dimension, uint seed, Json::Value const&
 
 
     // 初始化方块指针
-    mBlock_Dirt    = &BlockTypeRegistry::getDefaultBlockState("minecraft:dirt");
-    mBlock_Grass   = &BlockTypeRegistry::getDefaultBlockState("minecraft:grass_block");
-    mBlock_Bedrock = &BlockTypeRegistry::getDefaultBlockState("minecraft:bedrock");
+    mBlock_Dirt    = &BlockTypeRegistry::getDefaultBlockState(VanillaBlockTypeIds::Dirt);
+    mBlock_Grass   = &BlockTypeRegistry::getDefaultBlockState(VanillaBlockTypeIds::GrassBlock);
+    mBlock_Bedrock = &BlockTypeRegistry::getDefaultBlockState(VanillaBlockTypeIds::Bedrock);
     mBlock_Road    = &BlockTypeRegistry::getDefaultBlockState(gen.roadBlock.c_str());
     mBlock_Fill    = &BlockTypeRegistry::getDefaultBlockState(gen.fillBlock.c_str());
     mBlock_Border  = &BlockTypeRegistry::getDefaultBlockState(gen.borderBlock.c_str());
