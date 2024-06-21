@@ -52,7 +52,8 @@ PlotGenerator::PlotGenerator(Dimension& dimension, uint seed, Json::Value const&
         throw std::runtime_error("Invalid block type");
     }
 
-    mGeneratorY = -64 + (mSubChunkNum * 16) - 1;
+    mSubChunkNum = gen.subChunkNum;
+    mGeneratorY  = -64 + (mSubChunkNum * 16) - 1;
 
     // 子区块模板方块
     mVector_Dirt16          = TemplateSubChunkVector(4096, mBlock_Dirt);

@@ -31,8 +31,8 @@ public:
     Block const* mBlock_Fill;   // 填充方块
 
 
-    int mSubChunkNum = 4; // 子区块数量
-    int mGeneratorY;      // 地皮生成层
+    int mSubChunkNum; // 子区块数量
+    int mGeneratorY;  // 地皮生成层
 
     TemplateSubChunkVector                    mVector_Bedrock1_Dirt15; // 模板：1层基岩 + 15层泥土
     TemplateSubChunkVector                    mVector_Dirt16;          // 模板：16层泥土

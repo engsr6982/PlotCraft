@@ -14,8 +14,9 @@ struct _Config {
 
 #ifdef GEN_1
     struct _Generator {
-        int plotWidth = 64; // 地皮大小
-        int roadWidth = 5;  // 道路宽度
+        int plotWidth   = 64; // 地皮大小
+        int roadWidth   = 5;  // 道路宽度
+        int subChunkNum = 4;  // 子区块数量（负责高度,n*16）
 
         string roadBlock   = "minecraft:cherry_planks";
         string fillBlock   = "minecraft:grass_block";
@@ -26,6 +27,7 @@ struct _Config {
 #ifdef GEN_2
     struct _Generator {
         int plotChunkSize = 3; // 地皮区块
+        int subChunkNum   = 0; // TODO: 子区块数量（负责高度,n*16）
 
         string roadBlock   = "minecraft:cherry_planks";
         string borderBlock = "minecraft:stone_block_slab";
