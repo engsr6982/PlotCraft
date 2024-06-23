@@ -3,6 +3,7 @@
 #include "plotcraft/Macro.h"
 #include "plotcraft/utils/Moneys.h"
 #include <string>
+#include <vector>
 
 
 using string = std::string;
@@ -35,11 +36,20 @@ struct _Config {
 #endif
 
     utils::MoneysConfig moneys; // 经济系统配置
-    struct _Func {
+
+    struct SwitchDim {
+        std::vector<float> overWorld = {0, 100, 0}; // 切换维度时传送的坐标
+
+        std::vector<float> plotWorld = {0.5, 0, 0.5};
+    } switchDim;
+
+    struct PlotWorld {
         int  maxBuyPlotCount = 10;    // 最大购买地皮数量
         int  buyPlotPrice    = 10000; // 购买地皮价格
         bool inPlotCanFly    = true;  // 地皮内可飞行
-    } func;
+
+        bool spawnMob = false; // 地皮世界是否生成生物
+    } plotWorld;
 };
 
 PLAPI extern _Config cfg;

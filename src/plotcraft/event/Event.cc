@@ -111,7 +111,7 @@ bool registerEventListener() {
                         // TODO：修改命令
                         "地皮: {0}\n主人: 无主  |  价格: {1}\n输入：/plo buy 购买",
                         plotPos.toDebug(),
-                        config::cfg.func.buyPlotPrice
+                        config::cfg.plotWorld.buyPlotPrice
                     );
                 } else {
                     // Tip1
@@ -166,10 +166,13 @@ bool registerEventListener() {
         database::PlayerNameDB::getInstance().insertPlayer(e.self());
     });
 
-    mSpawningMobEventListener = bus.emplaceListener<ll::event::SpawningMobEvent>([](ll::event::SpawningMobEvent& e) {
-        if (e.blockSource().getDimensionId() == getPlotDim()) e.cancel(); // 拦截地皮世界生物生成
-        return true;
-    });
+    if (!config::cfg.plotWorld.spawnMob) {
+        mSpawningMobEventListener =
+            bus.emplaceListener<ll::event::SpawningMobEvent>([](ll::event::SpawningMobEvent& e) {
+                if (e.blockSource().getDimensionId() == getPlotDim()) e.cancel(); // 拦截地皮世界生物生成
+                return true;
+            });
+    }
 
     mPlayerDestroyBlockEventListener =
         bus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([](ll::event::PlayerDestroyBlockEvent& e) {
@@ -187,8 +190,10 @@ bool registerEventListener() {
             if (pps.isValid()) {
                 // 破坏目标在地皮内
                 if (pps.isPosOnBorder(pos)) {
-                    if (level != PlotPermission::Admin) e.cancel(); // 拦截非 Admin 破坏边界方块
-                    else utils::sendText<utils::Level::Warn>(e.self(), "请勿破坏地皮边框!");
+                    if (level != PlotPermission::Admin) {
+                        e.cancel(); // 拦截非 Admin 破坏边界方块
+                        utils::sendText<utils::Level::Warn>(e.self(), "请勿破坏地皮边框!");
+                    }
                 } else if (level == PlotPermission::None) e.cancel(); // 拦截 None
             } else {
                 // 破坏目标不在地皮内
@@ -211,7 +216,9 @@ bool registerEventListener() {
 #endif
 
             if (pps.isValid()) {
-                if (level == PlotPermission::None) e.cancel(); // 拦截 None
+                if (pps.isPosOnBorder(pos)) {
+                    if (level != PlotPermission::Admin) e.cancel();
+                } else if (level == PlotPermission::None) e.cancel(); // 拦截 None
             } else {
                 if (level != PlotPermission::Admin) e.cancel(); // 拦截非 Admin
             }
@@ -247,7 +254,9 @@ bool registerEventListener() {
         });
 
     mFireSpreadEventListener = bus.emplaceListener<ll::event::FireSpreadEvent>([](ll::event::FireSpreadEvent& e) {
-        if (e.blockSource().getDimensionId() == getPlotDim()) e.cancel(); // 拦截地皮世界火焰蔓延
+        // if (e.blockSource().getDimensionId() == getPlotDim()) e.cancel(); // 拦截地皮世界火焰蔓延
+        PlotPos pps(e.pos());
+        if (!pps.isValid()) e.cancel(); // 地皮外
         return true;
     });
 
@@ -323,7 +332,7 @@ bool registerEventListener() {
 
 
     // 监听自己插件的事件
-    if (config::cfg.func.inPlotCanFly) {
+    if (config::cfg.plotWorld.inPlotCanFly) {
         mPlayerLeavePlotEventListener = bus.emplaceListener<PlayerLeavePlot>([](PlayerLeavePlot& e) {
             auto pl = e.getPlayer();
             if (pl == nullptr) return;

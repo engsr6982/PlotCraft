@@ -5,8 +5,13 @@
 #include "mc/server/commands/CommandOriginType.h"
 #include "mc/server/commands/CommandPositionFloat.h"
 #include "mc/server/commands/CommandVersion.h"
+#include "mc/util/FeatureTerrainAdjustmentsUtil.h"
+#include "mc/world/level/BlockPos.h"
+#include "mc/world/level/ChunkBlockPos.h"
+#include "mc/world/level/ChunkPos.h"
+#include "mc/world/level/chunk/ChunkSource.h"
+#include "mc/world/level/chunk/LevelChunk.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
-
 #include "plotcraft/Config.h"
 #include "plotcraft/DataBase.h"
 #include "plotcraft/gui/index.h"
@@ -60,27 +65,13 @@ struct ParamGo {
 const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, ParamGo const& param) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
-    Vec3    v3     = player.getPosition();
 
-    static Vec3 _OverworldSpawn{0, 320, 0};
-    static int  offset = 0;
-    if (_OverworldSpawn.y == 320) {
-        auto res = area::findSafePos(v3.x + offset, v3.z + offset, 0);
-        if (res.status) _OverworldSpawn.y = res.y;
-        else {
-            offset += 8;
-            sendText<Level::Error>(output, "在主世界未找到可传送的安全位置，请重试!");
-            return;
-        }
-    }
+    auto& sw = config::cfg.switchDim;
 
     if (param.dim == ParamGo::overworld) {
-        player.teleport(_OverworldSpawn, 0); // 传送到重生点
+        player.teleport(Vec3{sw.overWorld[0], sw.overWorld[1], sw.overWorld[2]}, 0); // 传送到重生点
     } else {
-        player.teleport(
-            Vec3{0, -64 + (config::cfg.generator.subChunkNum * 16), 0},
-            VanillaDimensions::fromString("plot")
-        );
+        player.teleport(Vec3{sw.plotWorld[0], sw.plotWorld[1], sw.plotWorld[2]}, VanillaDimensions::fromString("plot"));
     }
 };
 
