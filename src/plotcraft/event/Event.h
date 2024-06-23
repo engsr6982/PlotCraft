@@ -21,7 +21,7 @@
 #include "plotcraft/Config.h"
 #include "plotcraft/DataBase.h"
 #include "plotcraft/PlotPos.h"
-#include "plotcraft/event/PlayerPlotEvent.h"
+#include "plotcraft/event/PlotEvents.h"
 #include "plugin/MyPlugin.h"
 #include <string>
 #include <thread>

@@ -42,7 +42,7 @@ public:
     PLAPI bool hasPlayer(string const& realName);
     PLAPI bool hasPlayer(mce::UUID const& uuid);
 
-    PLAPI std::optional<string> getPlayerName(mce::UUID const& uuid);
+    PLAPI string getPlayerName(mce::UUID const& uuid);
     PLAPI std::optional<mce::UUID> getPlayerUUID(string const& realName);
 
     PLAPI bool insertPlayer(Player& player);
@@ -240,6 +240,9 @@ public:
     PLAPI bool updateCachedPlotOwner(PlotID const& pid, UUID const& newOwner); // Plot
     PLAPI PlotPermission
     getPermission(UUID const& uuid, PlotID const& pid, bool ignoreAdmin = false, bool ignoreCache = false);
+
+    PLAPI Plots      getCachedPlots();
+    PLAPI PlotShares getCachedSharedPlots();
 };
 
 } // namespace plo::database

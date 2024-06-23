@@ -9,7 +9,6 @@
 #include <stdexcept>
 
 
-
 namespace plo::database {
 
 // ======================= Class PlayerNameDB =======================
@@ -28,7 +27,11 @@ bool PlayerNameDB::initPlayerNameDB() {
 bool PlayerNameDB::hasPlayer(string const& realName) { return mPlayerNameDB->has(realName); }
 bool PlayerNameDB::hasPlayer(mce::UUID const& uuid) { return mPlayerNameDB->has(uuid.asString()); }
 
-std::optional<string> PlayerNameDB::getPlayerName(mce::UUID const& uuid) { return mPlayerNameDB->get(uuid.asString()); }
+string PlayerNameDB::getPlayerName(mce::UUID const& uuid) {
+    auto fn = mPlayerNameDB->get(uuid.asString());
+    if (fn) return *fn;
+    return "";
+}
 std::optional<mce::UUID> PlayerNameDB::getPlayerUUID(string const& realName) {
     if (hasPlayer(realName)) return mce::UUID::fromString(*mPlayerNameDB->get(realName));
     return std::nullopt;
@@ -922,6 +925,24 @@ bool PlotDB::updateCachedPlotOwner(PlotID const& pid, UUID const& newOwner) {
     if (it == mPlots.end()) return false;
     it->second.mPlotOwner = UUID(newOwner);
     return true;
+}
+
+
+Plots PlotDB::getCachedPlots() {
+    Plots plots;
+    for (auto const& pair : mPlots) {
+        plots.push_back(pair.second);
+    }
+    return plots;
+}
+
+
+PlotShares PlotDB::getCachedSharedPlots() {
+    PlotShares shares;
+    for (auto const& pair : mPlotShares) {
+        shares.push_back(pair.second);
+    }
+    return shares;
 }
 
 
