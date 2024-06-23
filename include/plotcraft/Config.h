@@ -56,4 +56,6 @@ PLAPI extern _Config cfg;
 
 PLAPI void loadConfig();
 
+PLAPI void updateConfig();
+
 } // namespace plo::config

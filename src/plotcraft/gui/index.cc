@@ -30,7 +30,7 @@ void index(Player& player) {
 
     fm.appendButton("管理地皮", [](Player& pl) { _selectPlot(pl); });
 
-    // fm.appendButton("插件设置", [](Player& pl) {});
+    fm.appendButton("插件设置", [](Player& pl) {});
 
     fm.appendButton("退出", [](Player&) {});
     fm.sendTo(player);
@@ -383,6 +383,7 @@ void _buyPlot(Player& player, Plot pt) {
                 if (fromSale) {
                     bool const ok = impl->buyPlotFromSale(pt.mPlotID, pl.getUuid());
                     if (ok) {
+                        // TODO: 把扣除的经济转移给出售者
                         bus.publish(ev);
                         sendText(pl, "地皮购买成功");
                     } else sendText<utils::Level::Error>(pl, "地皮购买失败");

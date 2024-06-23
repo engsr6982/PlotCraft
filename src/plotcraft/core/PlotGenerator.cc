@@ -42,7 +42,6 @@ PlotGenerator::PlotGenerator(Dimension& dimension, uint seed, Json::Value const&
 
     // 初始化方块指针
     mBlock_Dirt    = &BlockTypeRegistry::getDefaultBlockState(VanillaBlockTypeIds::Dirt);
-    mBlock_Grass   = &BlockTypeRegistry::getDefaultBlockState(VanillaBlockTypeIds::GrassBlock);
     mBlock_Bedrock = &BlockTypeRegistry::getDefaultBlockState(VanillaBlockTypeIds::Bedrock);
     mBlock_Road    = &BlockTypeRegistry::getDefaultBlockState(gen.roadBlock.c_str());
     mBlock_Fill    = &BlockTypeRegistry::getDefaultBlockState(gen.fillBlock.c_str());
@@ -63,7 +62,7 @@ PlotGenerator::PlotGenerator(Dimension& dimension, uint seed, Json::Value const&
 
     for (size_t i = 0; i < 256; ++i) {
         mVector_Bedrock1_Dirt15[i * 16]      = mBlock_Bedrock; // 将每个子区块的第一个方块设置为基岩
-        mVector_Dirt15_Grass1[(i * 16) + 15] = mBlock_Grass;   // 将每个子区块的第15方块设置为草方块
+        mVector_Dirt15_Grass1[(i * 16) + 15] = mBlock_Fill;    // 将每个子区块的第15方块设置为草方块
     }
 
 

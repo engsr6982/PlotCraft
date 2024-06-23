@@ -17,8 +17,15 @@ void loadConfig() {
 
     bool noNeddReWrite = ll::config::loadConfig(cfg, path);
     if (!noNeddReWrite) {
-        logger.warn("检测到 配置文件 异常，请检查配置文件版本或配置是否正确");
+        logger.warn("配置文件异常，请检查配置文件版本或配置是否正确");
     }
 }
+
+
+void updateConfig() {
+    fs::path path = my_plugin::MyPlugin::getInstance().getSelf().getConfigDir() / "Config.json";
+    ll::config::saveConfig(cfg, path);
+}
+
 
 } // namespace plo::config

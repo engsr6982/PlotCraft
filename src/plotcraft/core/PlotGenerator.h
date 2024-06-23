@@ -23,8 +23,7 @@ using TemplateSubChunkVector = std::vector<Block const*>;
 class PlotGenerator : public FlatWorldGenerator {
 public:
     Block const* mBlock_Dirt;    // 初始方块：泥土
-    Block const* mBlock_Grass;   // 初始方块：草
-    Block const* mBlock_Bedrock; // 初始方块：地基
+    Block const* mBlock_Bedrock; // 初始方块：基岩
 
     Block const* mBlock_Road;   // 道路方块
     Block const* mBlock_Border; // 边框方块
