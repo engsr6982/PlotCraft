@@ -9,21 +9,10 @@ logger.info("Author: engsr6982");
 mc.listen(
     "onEntityExplode",
     (source, pos, radius, maxResistance, isDestroy, isFire) => {
+        logger.debug("onEntityExplode");
+        if (pos.dimid != PLAPI.getPlotWorldDimid()) return;
         if (isDestroy || isFire) {
-            const pps = PLAPI.getPlotPosByPos(pos);
-            if (!pps.isValid()) {
-                // 地皮外的爆炸
-                return false;
-            }
+            return false;
         }
     }
 );
-
-mc.listen("onDropItem", (player, item) => {
-    const pps = PLAPI.getPlotPosByPos(player.pos);
-    const level = PLAPI.getPlayerPermission(player.uuid, pps.getPlotID);
-
-    if (pps.isValid()) {
-        if (level == 0) return false; // 地皮内
-    }
-});
