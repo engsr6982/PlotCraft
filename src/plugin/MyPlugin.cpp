@@ -24,6 +24,7 @@
 #include "plotcraft/core/PlotDimension.h"
 #include "plotcraft/event/Event.h"
 #include "plotcraft/utils/Mc.h"
+#include "remote/Remote.h"
 
 
 namespace my_plugin {
@@ -75,6 +76,9 @@ bool MyPlugin::enable() {
     more_dimensions::CustomDimensionManager::getInstance().addDimension<plo::core::PlotDimension>("plot");
     if (!plo::event::registerEventListener()) return false; // 注册事件监听器
     plo::command::registerCommand();                        // 注册命令
+
+    plo::remote::exportPLAPI();   // 导出PLAPI
+    plo::remote::exportPLEvent(); // 导出PLEvent
 
     return true;
 }

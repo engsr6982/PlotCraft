@@ -102,6 +102,15 @@ function pack_plugin(target,plugin_define)
             os.cp(oripdbfile, pdbfile)
         end
 
+
+        local srcDir = path.join(os.projectdir(), "src")
+        local remoteDir = path.join(srcDir, "remote")
+        local libDir = path.join(remoteDir, "lib")
+        os.cp(libDir, outputdir)
+
+        local lseDir = path.join(remoteDir, "lse")
+        os.cp(lseDir, outputdir)
+
         formattedmanifest = string_formatter(manifest, plugin_define)
         io.writefile(manifestfile,formattedmanifest)
         cprint("${bright green}[Plugin Packer]: ${reset}plugin already generated to " .. outputdir)

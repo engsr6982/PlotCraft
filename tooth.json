@@ -17,7 +17,8 @@
     "prerequisites": {
         "github.com/LiteLDev/LeviLamina": "0.13.x",
         "github.com/LiteLDev/MoreDimensions": "0.4.x",
-        "github.com/LiteLDev/LegacyMoney": "0.8.x"
+        "github.com/LiteLDev/LegacyMoney": "0.8.x",
+        "github.com/LiteLDev/LegacyRemoteCall": "0.8.x"
     },
     "files": {
         "place": [
