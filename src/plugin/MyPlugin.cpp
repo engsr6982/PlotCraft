@@ -18,6 +18,7 @@
 
 #include "plotcraft/Config.h"
 #include "plotcraft/DataBase.h"
+#include "plotcraft/EconomyQueue.h"
 #include "plotcraft/command/Command.h"
 #include "plotcraft/core/PlotDimension.h"
 #include "plotcraft/event/Event.h"
@@ -43,6 +44,7 @@ bool MyPlugin::load() {
     plo::config::loadConfig();
     plo::database::PlayerNameDB::getInstance().initPlayerNameDB();
     plo::database::PlotDB::getInstance().load();
+    plo::EconomyQueue::getInstance().load();
 
     return true;
 }

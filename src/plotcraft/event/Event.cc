@@ -12,6 +12,7 @@
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "plotcraft/Config.h"
+#include "plotcraft/EconomyQueue.h"
 #include "plotcraft/utils/Text.h"
 #include "plotcraft/utils/Utils.h"
 
@@ -161,7 +162,10 @@ bool registerEventListener() {
     // Listen Minecraft events
     auto& bus                = ll::event::EventBus::getInstance();
     mPlayerJoinEventListener = bus.emplaceListener<ll::event::PlayerJoinEvent>([](ll::event::PlayerJoinEvent& e) {
+        if (e.self().isSimulatedPlayer()) return true; // 跳过模拟玩家
         database::PlayerNameDB::getInstance().insertPlayer(e.self());
+        EconomyQueue::getInstance().transfer(e.self());
+        return true;
     });
 
     if (!config::cfg.plotWorld.spawnMob) {

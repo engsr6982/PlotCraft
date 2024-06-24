@@ -1,47 +1,50 @@
 #include "DataBase.h"
+#include "mc/deps/core/mce/UUID.h"
+#include "plotcraft/Macro.h"
+#include "plotcraft/utils/Moneys.h"
+#include "plugin/MyPlugin.h"
 #include <algorithm>
+#include <cstdint>
+#include <filesystem>
+#include <fstream>
 #include <memory>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
-using UUID = plo::database::UUID;
+
+using UUID   = plo::database::UUID;
+using json   = nlohmann::json;
+namespace fs = std::filesystem;
 
 namespace plo {
 
 
-struct EconomyQueueItem {
-    UUID from;   // 源玩家
-    UUID to;     // 目标玩家
-    int  amount; // 金额
-};
-
-
 class EconomyQueue {
 public:
-    std::shared_ptr<std::vector<std::unique_ptr<EconomyQueueItem>>> mQueue;
+    std::shared_ptr<std::vector<std::shared_ptr<std::pair<UUID, uint64_t>>>> mQueue; // 队列
+
+    fs::path mPath; // 文件路径
 
     EconomyQueue()                               = default;
     EconomyQueue(const EconomyQueue&)            = delete;
     EconomyQueue& operator=(const EconomyQueue&) = delete;
 
-    static EconomyQueue& getInstance() {
-        static EconomyQueue instance;
-        return instance;
-    }
+    static EconomyQueue& getInstance();
 
-    bool insert(UUID const& from, UUID const& to, int const& amount) {
-        auto ptr = std::make_unique<EconomyQueueItem>(from, to, amount);
-        mQueue->push_back(std::move(ptr));
-        return true;
-    }
+    bool has(UUID const& target) const;
 
-    bool hasItem(UUID const& from, UUID const& to) {
-        auto fn = std::find_if(mQueue->begin(), mQueue->end(), [from, to](auto const& item) {
-            return item->from == from && item->to == to;
-        });
-        return fn != mQueue->end();
-    }
+    std::shared_ptr<std::pair<UUID, uint64_t>> get(UUID const& target) const;
+
+    bool set(UUID const target, int const val);
+
+    bool del(UUID const& target);
+
+    bool transfer(Player& target);
+
+    bool save();
+
+    bool load();
 };
-
 
 } // namespace plo

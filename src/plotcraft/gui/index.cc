@@ -5,9 +5,11 @@
 #include "ll/api/form/SimpleForm.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/world/actor/player/Player.h"
+#include "plotcraft/EconomyQueue.h"
 #include "plotcraft/utils/Moneys.h"
 #include <cstdint>
 #include <regex>
+
 
 using namespace ll::form;
 using namespace plo::utils;
@@ -383,7 +385,21 @@ void _buyPlot(Player& player, Plot pt) {
                 if (fromSale) {
                     bool const ok = impl->buyPlotFromSale(pt.mPlotID, pl.getUuid());
                     if (ok) {
-                        // TODO: 把扣除的经济转移给出售者
+                        // 把扣除的经济转移给出售者
+                        auto plptr = ll::service::getLevel()->getPlayer(pt.mPlotOwner);
+                        if (plptr) {
+                            ms->addMoney(plptr, price); // 出售者(当前地皮主人)在线
+                            sendText(
+                                plptr,
+                                "玩家 {} 购买了您出售的地皮 {}, 经济 +{}",
+                                pl.getRealName(),
+                                pt.mPlotName,
+                                price
+                            );
+                        } else {
+                            EconomyQueue::getInstance().set(pt.mPlotOwner, price); // 出售者(当前地皮主人)离线
+                        }
+
                         bus.publish(ev);
                         sendText(pl, "地皮购买成功");
                     } else sendText<utils::Level::Error>(pl, "地皮购买失败");
