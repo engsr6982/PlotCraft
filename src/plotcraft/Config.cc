@@ -19,6 +19,12 @@ void loadConfig() {
     if (!noNeddReWrite) {
         logger.warn("配置文件异常，请检查配置文件版本或配置是否正确");
     }
+
+    if (cfg.generator.subChunkNum <= 0) {
+        cfg.generator.subChunkNum = 1;
+        logger.warn("subChunkNum 不能小于等于0，已自动设置为1");
+        updateConfig();
+    }
 }
 
 

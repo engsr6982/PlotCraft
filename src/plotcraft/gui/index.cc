@@ -32,9 +32,100 @@ void index(Player& player) {
 
     fm.appendButton("管理地皮", [](Player& pl) { _selectPlot(pl); });
 
-    fm.appendButton("插件设置", [](Player& pl) {});
+    fm.appendButton("地皮商店", [](Player& pl) { _plotShop(pl); });
+
+    fm.appendButton("插件设置", [](Player& pl) { _pluginSetting(pl); });
 
     fm.appendButton("退出", [](Player&) {});
+    fm.sendTo(player);
+}
+
+void _plotShop(Player& player) {
+    SimpleForm fm{PLUGIN_TITLE};
+
+    fm.setContent("PlotCraft > 地皮商店(玩家出售)");
+
+    auto* impl = &PlotDB::getInstance().getImpl();
+
+    auto sls = impl->getSales();
+    for (auto const& sl : sls) {
+        auto pt = impl->getPlot(sl.mPlotID);
+        if (!pt.has_value()) continue;
+        if (pt->mPlotOwner == player.getUuid()) continue;
+        fm.appendButton(
+            fmt::format("{}\nID: {} | 价格: {}", pt->mPlotName, sl.mPlotID, sl.mPrice),
+            [pt, sl](Player& pl) { _plotShopShowPlot(pl, pt.value(), sl); }
+        );
+    }
+
+    fm.sendTo(player);
+}
+
+void _plotShopShowPlot(Player& player, Plot pt, PlotSale sl) {
+    SimpleForm fm{PLUGIN_TITLE};
+
+    auto* ndb = &PlayerNameDB::getInstance();
+
+    fm.setContent(fmt::format(
+        "地皮ID: {}\n地皮名称: {}\n地皮主人: {}\n出售价格: {}\n出售时间: {}",
+        pt.mPlotID,
+        pt.mPlotName,
+        ndb->getPlayerName(pt.mPlotOwner),
+        sl.mPrice,
+        sl.mSaleTime
+    ));
+
+    fm.appendButton("购买地皮", [pt](Player& pl) { _buyPlot(pl, pt); });
+
+    fm.appendButton("传送到此地皮", [pt](Player& pl) {
+        PlotPos pps{pt.mPlotX, pt.mPlotZ};
+        pl.teleport(pps.getSafestPos(), VanillaDimensions::fromString("plot"));
+    });
+
+    fm.appendButton("返回", [pt](Player& pl) { _plotShop(pl); });
+
+    fm.sendTo(player);
+}
+
+void _pluginSetting(Player& player) {
+    auto* impl = &PlotDB::getInstance().getImpl();
+    auto* cfg  = &config::cfg.switchDim;
+
+    if (impl->getPlayerPermission(player.getUuid(), "") != PlotPermission::Admin) {
+        sendText<utils::Level::Error>(player, "你没有权限执行此操作");
+        return;
+    }
+
+    SimpleForm fm{PLUGIN_TITLE};
+
+    fm.setContent("PlotCraft > 插件设置");
+
+    fm.appendButton("设置当前位置为主世界安全坐标", [cfg](Player& pl) {
+        if (pl.getDimensionId() != 0) {
+            sendText<utils::Level::Error>(pl, "你必须在主世界才能执行此操作");
+            return;
+        }
+        auto const ps     = pl.getPosition();
+        cfg->overWorld[0] = ps.x;
+        cfg->overWorld[1] = ps.y;
+        cfg->overWorld[2] = ps.z;
+        config::updateConfig();
+        sendText(pl, "设置成功");
+    });
+
+    fm.appendButton("设置当前位置为地皮世界安全坐标", [cfg](Player& pl) {
+        if (pl.getDimensionId() != VanillaDimensions::fromString("plot")) {
+            sendText<utils::Level::Error>(pl, "你必须在地皮世界才能执行此操作");
+            return;
+        }
+        auto const ps     = pl.getPosition();
+        cfg->plotWorld[0] = ps.x;
+        cfg->plotWorld[1] = ps.y;
+        cfg->plotWorld[2] = ps.z;
+        config::updateConfig();
+        sendText(pl, "设置成功");
+    });
+
     fm.sendTo(player);
 }
 
@@ -356,6 +447,10 @@ void _buyPlot(Player& player, Plot pt) {
 
     if (hasOwner && !hasSale) {
         sendText<utils::Level::Warn>(player, "这个地皮没有出售，无法购买。");
+        return;
+    }
+    if (pt.mPlotOwner == player.getUuid()) {
+        sendText<utils::Level::Warn>(player, "你不能购买自己的地皮。");
         return;
     }
 

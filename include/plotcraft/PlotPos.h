@@ -36,6 +36,8 @@ public:
 
     PLAPI bool isPosInPlot(const Vec3& vec3);
 
+    PLAPI Vec3 getSafestPos();
+
     PLAPI void tryFixMinAndMaxPos();
 
     PLAPI bool isPosOnBorder(const Vec3& vec3);

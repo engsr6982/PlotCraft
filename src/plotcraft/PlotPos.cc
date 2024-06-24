@@ -106,6 +106,13 @@ PlotPos::PlotPos(const Vec3& vec3) {
 #endif
 }
 
+
+Vec3 PlotPos::getSafestPos() {
+    auto& cfg = config::cfg.generator;
+    int   y   = -64 + (cfg.subChunkNum * 16) + 2;
+    return Vec3{minPos.x, y, minPos.z};
+}
+
 bool PlotPos::isValid() { return mIsValid; }
 
 Vec3 PlotPos::getMin() { return minPos; }

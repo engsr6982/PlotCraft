@@ -34,6 +34,11 @@ void _selectPlot(Player& player);
 void plot(Player& player, PlotPos plotPos);
 void plot(Player& player, Plot plot, bool ret = false);
 
+void _pluginSetting(Player& player);
+
+void _plotShop(Player& player);
+void _plotShopShowPlot(Player& player, Plot pt, PlotSale sl) ;
+
 void _addSharePlayer(Player& player, Plot pt);
 
 void _sellMyPlot(Player& player, Plot pt);
