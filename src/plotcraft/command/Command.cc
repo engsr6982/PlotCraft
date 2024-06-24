@@ -105,7 +105,7 @@ bool registerCommand() {
     cmd.overload<ParamGo>().text("go").required("dim").execute(LambdaGo);
 
     // plo plot 当前地皮菜单
-    cmd.overload().text("plot").optional("pos").execute(LambdaPlot);
+    cmd.overload().text("plot").execute(LambdaPlot);
 
     // plo  全局地皮菜单
     cmd.overload().execute(LambdaDefault);
