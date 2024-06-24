@@ -318,7 +318,7 @@ bool registerEventListener() {
 
 #ifdef DEBUG
             e.self().sendMessage(utils::format(
-                "[Debug] 玩家交互方块: 位置: {1}, 权限: {2}",
+                "[Debug] 玩家交互方块: 位置: {0}, 权限: {1}",
                 pos.toString(),
                 std::to_string(static_cast<int>(level))
             ));

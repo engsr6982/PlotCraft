@@ -175,9 +175,9 @@ void plot(Player& player, Plot pt, bool ret) {
     fm.setContent(fmt::format(
         "地皮 {} 的元数据:\n地皮主人: {}\n地皮名称: {}\n是否出售: {}\n出售价格: {}\n  ",
         pt.mPlotID,
-        hasOwner ? "无主" : ndb.getPlayerName(pt.mPlotOwner),
+        !hasOwner ? "无主" : ndb.getPlayerName(pt.mPlotOwner),
         pt.mPlotName,
-        hasOwner ? hasSale ? "是" : "否" : "否",
+        hasOwner ? hasSale ? "是" : "否" : "是",
         hasOwner ? hasSale ? std::to_string(impl.getSale(pt.mPlotID)->mPrice) : "null"
                  : std::to_string(config::cfg.plotWorld.buyPlotPrice)
     ));

@@ -5,6 +5,7 @@
 
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/server/ServerStartedEvent.h"
+#include "ll/api/i18n/I18n.h"
 #include "ll/api/plugin/NativePlugin.h"
 #include "ll/api/plugin/RegisterHelper.h"
 #include "ll/api/service/Bedrock.h"
@@ -45,6 +46,7 @@ bool MyPlugin::load() {
     plo::database::PlayerNameDB::getInstance().initPlayerNameDB();
     plo::database::PlotDB::getInstance().load();
     plo::EconomyQueue::getInstance().load();
+    ll::i18n::load(getSelf().getLangDir());
 
     return true;
 }
