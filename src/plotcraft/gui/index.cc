@@ -173,9 +173,10 @@ void plot(Player& player, Plot pt, bool ret) {
     auto& pdb  = PlotDB::getInstance();
     auto& impl = pdb.getImpl();
 
-    bool const hasOwner = !pt.mPlotOwner.isEmpty();                      // 是否有主人
-    bool const hasSale  = impl.hasSale(pt.mPlotID);                      // 是否出售
-    bool const isOwner  = hasOwner && player.getUuid() == pt.mPlotOwner; // 是否是主人
+    bool const hasOwner       = !pt.mPlotOwner.isEmpty();                              // 是否有主人
+    bool const hasSale        = impl.hasSale(pt.mPlotID);                              // 是否出售
+    bool const isOwner        = hasOwner && player.getUuid() == pt.mPlotOwner;         // 是否是主人
+    bool const isSharedMember = impl.isPlotSharedPlayer(pt.mPlotID, player.getUuid()); // 是否是地皮共享成员
 
     fm.setContent(fmt::format(
         "地皮 {} 的元数据:\n地皮主人: {}\n地皮名称: {}\n是否出售: {}\n出售价格: {}\n  ",
@@ -189,6 +190,13 @@ void plot(Player& player, Plot pt, bool ret) {
 
 
     if ((!hasOwner || hasSale) && !isOwner) fm.appendButton("购买地皮", [pt](Player& pl) { _buyPlot(pl, pt); });
+
+    if (isOwner || isSharedMember)
+        fm.appendButton("传送到此地皮", [pt](Player& pl) {
+            auto const v3 = PlotPos{pt.mPlotX, pt.mPlotZ}.getSafestPos();
+            pl.teleport(v3, VanillaDimensions::fromString("plot"));
+            sendText(pl, "传送成功");
+        });
 
     if (isOwner) {
         fm.appendButton("修改地皮名称", [pt](Player& pl) { _changePlotName(pl, pt); });

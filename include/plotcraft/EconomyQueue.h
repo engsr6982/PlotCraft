@@ -1,3 +1,4 @@
+#pragma once
 #include "DataBase.h"
 #include "mc/deps/core/mce/UUID.h"
 #include "plotcraft/Macro.h"
@@ -30,21 +31,21 @@ public:
     EconomyQueue(const EconomyQueue&)            = delete;
     EconomyQueue& operator=(const EconomyQueue&) = delete;
 
-    static EconomyQueue& getInstance();
+    PLAPI static EconomyQueue& getInstance();
 
-    bool has(UUID const& target) const;
+    PLAPI bool has(UUID const& target) const;
 
-    std::shared_ptr<std::pair<UUID, uint64_t>> get(UUID const& target) const;
+    PLAPI std::shared_ptr<std::pair<UUID, uint64_t>> get(UUID const& target) const;
 
-    bool set(UUID const target, int const val);
+    PLAPI bool set(UUID const target, int const val);
 
-    bool del(UUID const& target);
+    PLAPI bool del(UUID const& target);
 
-    bool transfer(Player& target);
+    PLAPI bool transfer(Player& target);
 
-    bool save();
+    PLAPI bool save();
 
-    bool load();
+    PLAPI bool load();
 };
 
 } // namespace plo

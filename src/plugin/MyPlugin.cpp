@@ -36,31 +36,30 @@ MyPlugin& MyPlugin::getInstance() { return *instance; }
 
 bool MyPlugin::load() {
     auto& logger = getSelf().getLogger();
+    logger.info(R"(    ____   __        __   ______              ____ __ )");
+    logger.info(R"(   / __ \ / /____   / /_ / ____/_____ ____ _ / __// /_)");
+    logger.info(R"(  / /_/ // // __ \ / __// /    / ___// __ `// /_ / __/)");
+    logger.info(R"( / ____// // /_/ // /_ / /___ / /   / /_/ // __// /_  )");
+    logger.info(R"(/_/    /_/ \____/ \__/ \____//_/    \__,_//_/   \__/  )");
+    logger.info(R"(                                                      )");
+    logger.info(R"(            ---- Author: engsr6982 ----               )");
     logger.info("Loading...");
 
 #ifdef DEBUG
     logger.consoleLevel = 5; // 调试模式下输出详细日志
 #endif
 
-    // 初始化数据（非MCAPI）
     logger.info("Try loading config、database...");
     plo::config::loadConfig();
-    plo::database::PlayerNameDB::getInstance().initPlayerNameDB();
-    plo::database::PlotDB::getInstance().load();
-    plo::EconomyQueue::getInstance().load();
     ll::i18n::load(getSelf().getLangDir());
+    plo::database::PlotDB::getInstance().load();
+    plo::database::PlayerNameDB::getInstance().initPlayerNameDB();
+    plo::EconomyQueue::getInstance().load();
 
     plo::utils::Moneys::getInstance().updateConfig(plo::config::cfg.moneys);
 
-    logger.info(R"(
-    ____   __        __   ______              ____ __ 
-   / __ \ / /____   / /_ / ____/_____ ____ _ / __// /_
-  / /_/ // // __ \ / __// /    / ___// __ `// /_ / __/
- / ____// // /_/ // /_ / /___ / /   / /_/ // __// /_  
-/_/    /_/ \____/ \__/ \____//_/    \__,_//_/   \__/  
-                                                      
-            ---- Author: engsr6982 ----
-)");
+    plo::remote::exportPLAPI();   // 导出PLAPI
+    plo::remote::exportPLEvent(); // 导出PLEvent
 
     return true;
 }
@@ -79,9 +78,6 @@ bool MyPlugin::enable() {
     more_dimensions::CustomDimensionManager::getInstance().addDimension<plo::core::PlotDimension>("plot");
     if (!plo::event::registerEventListener()) return false; // 注册事件监听器
     plo::command::registerCommand();                        // 注册命令
-
-    plo::remote::exportPLAPI();   // 导出PLAPI
-    plo::remote::exportPLEvent(); // 导出PLEvent
 
     return true;
 }
