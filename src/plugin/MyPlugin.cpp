@@ -24,6 +24,7 @@
 #include "plotcraft/core/PlotDimension.h"
 #include "plotcraft/event/Event.h"
 #include "plotcraft/utils/Mc.h"
+#include "plotcraft/utils/Moneys.h"
 #include "remote/Remote.h"
 
 
@@ -48,6 +49,8 @@ bool MyPlugin::load() {
     plo::database::PlotDB::getInstance().load();
     plo::EconomyQueue::getInstance().load();
     ll::i18n::load(getSelf().getLangDir());
+
+    plo::utils::Moneys::getInstance().updateConfig(plo::config::cfg.moneys);
 
     logger.info(R"(
     ____   __        __   ______              ____ __ 

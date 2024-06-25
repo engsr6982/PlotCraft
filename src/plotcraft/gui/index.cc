@@ -149,6 +149,11 @@ void _selectPlot(Player& player) {
 
 // command index
 void plot(Player& player, PlotPos plotPos) {
+    if (player.getDimensionId() != VanillaDimensions::fromString("plot")) {
+        sendText<utils::Level::Error>(player, "你必须在地皮世界才能执行此操作");
+        return;
+    }
+
     auto& db = PlotDB::getInstance();
 
     auto pt = db.getCached(plotPos.getPlotID());
@@ -182,7 +187,6 @@ void plot(Player& player, Plot pt, bool ret) {
                  : std::to_string(config::cfg.plotWorld.buyPlotPrice)
     ));
 
-    if (ret) fm.appendButton("返回", [](Player& pl) { _selectPlot(pl); });
 
     if ((!hasOwner || hasSale) && !isOwner) fm.appendButton("购买地皮", [pt](Player& pl) { _buyPlot(pl, pt); });
 
@@ -196,6 +200,7 @@ void plot(Player& player, Plot pt, bool ret) {
 
     if (hasOwner) fm.appendButton("地皮评论", [pt](Player& pl) { _plotcomment(pl, pt); });
 
+    if (ret) fm.appendButton("返回", [](Player& pl) { _selectPlot(pl); });
 
     fm.sendTo(player);
 }
