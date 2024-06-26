@@ -16,11 +16,6 @@
 #include "mc/server/commands/MinecraftCommands.h"
 #include "mc/server/commands/ServerCommandOrigin.h"
 #include "mc/world/Minecraft.h"
-
-#if !defined(OVERWORLD)
-#include "more_dimensions/api/dimension/CustomDimensionManager.h"
-#endif
-
 #include "plotcraft/Config.h"
 #include "plotcraft/DataBase.h"
 #include "plotcraft/EconomyQueue.h"
@@ -29,7 +24,15 @@
 #include "plotcraft/event/Event.h"
 #include "plotcraft/utils/Mc.h"
 #include "plotcraft/utils/Moneys.h"
+
+#ifdef REMOTE_API
 #include "remote/Remote.h"
+#endif
+
+#if !defined(OVERWORLD)
+#include "more_dimensions/api/dimension/CustomDimensionManager.h"
+#endif
+
 
 namespace fs = std::filesystem;
 
@@ -52,9 +55,9 @@ bool MyPlugin::load() {
     logger.info(R"(                                                           )");
     logger.info("Loading...");
 
-#ifdef DEBUG
-    logger.consoleLevel = 5; // 调试模式下输出详细日志
-#endif
+    logger.info("BuildInfomation: {}", BuildVersionInfo);
+
+    logger.info("Try creating directories...");
 
     if (!fs::exists(getSelf().getDataDir())) {
         fs::create_directories(getSelf().getDataDir());

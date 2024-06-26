@@ -60,6 +60,8 @@ const auto LambdaOP = [](CommandOrigin const& origin, CommandOutput& output, Par
     }
 };
 
+
+#ifndef OVERWORLD
 struct ParamGo {
     enum GoDimension { overworld, plot } dim;
 };
@@ -75,6 +77,7 @@ const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, Par
         player.teleport(Vec3{sw.plotWorld[0], sw.plotWorld[1], sw.plotWorld[2]}, core_utils::getPlotDimensionId());
     }
 };
+#endif
 
 
 const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output) {
@@ -102,8 +105,10 @@ bool registerCommand() {
     // plo <op|deop> <name>
     cmd.overload<ParamOp>().required("op").required("name").execute(LambdaOP);
 
+#ifndef OVERWORLD
     // plo go <overworld|plot>
     cmd.overload<ParamGo>().text("go").required("dim").execute(LambdaGo);
+#endif
 
     // plo plot 当前地皮菜单
     cmd.overload().text("plot").execute(LambdaPlot);

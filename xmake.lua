@@ -94,6 +94,8 @@ target("PlotCraft")
         add_defines("GEN_2")
     end
 
+    add_defines("BuildVersionInfo=\"PlotGenerator: " .. tostring(get_config("gen")) .. " | Overworld: " .. tostring(get_config("overworld")) .. " | RemoteCall: " .. tostring(get_config("remote")) .. "\"")
+
     add_defines("PLUGIN_NAME=\"PlotCraft\"")
     add_defines("PLUGIN_TITLE=\"§6[§aPlotCraft§6]§r \"")
 
