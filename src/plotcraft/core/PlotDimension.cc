@@ -1,3 +1,5 @@
+#ifndef OVERWORLD
+
 #include "PlotDimension.h"
 
 #include "mc/world/level/BlockSource.h"
@@ -15,14 +17,8 @@
 #include "mc/world/level/levelgen/structure/VillageFeature.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 
-#ifdef GEN_1
-#include "PlotGenerator.h"
-#endif
 
-#ifdef GEN_2
-#include "PlotGenerator2.h"
-#endif
-
+#include "CoreUtils.h"
 
 namespace plo::core {
 
@@ -45,7 +41,7 @@ PlotDimension::createGenerator(br::worldgen::StructureSetRegistry const& /* stru
 
     // 实例化 地皮生成器
     auto worldGenerator =
-        std::make_unique<plo::core::PlotGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
+        std::make_unique<plo::core_utils::Generator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
 
     worldGenerator->init(); // 必须调用，初始化生成器
 
@@ -98,3 +94,5 @@ short PlotDimension::getCloudHeight() const { return 192; }
 bool PlotDimension::hasPrecipitationFog() const { return true; }
 
 } // namespace plo::core
+
+#endif // OVERWORLD

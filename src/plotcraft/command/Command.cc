@@ -18,6 +18,7 @@
 #include "plotcraft/utils/Area.h"
 #include "plotcraft/utils/Text.h"
 
+#include "plotcraft/core/CoreUtils.h"
 
 namespace plo::command {
 
@@ -71,7 +72,7 @@ const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, Par
     if (param.dim == ParamGo::overworld) {
         player.teleport(Vec3{sw.overWorld[0], sw.overWorld[1], sw.overWorld[2]}, 0); // 传送到重生点
     } else {
-        player.teleport(Vec3{sw.plotWorld[0], sw.plotWorld[1], sw.plotWorld[2]}, VanillaDimensions::fromString("plot"));
+        player.teleport(Vec3{sw.plotWorld[0], sw.plotWorld[1], sw.plotWorld[2]}, core_utils::getPlotDimensionId());
     }
 };
 

@@ -1,7 +1,7 @@
-#include <cstdio>
 #ifdef GEN_2
 #include "PlotGenerator2.h"
 #include "plotcraft/Config.h"
+#include <cstdio>
 
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/registry/BlockTypeRegistry.h"

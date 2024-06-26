@@ -1,7 +1,6 @@
-#include "mc/world/level/block/BlockVolume.h"
 #ifdef GEN_2
 #pragma once
-
+#include "mc/world/level/block/BlockVolume.h"
 #include "mc/world/level/levelgen/flat/FlatWorldGenerator.h"
 #include <vector>
 

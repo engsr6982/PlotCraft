@@ -6,6 +6,7 @@
 #include "ll/api/service/Bedrock.h"
 #include "mc/world/actor/player/Player.h"
 #include "plotcraft/EconomyQueue.h"
+#include "plotcraft/core/CoreUtils.h"
 #include "plotcraft/utils/Moneys.h"
 #include <cstdint>
 #include <regex>
@@ -13,6 +14,7 @@
 
 using namespace ll::form;
 using namespace plo::utils;
+using namespace plo::core_utils;
 namespace pev = plo::event;
 
 namespace plo::gui {
@@ -22,7 +24,7 @@ void index(Player& player) {
 
     fm.setContent("PlotCraft > 选择一个操作:");
 
-    if (player.getDimensionId() == VanillaDimensions::fromString("plot")) {
+    if (player.getDimensionId() == getPlotDimensionId()) {
         fm.appendButton("前往主世界", [](Player& pl) { mc::executeCommand("plo go overworld", &pl); });
     } else {
         fm.appendButton("前往地皮世界", [](Player& pl) { mc::executeCommand("plo go plot", &pl); });
@@ -79,7 +81,7 @@ void _plotShopShowPlot(Player& player, Plot pt, PlotSale sl) {
 
     fm.appendButton("传送到此地皮", [pt](Player& pl) {
         PlotPos pps{pt.mPlotX, pt.mPlotZ};
-        pl.teleport(pps.getSafestPos(), VanillaDimensions::fromString("plot"));
+        pl.teleport(pps.getSafestPos(), getPlotDimensionId());
     });
 
     fm.appendButton("返回", [pt](Player& pl) { _plotShop(pl); });
@@ -114,7 +116,7 @@ void _pluginSetting(Player& player) {
     });
 
     fm.appendButton("设置当前位置为地皮世界安全坐标", [cfg](Player& pl) {
-        if (pl.getDimensionId() != VanillaDimensions::fromString("plot")) {
+        if (pl.getDimensionId() != getPlotDimensionId()) {
             sendText<utils::Level::Error>(pl, "你必须在地皮世界才能执行此操作");
             return;
         }
@@ -149,7 +151,7 @@ void _selectPlot(Player& player) {
 
 // command index
 void plot(Player& player, PlotPos plotPos) {
-    if (player.getDimensionId() != VanillaDimensions::fromString("plot")) {
+    if (player.getDimensionId() != getPlotDimensionId()) {
         sendText<utils::Level::Error>(player, "你必须在地皮世界才能执行此操作");
         return;
     }
@@ -194,7 +196,7 @@ void plot(Player& player, Plot pt, bool ret) {
     if (isOwner || isSharedMember)
         fm.appendButton("传送到此地皮", [pt](Player& pl) {
             auto const v3 = PlotPos{pt.mPlotX, pt.mPlotZ}.getSafestPos();
-            pl.teleport(v3, VanillaDimensions::fromString("plot"));
+            pl.teleport(v3, getPlotDimensionId());
             sendText(pl, "传送成功");
         });
 

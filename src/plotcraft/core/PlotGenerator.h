@@ -1,7 +1,7 @@
-#include "mc/world/level/block/Block.h"
-#include <memory>
 #ifdef GEN_1
 #pragma once
+#include "mc/world/level/block/Block.h"
+#include <memory>
 
 #include "mc/deps/core/data/DividedPos2d.h"
 #include "mc/deps/core/utility/buffer_span.h"

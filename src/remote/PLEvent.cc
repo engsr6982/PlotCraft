@@ -1,3 +1,4 @@
+#ifdef REMOTE_API
 #include "Remote.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/utils/HashUtils.h"
@@ -13,8 +14,6 @@ using JS_PlotPos_Constructor = std::vector<int>; // x,z,isValid
 
 
 namespace plo::remote {
-
-// int getPlotWorldDimid() { return VanillaDimensions::fromString("plot"); }
 
 void exportPLEvent() {
     string const sp  = "PLAPI";
@@ -56,3 +55,5 @@ void exportPLEvent() {
 
 
 } // namespace plo::remote
+
+#endif // REMOTE_API

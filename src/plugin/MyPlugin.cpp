@@ -17,7 +17,9 @@
 #include "mc/server/commands/ServerCommandOrigin.h"
 #include "mc/world/Minecraft.h"
 
+#if !defined(OVERWORLD)
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
+#endif
 
 #include "plotcraft/Config.h"
 #include "plotcraft/DataBase.h"
@@ -67,8 +69,12 @@ bool MyPlugin::load() {
 
     plo::utils::Moneys::getInstance().updateConfig(plo::config::cfg.moneys);
 
+
+#ifdef REMOTE_API
     plo::remote::exportPLAPI();   // 导出PLAPI
     plo::remote::exportPLEvent(); // 导出PLEvent
+#endif
+
 
     return true;
 }
@@ -77,16 +83,18 @@ bool MyPlugin::load() {
 bool MyPlugin::enable() {
     auto& logger = getSelf().getLogger();
     logger.info("Enabling...");
+    logger.info("Try registering command、event listener、dimension...");
 
 #ifdef DEBUG
     plo::mc::executeCommand("gamerule showcoordinates true");
 #endif
 
-    // 注册MCAPI
-    logger.info("Try registering command、event listener、dimension...");
+#if !defined(OVERWORLD)
     more_dimensions::CustomDimensionManager::getInstance().addDimension<plo::core::PlotDimension>("plot");
-    if (!plo::event::registerEventListener()) return false; // 注册事件监听器
-    plo::command::registerCommand();                        // 注册命令
+#endif
+
+    plo::event::registerEventListener(); // 注册事件监听器
+    plo::command::registerCommand();     // 注册命令
 
     return true;
 }

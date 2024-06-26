@@ -1,3 +1,4 @@
+#ifndef OVERWORLD
 #pragma once
 #include "mc/world/level/dimension/Dimension.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
@@ -45,3 +46,5 @@ public:
 
 
 } // namespace plo::core
+
+#endif // OVERWORLD

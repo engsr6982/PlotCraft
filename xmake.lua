@@ -7,21 +7,34 @@ add_repositories("liteldev-repo https://github.com/LiteLDev/xmake-repo.git")
 -- please note that you should add bdslibrary yourself if using dev version
 add_requires(
     "levilamina 0.13.0",
-    "more-dimensions 0.4.0",
     "sqlitecpp 3.2.1",
-    "legacymoney 0.8.1",
-    "legacyremotecall 0.8.1"
+    "legacymoney 0.8.1"
 )
 
 if not has_config("vs_runtime") then
     set_runtimes("MD")
 end
 
-option("gen")
+if get_config("overworld") == false then 
+    add_requires("more-dimensions 0.4.0")
+end 
+
+if get_config("remote") == true then
+    add_requires("legacyremotecall 0.8.1")
+end 
+
+option("gen") -- Generator
     set_default(1)
     set_values(1, 2)
 
-target("PlotCraft") -- Change this to your plugin name.
+option("overworld") -- Overworld
+    set_default(false)
+
+option("remote") -- RemoteCall
+    set_default(true)
+
+
+target("PlotCraft")
     add_cxflags(
         "/EHa",
         "/utf-8",
@@ -41,10 +54,8 @@ target("PlotCraft") -- Change this to your plugin name.
     )
     add_packages(
         "levilamina",
-        "more-dimensions",
         "sqlitecpp",
-        "legacymoney",
-        "legacyremotecall"
+        "legacymoney"
     )
     add_files("src/**.cpp", "src/**.cc")
     add_includedirs(
@@ -57,11 +68,26 @@ target("PlotCraft") -- Change this to your plugin name.
     set_languages("c++20")
     set_symbols("debug")
 
+    -- GEN_1
+    -- GEN_2
+    -- OVERWORLD
+    -- REMOTE_API
+
     if is_mode("debug") then
         add_defines("DEBUG")
     end
 
-    -- 地皮生成器选择
+    if get_config("overworld") == false then
+        add_packages("more-dimensions")
+    else
+        add_defines("OVERWORLD")
+    end 
+
+    if get_config("remote") == true  then
+        add_packages("legacyremotecall")
+        add_defines("REMOTE_API")
+    end
+
     if get_config("gen") == 1 then
         add_defines("GEN_1")
     else 

@@ -1,3 +1,4 @@
+#ifdef REMOTE_API
 #include "mc/enums/GameType.h"
 #include "mc/math/Vec3.h"
 #include "mc/world/gamemode/GameMode.h"
@@ -12,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "plotcraft/core/CoreUtils.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -22,6 +24,8 @@
 #pragma warning(pop)
 #endif
 
+using namespace plo::core_utils;
+
 namespace plo::remote {
 
 
@@ -30,7 +34,6 @@ void exportPLAPI();
 void exportPLEvent();
 
 
-int getPlotWorldDimid();
-
-
 } // namespace plo::remote
+
+#endif // REMOTE_API

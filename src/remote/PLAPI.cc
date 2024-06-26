@@ -1,16 +1,16 @@
+#ifdef REMOTE_API
 #include "Remote.h"
 
 
 namespace plo::remote {
 
-int getPlotWorldDimid() { return VanillaDimensions::fromString("plot"); }
 
 void exportPLAPI() {
     using namespace RemoteCall;
     using FloatPos  = std::pair<Vec3, int>;
     string const sp = "PLAPI";
 
-    exportAs(sp, "getPlotWorldDimid", []() -> int { return getPlotWorldDimid(); });
+    exportAs(sp, "getPlotWorldDimid", []() -> int { return getPlotDimensionId(); });
 
     exportAs(sp, "PlotPos_toString", [](int x, int z) -> string { return PlotPos{x, z}.toString(); });
 
@@ -21,7 +21,7 @@ void exportPLAPI() {
     });
 
     exportAs(sp, "PlotPos_getSafestPos", [](int px, int pz) -> FloatPos {
-        return std::make_pair(PlotPos{px, pz}.getSafestPos(), getPlotWorldDimid());
+        return std::make_pair(PlotPos{px, pz}.getSafestPos(), getPlotDimensionId());
     });
 
     exportAs(sp, "PlotPos_isPosOnBorder", [](int x, int z, FloatPos const& pos) -> bool {
@@ -29,11 +29,11 @@ void exportPLAPI() {
     });
 
     exportAs(sp, "PlotPos_getMin", [](int x, int z) -> FloatPos {
-        return std::make_pair(PlotPos{x, z}.getMin(), getPlotWorldDimid());
+        return std::make_pair(PlotPos{x, z}.getMin(), getPlotDimensionId());
     });
 
     exportAs(sp, "PlotPos_getMax", [](int x, int z) -> FloatPos {
-        return std::make_pair(PlotPos{x, z}.getMax(), getPlotWorldDimid());
+        return std::make_pair(PlotPos{x, z}.getMax(), getPlotDimensionId());
     });
 
     using JS_PlotPos_Constructor = std::vector<int>;
@@ -70,3 +70,5 @@ void exportPLAPI() {
 
 
 } // namespace plo::remote
+
+#endif // REMOTE_API

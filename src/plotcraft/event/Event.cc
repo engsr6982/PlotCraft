@@ -13,6 +13,7 @@
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/EconomyQueue.h"
+#include "plotcraft/core/CoreUtils.h"
 #include "plotcraft/utils/Text.h"
 #include "plotcraft/utils/Utils.h"
 
@@ -52,15 +53,15 @@ ll::event::ListenerPtr mPlayerEnterPlotEventListener; // 玩家进入地皮
 
 namespace plo::event {
 
-DimensionType getPlotDim() { return VanillaDimensions::fromString("plot"); }
+using namespace core_utils;
 
 bool registerEventListener() {
     // 注册Tick调度(实现Tip、Event等)
     mTickScheduler.add<ll::schedule::RepeatTask>(4_tick, []() {
-        auto lv = ll::service::getLevel()->getDimension(getPlotDim());
+        auto lv = ll::service::getLevel()->getDimension(getPlotDimensionId());
         if (!lv) return; // 空指针
         lv->forEachPlayer([](Player& p) {
-            if (p.getDimensionId() != getPlotDim()) return true; // 不是地皮世界，跳过
+            if (p.getDimensionId() != getPlotDimensionId()) return true; // 不是地皮世界，跳过
             if (p.isLoading() || p.isSimulated() || p.isSimulatedPlayer()) return true;
             TextPacket pkt = TextPacket();
             pkt.mType      = TextPacketType::Tip;
@@ -171,14 +172,14 @@ bool registerEventListener() {
     if (!config::cfg.plotWorld.spawnMob) {
         mSpawningMobEventListener =
             bus.emplaceListener<ll::event::SpawningMobEvent>([](ll::event::SpawningMobEvent& e) {
-                if (e.blockSource().getDimensionId() == getPlotDim()) e.cancel(); // 拦截地皮世界生物生成
+                if (e.blockSource().getDimensionId() == getPlotDimensionId()) e.cancel(); // 拦截地皮世界生物生成
                 return true;
             });
     }
 
     mPlayerDestroyBlockEventListener =
         bus.emplaceListener<ll::event::PlayerDestroyBlockEvent>([](ll::event::PlayerDestroyBlockEvent& e) {
-            if (e.self().getDimensionId() != getPlotDim()) return true; // 被破坏的方块不在地皮世界
+            if (e.self().getDimensionId() != getPlotDimensionId()) return true; // 被破坏的方块不在地皮世界
             auto pos   = e.pos();
             auto pps   = PlotPos(pos);
             auto level = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
@@ -206,7 +207,7 @@ bool registerEventListener() {
 
     mPlayerPlaceingBlockEventListener =
         bus.emplaceListener<ll::event::PlayerPlacingBlockEvent>([](ll::event::PlayerPlacingBlockEvent& e) {
-            if (e.self().getDimensionId() != getPlotDim()) return true;
+            if (e.self().getDimensionId() != getPlotDimensionId()) return true;
             auto pos   = e.pos(); // 放置方块的位置
             auto pps   = PlotPos(pos);
             auto level = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
@@ -229,7 +230,7 @@ bool registerEventListener() {
 
     mPlayerUseItemOnEventListener =
         bus.emplaceListener<ll::event::PlayerInteractBlockEvent>([](ll::event::PlayerInteractBlockEvent& e) {
-            if (e.self().getDimensionId() != getPlotDim()) return true;
+            if (e.self().getDimensionId() != getPlotDimensionId()) return true;
             auto pos   = e.clickPos(); // 点击的位置
             auto pps   = PlotPos(pos); // 获取点击位置的地皮坐标
             auto level = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
@@ -256,15 +257,15 @@ bool registerEventListener() {
         });
 
     mFireSpreadEventListener = bus.emplaceListener<ll::event::FireSpreadEvent>([](ll::event::FireSpreadEvent& e) {
-        // if (e.blockSource().getDimensionId() == getPlotDim()) e.cancel(); // 拦截地皮世界火焰蔓延
+        // if (e.blockSource().getDimensionId() == getPlotDimensionId()) e.cancel(); // 拦截地皮世界火焰蔓延
         PlotPos pps(e.pos());
         if (!pps.isValid()) e.cancel(); // 地皮外
         return true;
     });
 
     mPlayerAttackEventListener = bus.emplaceListener<ll::event::PlayerAttackEvent>([](ll::event::PlayerAttackEvent& e) {
-        if (e.self().getDimensionId() != getPlotDim()) return true; // 玩家不在地皮世界
-        auto pos   = e.target().getPosition();                      // 攻击的实体位置
+        if (e.self().getDimensionId() != getPlotDimensionId()) return true; // 玩家不在地皮世界
+        auto pos   = e.target().getPosition();                              // 攻击的实体位置
         auto pps   = PlotPos(pos);
         auto level = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
 
@@ -287,8 +288,8 @@ bool registerEventListener() {
 
     mPlayerPickUpItemEventListener =
         bus.emplaceListener<ll::event::PlayerPickUpItemEvent>([](ll::event::PlayerPickUpItemEvent& e) {
-            if (e.self().getDimensionId() != getPlotDim()) return true; // 玩家不在地皮世界
-            auto pos   = e.itemActor().getPosition();                   // 要捡起的物品实体位置
+            if (e.self().getDimensionId() != getPlotDimensionId()) return true; // 玩家不在地皮世界
+            auto pos   = e.itemActor().getPosition();                           // 要捡起的物品实体位置
             auto pps   = PlotPos(pos);
             auto level = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());
 
@@ -311,7 +312,7 @@ bool registerEventListener() {
 
     mPlayerInteractBlockEventListener =
         bus.emplaceListener<ll::event::PlayerInteractBlockEvent>([](ll::event::PlayerInteractBlockEvent& e) {
-            if (e.self().getDimensionId() != getPlotDim()) return true;
+            if (e.self().getDimensionId() != getPlotDimensionId()) return true;
             auto pos   = e.blockPos(); // 交互的方块位置
             auto pps   = PlotPos(pos);
             auto level = database::PlotDB::getInstance().getPermission(e.self().getUuid(), pps.toString());

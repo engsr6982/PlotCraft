@@ -1,9 +1,9 @@
-#include <algorithm>
-#include <memory>
-#include <vector>
 #ifdef GEN_1
 #include "PlotGenerator.h"
 #include "plotcraft/Config.h"
+#include <algorithm>
+#include <memory>
+#include <vector>
 
 #include "fmt/format.h"
 #include "mc/deps/core/data/DividedPos2d.h"
