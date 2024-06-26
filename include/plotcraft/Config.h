@@ -10,8 +10,10 @@ using string = std::string;
 
 namespace plo::config {
 
+#define mConfigVersion 4
+
 struct _Config {
-    int version = 3;
+    int version = mConfigVersion;
 
 #ifdef GEN_1
     struct _Generator {
@@ -50,6 +52,8 @@ struct _Config {
 
         bool spawnMob = false; // 地皮世界是否生成生物
     } plotWorld;
+
+    std::vector<int> allowedPlotTeleportDim = {0, 1, 2, 3}; // 允许传送到地皮维度的维度列表
 };
 
 PLAPI extern _Config cfg;

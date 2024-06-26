@@ -174,6 +174,7 @@ void plot(Player& player, Plot pt, bool ret) {
     auto& ndb  = PlayerNameDB::getInstance();
     auto& pdb  = PlotDB::getInstance();
     auto& impl = pdb.getImpl();
+    auto& cfg  = config::cfg;
 
     bool const hasOwner       = !pt.mPlotOwner.isEmpty();                              // 是否有主人
     bool const hasSale        = impl.hasSale(pt.mPlotID);                              // 是否出售
@@ -193,7 +194,7 @@ void plot(Player& player, Plot pt, bool ret) {
 
     if ((!hasOwner || hasSale) && !isOwner) fm.appendButton("购买地皮", [pt](Player& pl) { _buyPlot(pl, pt); });
 
-    if (isOwner || isSharedMember)
+    if ((isOwner || isSharedMember) && utils::some(cfg.allowedPlotTeleportDim, player.getDimensionId().id))
         fm.appendButton("传送到此地皮", [pt](Player& pl) {
             auto const v3 = PlotPos{pt.mPlotX, pt.mPlotZ}.getSafestPos();
             pl.teleport(v3, getPlotDimensionId());

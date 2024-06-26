@@ -1,5 +1,6 @@
 #ifdef REMOTE_API
 #include "Remote.h"
+#include "mc/world/level/dimension/VanillaDimensions.h"
 
 
 namespace plo::remote {
@@ -12,7 +13,11 @@ void exportPLAPI() {
 
     exportAs(sp, "getPlotWorldDimid", []() -> int { return getPlotDimensionId(); });
 
+    exportAs(sp, "getDimidFromString", [](string const& str) -> int { return VanillaDimensions::fromString(str); });
+
     exportAs(sp, "PlotPos_toString", [](int x, int z) -> string { return PlotPos{x, z}.toString(); });
+
+    exportAs(sp, "PlotPos_getPlotID", [](int x, int z) -> string { return PlotPos{x, z}.getPlotID(); });
 
     exportAs(sp, "PlotPos_toDebug", [](int x, int z) -> string { return PlotPos{x, z}.toDebug(); });
 

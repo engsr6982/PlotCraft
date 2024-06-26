@@ -13,25 +13,23 @@ using string = std::string;
 
 namespace plo::utils {
 
-PLAPI inline string join(const std::vector<string>& vec, const string splitter = ", ") {
-    if (vec.empty()) return "";
-    return std::accumulate(
-        std::next(vec.begin()),
-        vec.end(),
-        vec[0],
-        [splitter](const string& a, const string& b) -> string { return a + splitter + b; }
-    );
-}
-
-PLAPI inline string join(const std::vector<int>& vec, const string splitter = ", ") {
+template <typename T>
+PLAPI inline string join(std::vector<T> const& vec, string const& splitter = ", ") {
     if (vec.empty()) return "";
     return std::accumulate(
         std::next(vec.begin()),
         vec.end(),
         std::to_string(vec[0]),
-        [splitter](const string& a, const int& b) -> string { return a + splitter + std::to_string(b); }
+        [splitter](const string& a, const T& b) -> string { return a + splitter + std::to_string(b); }
     );
 }
+
+template <typename T>
+PLAPI inline bool some(std::vector<T> const& vec, T const& it) {
+    if (vec.empty()) return false;
+    return std::find(vec.begin(), vec.end(), it) != vec.end();
+}
+
 
 PLAPI inline string toJson(const std::unordered_map<string, double>& map) {
     string json = "{";
@@ -49,13 +47,6 @@ PLAPI inline string toJson(const std::unordered_map<string, int>& map) {
     }
     json[json.size() - 1] = '}';
     return json;
-}
-
-PLAPI inline bool some(const std::vector<string>& vec, const string& str) {
-    if (vec.empty()) {
-        return false;
-    }
-    return std::find(vec.begin(), vec.end(), str) != vec.end();
 }
 
 PLAPI inline void DebugFormPrint(const ll::form::CustomFormResult& dt) {

@@ -10,11 +10,13 @@
 
 const _Remote_ = {
   getPlotWorldDimid: ll.imports("PLAPI", "getPlotWorldDimid"),
+  getDimidFromString: ll.imports("PLAPI", "getDimidFromString"),
   PlotPos_toString: ll.imports("PLAPI", "PlotPos_toString"),
   PlotPos_toDebug: ll.imports("PLAPI", "PlotPos_toDebug"),
   PlotPos_isPosInPlot: ll.imports("PLAPI", "PlotPos_isPosInPlot"),
   PlotPos_getSafestPos: ll.imports("PLAPI", "PlotPos_getSafestPos"),
   PlotPos_isPosOnBorder: ll.imports("PLAPI", "PlotPos_isPosOnBorder"),
+  PlotPos_getPlotID: ll.imports("PLAPI", "PlotPos_getPlotID"),
   getPlayerPermission: ll.imports("PLAPI", "getPlayerPermission"),
   PlotPos_getMin: ll.imports("PLAPI", "PlotPos_getMin"),
   PlotPos_getMax: ll.imports("PLAPI", "PlotPos_getMax"),
@@ -33,12 +35,20 @@ class PLAPI {
   }
 
   /**
+   * 使用名称获取维度id
+   * @param {string} name
+   */
+  static getDimidFromString(name) {
+    return _Remote_.getDimidFromString(name);
+  }
+
+  /**
    * @param {number} x
    * @param {number} y
    * @param {number} z
    * @returns {FloatPos}
    */
-  static getFloatPos(x, y, z) {
+  static getPlotWorldFloatPos(x, y, z) {
     return new FloatPos(x, y, z, this.getPlotWorldDimid());
   }
 
@@ -123,7 +133,7 @@ class PlotPos {
    * @returns {string}
    */
   getPlotID() {
-    return _Remote_.PlotPos_toString(this.x, this.z);
+    return _Remote_.PlotPos_getPlotID(this.x, this.z);
   }
 
   /**

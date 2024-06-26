@@ -1,7 +1,11 @@
 #include "plotcraft/Config.h"
 #include "ll/api/Config.h"
+#include "plotcraft/utils/Date.h"
 #include "plugin/MyPlugin.h"
 #include <filesystem>
+#include <stdexcept>
+#include <string>
+
 
 namespace fs = std::filesystem;
 
@@ -15,10 +19,13 @@ void loadConfig() {
 
     fs::path path = mSelf.getConfigDir() / "Config.json";
 
-    bool noNeddReWrite = ll::config::loadConfig(cfg, path);
-    if (!noNeddReWrite) {
-        logger.warn("配置文件异常，请检查配置文件版本或配置是否正确");
+    bool const ok = ll::config::loadConfig(cfg, path);
+
+    if (!ok) {
+        logger.warn("loadConfig 返回了预期之外的结果，尝试备份并覆写配置文件...");
+        updateConfig();
     }
+
 
     if (cfg.generator.subChunkNum <= 0) {
         cfg.generator.subChunkNum = 1;
@@ -29,8 +36,11 @@ void loadConfig() {
 
 
 void updateConfig() {
-    fs::path path = my_plugin::MyPlugin::getInstance().getSelf().getConfigDir() / "Config.json";
-    ll::config::saveConfig(cfg, path);
+    fs::path dir = my_plugin::MyPlugin::getInstance().getSelf().getConfigDir();
+
+    fs::copy(dir / "Config.json", dir / ("Config.json.bak"));
+
+    ll::config::saveConfig(cfg, dir / "Config.json");
 }
 
 
