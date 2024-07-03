@@ -8,6 +8,7 @@
 #include "ll/api/event/world/FireSpreadEvent.h"
 #include "mc/_HeaderOutputPredefine.h"
 #include "mc/enums/GameType.h"
+#include "mc/server/ServerPlayer.h"
 #include "mc/world/gamemode/GameMode.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
@@ -147,10 +148,9 @@ bool registerEventListener() {
 
     // Minecraft events
     mPlayerJoinEventListener = bus->emplaceListener<ll::event::PlayerJoinEvent>([ndb](ll::event::PlayerJoinEvent& e) {
-        auto player = e.self();
-        if (player.isSimulatedPlayer()) return true; // skip simulated player
-        ndb->insertPlayer(player);
-        EconomyQueue::getInstance().transfer(player);
+        if (e.self().isSimulatedPlayer()) return true; // skip simulated player
+        ndb->insertPlayer(e.self());
+        EconomyQueue::getInstance().transfer(e.self());
         return true;
     });
 
@@ -164,7 +164,7 @@ bool registerEventListener() {
 
     mPlayerDestroyBlockEventListener =
         bus->emplaceListener<ll::event::PlayerDestroyBlockEvent>([pdb](ll::event::PlayerDestroyBlockEvent& e) {
-            auto player = e.self();
+            auto& player = e.self();
             if (player.getDimensionId() != getPlotDimensionId()) return true; // 被破坏的方块不在地皮世界
 
             auto pos   = e.pos();
@@ -190,7 +190,7 @@ bool registerEventListener() {
 
     mPlayerPlaceingBlockEventListener =
         bus->emplaceListener<ll::event::PlayerPlacingBlockEvent>([pdb](ll::event::PlayerPlacingBlockEvent& e) {
-            auto player = e.self();
+            auto& player = e.self();
             if (player.getDimensionId() != getPlotDimensionId()) return true;
 
             auto pos   = e.pos();
@@ -216,7 +216,7 @@ bool registerEventListener() {
 
     mPlayerUseItemOnEventListener =
         bus->emplaceListener<ll::event::PlayerInteractBlockEvent>([pdb](ll::event::PlayerInteractBlockEvent& e) {
-            auto player = e.self();
+            auto& player = e.self();
             if (player.getDimensionId() != getPlotDimensionId()) return true;
 
             auto pos   = e.clickPos();
@@ -254,7 +254,7 @@ bool registerEventListener() {
 
     mPlayerAttackEventListener =
         bus->emplaceListener<ll::event::PlayerAttackEvent>([pdb](ll::event::PlayerAttackEvent& e) {
-            auto player = e.self();
+            auto& player = e.self();
             if (player.getDimensionId() != getPlotDimensionId()) return true;
 
             auto pos   = e.target().getPosition();
@@ -279,7 +279,7 @@ bool registerEventListener() {
 
     mPlayerPickUpItemEventListener =
         bus->emplaceListener<ll::event::PlayerPickUpItemEvent>([pdb](ll::event::PlayerPickUpItemEvent& e) {
-            auto player = e.self();
+            auto& player = e.self();
             if (player.getDimensionId() != getPlotDimensionId()) return true;
 
             auto pos   = e.itemActor().getPosition();
@@ -304,7 +304,7 @@ bool registerEventListener() {
 
     mPlayerInteractBlockEventListener =
         bus->emplaceListener<ll::event::PlayerInteractBlockEvent>([pdb](ll::event::PlayerInteractBlockEvent& e) {
-            auto player = e.self();
+            auto& player = e.self();
             if (player.getDimensionId() != getPlotDimensionId()) return true;
             auto pos   = e.blockPos(); // 交互的方块位置
             auto pps   = PlotPos(pos);
