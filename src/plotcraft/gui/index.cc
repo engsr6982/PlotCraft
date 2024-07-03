@@ -25,18 +25,24 @@ void index(Player& player) {
     fm.setContent("PlotCraft > 选择一个操作:");
 
     if (player.getDimensionId() == getPlotDimensionId()) {
-        fm.appendButton("前往主世界", [](Player& pl) { mc::executeCommand("plo go overworld", &pl); });
+        fm.appendButton("前往主世界", "textures/ui/realmsIcon", "path", [](Player& pl) {
+            mc::executeCommand("plo go overworld", &pl);
+        });
     } else {
-        fm.appendButton("前往地皮世界", [](Player& pl) { mc::executeCommand("plo go plot", &pl); });
+        fm.appendButton("前往地皮世界", "textures/ui/realmsIcon", "path", [](Player& pl) {
+            mc::executeCommand("plo go plot", &pl);
+        });
     }
 
-    fm.appendButton("管理脚下地皮", [](Player& pl) { mc::executeCommand("plo plot", &pl); });
+    fm.appendButton("管理脚下地皮", "textures/ui/icon_recipe_item", "path", [](Player& pl) {
+        mc::executeCommand("plo plot", &pl);
+    });
 
-    fm.appendButton("管理地皮", [](Player& pl) { _selectPlot(pl); });
+    fm.appendButton("管理地皮", "textures/ui/icon_recipe_nature", "path", [](Player& pl) { _selectPlot(pl); });
 
-    fm.appendButton("地皮商店", [](Player& pl) { _plotShop(pl); });
+    fm.appendButton("地皮商店", "textures/ui/store_home_icon", "path", [](Player& pl) { _plotShop(pl); });
 
-    fm.appendButton("插件设置", [](Player& pl) { _pluginSetting(pl); });
+    fm.appendButton("插件设置", "textures/ui/gear", "path", [](Player& pl) { _pluginSetting(pl); });
 
     fm.appendButton("退出", [](Player&) {});
     fm.sendTo(player);
@@ -77,14 +83,14 @@ void _plotShopShowPlot(Player& player, Plot pt, PlotSale sl) {
         sl.mSaleTime
     ));
 
-    fm.appendButton("购买地皮", [pt](Player& pl) { _buyPlot(pl, pt); });
+    fm.appendButton("购买地皮", "textures/ui/confirm", "path", [pt](Player& pl) { _buyPlot(pl, pt); });
 
-    fm.appendButton("传送到此地皮", [pt](Player& pl) {
+    fm.appendButton("传送到此地皮", "textures/ui/send_icon", "path", [pt](Player& pl) {
         PlotPos pps{pt.mPlotX, pt.mPlotZ};
         pl.teleport(pps.getSafestPos(), getPlotDimensionId());
     });
 
-    fm.appendButton("返回", [pt](Player& pl) { _plotShop(pl); });
+    fm.appendButton("返回", "textures/ui/icon_import", "path", [pt](Player& pl) { _plotShop(pl); });
 
     fm.sendTo(player);
 }
@@ -102,7 +108,7 @@ void _pluginSetting(Player& player) {
 
     fm.setContent("PlotCraft > 插件设置");
 
-    fm.appendButton("设置当前位置为主世界安全坐标", [cfg](Player& pl) {
+    fm.appendButton("设置当前位置为主世界安全坐标", "textures/ui/Wrenches1", "path", [cfg](Player& pl) {
         if (pl.getDimensionId() != 0) {
             sendText<utils::Level::Error>(pl, "你必须在主世界才能执行此操作");
             return;
@@ -115,7 +121,7 @@ void _pluginSetting(Player& player) {
         sendText(pl, "设置成功");
     });
 
-    fm.appendButton("设置当前位置为地皮世界安全坐标", [cfg](Player& pl) {
+    fm.appendButton("设置当前位置为地皮世界安全坐标", "textures/ui/Wrenches1", "path", [cfg](Player& pl) {
         if (pl.getDimensionId() != getPlotDimensionId()) {
             sendText<utils::Level::Error>(pl, "你必须在地皮世界才能执行此操作");
             return;
@@ -135,7 +141,7 @@ void _pluginSetting(Player& player) {
 void _selectPlot(Player& player) {
     SimpleForm fm{PLUGIN_TITLE};
 
-    fm.appendButton("返回", [](Player& pl) { index(pl); });
+    fm.appendButton("返回", "textures/ui/icon_import", "path", [](Player& pl) { index(pl); });
 
 
     auto plots = PlotDB::getInstance().getCachedPlots();
@@ -192,26 +198,32 @@ void plot(Player& player, Plot pt, bool ret) {
     ));
 
 
-    if ((!hasOwner || hasSale) && !isOwner) fm.appendButton("购买地皮", [pt](Player& pl) { _buyPlot(pl, pt); });
+    if ((!hasOwner || hasSale) && !isOwner)
+        fm.appendButton("购买地皮", "textures/ui/confirm", "path", [pt](Player& pl) { _buyPlot(pl, pt); });
 
     if ((isOwner || isSharedMember) && utils::some(cfg.allowedPlotTeleportDim, player.getDimensionId().id))
-        fm.appendButton("传送到此地皮", [pt](Player& pl) {
+        fm.appendButton("传送到此地皮", "textures/ui/move", "path", [pt](Player& pl) {
             auto const v3 = PlotPos{pt.mPlotX, pt.mPlotZ}.getSafestPos();
             pl.teleport(v3, getPlotDimensionId());
             sendText(pl, "传送成功");
         });
 
     if (isOwner) {
-        fm.appendButton("修改地皮名称", [pt](Player& pl) { _changePlotName(pl, pt); });
+        fm.appendButton("修改地皮名称", "textures/ui/book_edit_default", "path", [pt](Player& pl) {
+            _changePlotName(pl, pt);
+        });
 
-        fm.appendButton("地皮出售", [pt](Player& pl) { _sellMyPlot(pl, pt); });
+        fm.appendButton("地皮出售", "textures/ui/MCoin", "path", [pt](Player& pl) { _sellMyPlot(pl, pt); });
 
-        fm.appendButton("共享地皮", [pt](Player& pl) { _plotShareManage(pl, pt); });
+        fm.appendButton("共享地皮", "textures/ui/share_microsoft", "path", [pt](Player& pl) {
+            _plotShareManage(pl, pt);
+        });
     }
 
-    if (hasOwner) fm.appendButton("地皮评论", [pt](Player& pl) { _plotcomment(pl, pt); });
+    if (hasOwner)
+        fm.appendButton("地皮评论", "textures/ui/icon_sign", "path", [pt](Player& pl) { _plotcomment(pl, pt); });
 
-    if (ret) fm.appendButton("返回", [](Player& pl) { _selectPlot(pl); });
+    if (ret) fm.appendButton("返回", "textures/ui/icon_import", "path", [](Player& pl) { _selectPlot(pl); });
 
     fm.sendTo(player);
 }
@@ -227,8 +239,10 @@ void _sellMyPlot(Player& player, Plot pt) {
     if (isSaleing) {
         fm.setContent(fmt::format("你正在出售地皮 {}，价格为 {}。", pt.mPlotID, impl->getSale(pt.mPlotID)->mPrice));
 
-        fm.appendButton("编辑出售价格", [pt](Player& pl) { _sellPlotAndEditPrice(pl, pt, true); });
-        fm.appendButton("取消出售", [pt, impl](Player& pl) {
+        fm.appendButton("编辑出售价格", "textures/ui/book_edit_default", "path", [pt](Player& pl) {
+            _sellPlotAndEditPrice(pl, pt, true);
+        });
+        fm.appendButton("取消出售", "textures/ui/cancel", "path", [pt, impl](Player& pl) {
             bool const ok = impl->removeSale(pt.mPlotID);
             if (ok) sendText(pl, "出售已取消");
             else sendText<utils::Level::Error>(pl, "出售取消失败");
@@ -236,10 +250,12 @@ void _sellMyPlot(Player& player, Plot pt) {
     } else {
         fm.setContent("此地皮没有出售，无法查询信息。");
 
-        fm.appendButton("出售当前地皮", [pt](Player& pl) { _sellPlotAndEditPrice(pl, pt, false); });
+        fm.appendButton("出售当前地皮", "textures/ui/icon_minecoin_9x9", "path", [pt](Player& pl) {
+            _sellPlotAndEditPrice(pl, pt, false);
+        });
     }
 
-    fm.appendButton("返回", [pt](Player& pl) { plot(pl, pt, true); });
+    fm.appendButton("返回", "textures/ui/icon_import", "path", [pt](Player& pl) { plot(pl, pt, true); });
 
     fm.sendTo(player);
 }
@@ -297,15 +313,15 @@ void _plotShareManage(Player& player, Plot pt) {
     fm.setContent("地皮共享设置\n将玩家设置为当前地皮共享者(信任者)后\n被授权的玩家拥有共享的地皮权限(放置、破坏、修改)"
                   "。注意：此权限不包含打开GUI修改地皮的权限。");
 
-    fm.appendButton("返回", [pt](Player& pl) { plot(pl, pt, true); });
+    fm.appendButton("返回", "textures/ui/icon_import", "path", [pt](Player& pl) { plot(pl, pt, true); });
 
-    fm.appendButton("清除所有共享者", [pt, impl](Player& pl) {
+    fm.appendButton("清除所有共享者", "textures/ui/recap_glyph_color_2x", "path", [pt, impl](Player& pl) {
         bool const ok = impl->resetPlotShareInfo(pt.mPlotID);
         if (ok) sendText(pl, "共享信息已清除");
         else sendText<utils::Level::Error>(pl, "共享信息清除失败");
     });
 
-    fm.appendButton("添加共享者", [pt](Player& pl) { _addSharePlayer(pl, pt); });
+    fm.appendButton("添加共享者", "textures/ui/color_plus", "path", [pt](Player& pl) { _addSharePlayer(pl, pt); });
 
 
     auto sharedInfos = impl->getSharedPlots(pt.mPlotID);
@@ -540,9 +556,9 @@ void _plotcomment(Player& player, Plot pt) {
 
     fm.setContent(fmt::format("地皮 '{}' 的评论区:", pt.mPlotID));
 
-    fm.appendButton("返回", [pt](Player& pl) { plot(pl, pt, true); });
+    fm.appendButton("返回", "textures/ui/icon_import", "path", [pt](Player& pl) { plot(pl, pt, true); });
 
-    fm.appendButton("发表评论", [pt](Player& pl) { _publishComment(pl, pt); });
+    fm.appendButton("发表评论", "textures/ui/message", "path", [pt](Player& pl) { _publishComment(pl, pt); });
 
 
     auto& ndb = PlayerNameDB::getInstance();
@@ -618,11 +634,13 @@ void _showCommentOperation(Player& player, Plot pt, PlotComment ct) {
     ));
 
     if (isCommentOwner) {
-        fm.appendButton("编辑评论", [pt, ct](Player& pl) { _editComment(pl, pt, ct); });
+        fm.appendButton("编辑评论", "textures/ui/book_edit_default", "path", [pt, ct](Player& pl) {
+            _editComment(pl, pt, ct);
+        });
     }
 
     if (isCommentOwner || isOwner) {
-        fm.appendButton("删除评论", [pt, ct](Player& pl) {
+        fm.appendButton("删除评论", "textures/ui/icon_trash", "path", [pt, ct](Player& pl) {
             pev::PlayerDeletePlotComment ev{&pl, pt, ct};
             ll::event::EventBus::getInstance().publish(ev);
             if (ev.isCancelled()) return; // 事件被取消
@@ -638,7 +656,7 @@ void _showCommentOperation(Player& player, Plot pt, PlotComment ct) {
         });
     }
 
-    fm.appendButton("返回", [pt](Player& pl) { _plotcomment(pl, pt); });
+    fm.appendButton("返回", "textures/ui/icon_import", "path", [pt](Player& pl) { _plotcomment(pl, pt); });
 
     fm.sendTo(player);
 }
