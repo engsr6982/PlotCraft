@@ -496,7 +496,7 @@ void _buyPlot(Player& player, Plot pt) {
         "确认",
         "返回"
     }
-        .sendTo(player, [pt, price, fromSale, ms, impl](Player& pl, ModalFormResult const& dt, FormCancelReason) {
+        .sendTo(player, [pt, price, fromSale, ms, impl, cfg](Player& pl, ModalFormResult const& dt, FormCancelReason) {
             if (!dt) {
                 sendText(pl, "表单已放弃");
                 return;
@@ -512,19 +512,23 @@ void _buyPlot(Player& player, Plot pt) {
                 if (fromSale) {
                     bool const ok = impl->buyPlotFromSale(pt.mPlotID, pl.getUuid());
                     if (ok) {
+                        // 计算税率
+                        int const tax      = cfg.playerSellPlotTax * price / 100;
+                        int       newPrice = price - tax;
+                        if (newPrice < 0) newPrice = 0;
                         // 把扣除的经济转移给出售者
                         auto plptr = ll::service::getLevel()->getPlayer(pt.mPlotOwner);
                         if (plptr) {
-                            ms->addMoney(plptr, price); // 出售者(当前地皮主人)在线
+                            ms->addMoney(plptr, newPrice); // 出售者(当前地皮主人)在线
                             sendText(
                                 plptr,
                                 "玩家 {} 购买了您出售的地皮 {}, 经济 +{}",
                                 pl.getRealName(),
                                 pt.mPlotName,
-                                price
+                                newPrice
                             );
                         } else {
-                            EconomyQueue::getInstance().set(pt.mPlotOwner, price); // 出售者(当前地皮主人)离线
+                            EconomyQueue::getInstance().set(pt.mPlotOwner, newPrice); // 出售者(当前地皮主人)离线
                         }
 
                         bus.publish(ev);
