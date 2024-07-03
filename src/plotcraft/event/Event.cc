@@ -20,6 +20,17 @@
 #include <unordered_map>
 
 
+#ifdef DEBUG
+
+#define debugger(...) std::cout << "[Debug] " << __VA_ARGS__ << std::endl;
+
+#else
+
+#define debugger(...) ((void)0)
+
+#endif
+
+
 using string = std::string;
 using ll::chrono_literals::operator""_tick;
 using PlotPermission = plo::database::PlotPermission;
@@ -60,6 +71,28 @@ namespace plo::event {
 
 using namespace core_utils;
 
+void buildTipMessage(Player& p, PlotPos& pps, Plot& plot, PlotDBImpl* impl, PlayerNameDB* ndb) {
+    TextPacket pkt = TextPacket();
+    pkt.mType      = TextPacketType::Tip;
+    if (pps.isValid()) {
+        auto sale = impl->getSale(pps.toString());
+        // clang-format off
+        pkt.mMessage = fmt::format(
+            "地皮: {0}\n主人: {1}  |  名称: {2}\n出售: {3}  |  价格: {4}{5}",
+            pps.toDebug(),
+            plot.mPlotOwner.isEmpty() ? "无主" : ndb->getPlayerName(plot.mPlotOwner),
+            plot.mPlotName,
+            plot.mPlotOwner.isEmpty() ? "§a✔§r" : sale.has_value() ? "§a✔§r" : "§c✘§r",
+            plot.mPlotOwner.isEmpty() ? config::cfg.plotWorld.buyPlotPrice : sale.has_value() ? sale->mPrice : 0,
+            plot.mPlotOwner.isEmpty() ? "\n输入：/plo plot 打开购买菜单" : ""
+        );
+        // clang-format on
+    } else pkt.mMessage = fmt::format("{0} | 地皮世界\n输入: /plo 打开地皮菜单", PLUGIN_TITLE); // Tip3
+
+    p.sendNetworkPacket(pkt);
+}
+
+
 bool registerEventListener() {
     auto* bus  = &ll::event::EventBus::getInstance();
     auto* pdb  = &database::PlotDB::getInstance();
@@ -71,10 +104,10 @@ bool registerEventListener() {
         auto lv = ll::service::getLevel();
         if (!lv) return; // nullptr
 
-        lv->forEachPlayer([bus, impl, pdb, ndb](Player& p) {
-            if (p.isSimulatedPlayer()) return true; // skip simulated player
+        lv->forEachPlayer([bus, pdb, ndb, impl](Player& p) {
+            if (p.isSimulatedPlayer() || p.isLoading()) return true; // skip simulated player
 
-            int     dimid = p.getDimensionId().id;
+            int     dimid = p.getDimensionId();
             PlotPos pps{p.getPosition()};
 
             if (dimid != getPlotDimensionId()) {
@@ -83,64 +116,29 @@ bool registerEventListener() {
                     // 玩家通过传送离开地皮维度
                     bus->publish(PlayerLeavePlot(pair.first, &p));
                     pt.set(p.getUuid(), pps, dimid);
+                    debugger("离开地皮（维度）: " << pps.toDebug());
                 }
                 return true;
             }
 
-
             Plot plot{};
             if (pdb->hasCached(pps.getPlotID())) plot = *pdb->getCached(pps.getPlotID());
-
-            TextPacket pkt = TextPacket();
-            pkt.mType      = TextPacketType::Tip;
+            buildTipMessage(p, pps, plot, impl, ndb);
 
             if (pps.isValid()) {
                 if (pt.get(p.getUuid()).first != pps) { // join
                     bus->publish(PlayerEnterPlot(pps, &p));
                     pt.set(p.getUuid(), pps, dimid);
-                }
-                if (plot.mPlotOwner.isEmpty()) {
-                    // Tip2
-                    pkt.mMessage = fmt::format(
-                        "地皮: {0}\n主人: 无主  |  价格: {1}\n输入：/plo plot 打开购买菜单",
-                        pps.toDebug(),
-                        config::cfg.plotWorld.buyPlotPrice
-                    );
-                } else {
-                    // Tip1
-                    auto sale = impl->getSale(pps.toString());
-                    if (sale.has_value()) {
-                        // 玩家出售此地皮
-                        pkt.mMessage = fmt::format(
-                            "地皮: {0}\n主人: {1}  |  名称: {2}\n出售: {3}  |  价格: {4}",
-                            pps.toDebug(),
-                            ndb->getPlayerName(plot.mPlotOwner),
-                            plot.mPlotName,
-                            "§a✔§r",
-                            sale->mPrice
-                        );
-                    } else {
-                        // 玩家不出售此地皮
-                        pkt.mMessage = fmt::format(
-                            "地皮: {0}\n主人: {1}  |  名称: {2}\n出售: {3}  |  价格: {4}",
-                            pps.toDebug(),
-                            ndb->getPlayerName(plot.mPlotOwner),
-                            plot.mPlotName,
-                            "§c✘§r",
-                            "null"
-                        );
-                    }
+                    debugger("进入地皮: " << pps.toDebug());
                 }
             } else {
-                if (auto pair = pt.get(p.getUuid()); pair.first != pps) {
+                auto pair = pt.get(p.getUuid());
+                if (pair.first != pps) {
                     bus->publish(PlayerLeavePlot(pair.first, &p)); // use last position
                     pt.set(p.getUuid(), pps, dimid);
+                    debugger("离开地皮（位置）: " << pair.first.toDebug());
                 }
-                // Tip3
-                pkt.mMessage = fmt::format("{0} | 地皮世界\n输入: /plo 打开地皮菜单", PLUGIN_TITLE);
             }
-
-            p.sendNetworkPacket(pkt);
             return true;
         });
     });
@@ -171,11 +169,7 @@ bool registerEventListener() {
             auto pps   = PlotPos(pos);
             auto level = pdb->getPermission(player.getUuid(), pps.toString());
 
-#ifdef DEBUG
-            player.sendMessage(
-                "[Debug] 破坏方块: " + pos.toString() + ", 权限: " + std::to_string(static_cast<int>(level))
-            );
-#endif
+            debugger("破坏方块: " << pos.toString() << ", 权限: " << std::to_string(static_cast<int>(level)));
 
             if (!pps.isValid() && level != PlotPermission::Admin) e.cancel(); // 非管理员破坏道路
 
@@ -197,11 +191,7 @@ bool registerEventListener() {
             auto pps   = PlotPos(pos);
             auto level = pdb->getPermission(player.getUuid(), pps.toString());
 
-#ifdef DEBUG
-            player.sendMessage(
-                "[Debug] 放置方块: " + pos.toString() + ", 权限: " + std::to_string(static_cast<int>(level))
-            );
-#endif
+            debugger("放置方块: " << pos.toString() << ", 权限: " << std::to_string(static_cast<int>(level)));
 
             if (!pps.isValid() && level != PlotPermission::Admin) e.cancel(); // 非管理员在道路放置方块
 
@@ -227,14 +217,10 @@ bool registerEventListener() {
             static std::vector<string> ignoreItems = {"minecraft:clock"};
             if (utils::some(ignoreItems, e.item().getTypeName())) return true; // 忽略钟（兼容菜单插件）
 
-#ifdef DEBUG
-            player.sendMessage(utils::format(
-                "[Debug] 使用物品: {0}, 位置: {1}, 权限: {2}",
-                e.item().getTypeName(),
-                pos.toString(),
-                std::to_string(static_cast<int>(level))
-            ));
-#endif
+            debugger(
+                "使用物品: " << e.item().getTypeName() << ", 位置: " << pos.toString()
+                             << ", 权限: " << std::to_string(static_cast<int>(level))
+            );
 
             if (!pps.isValid() && level != PlotPermission::Admin) e.cancel(); // 非管理员在道路使用物品
 
@@ -261,14 +247,10 @@ bool registerEventListener() {
             auto pps   = PlotPos(pos);
             auto level = pdb->getPermission(player.getUuid(), pps.toString());
 
-#ifdef DEBUG
-            player.sendMessage(utils::format(
-                "[Debug] 玩家攻击: {0}, 位置: {1}, 权限: {2}",
-                e.target().getEntityLocNameString(),
-                pos.toString(),
-                std::to_string(static_cast<int>(level))
-            ));
-#endif
+            debugger(
+                "玩家攻击: " << e.target().getEntityLocNameString() << ", 位置: " << pos.toString()
+                             << ", 权限: " << std::to_string(static_cast<int>(level))
+            );
 
             if (!pps.isValid() && level != PlotPermission::Admin) e.cancel();
 
@@ -286,14 +268,10 @@ bool registerEventListener() {
             auto pps   = PlotPos(pos);
             auto level = pdb->getPermission(player.getUuid(), pps.toString());
 
-#ifdef DEBUG
-            player.sendMessage(utils::format(
-                "[Debug] 玩家捡起物品: {0}, 位置: {1}, 权限: {2}",
-                e.itemActor().getEntityLocNameString(),
-                pos.toString(),
-                std::to_string(static_cast<int>(level))
-            ));
-#endif
+            debugger(
+                "玩家捡起物品: " << e.itemActor().getEntityLocNameString() << ", 位置: " << pos.toString()
+                                 << ", 权限: " << std::to_string(static_cast<int>(level))
+            );
 
             // 地皮内的属于地皮所有者和共享者
             // 地皮外的属于全体玩家
@@ -310,13 +288,7 @@ bool registerEventListener() {
             auto pps   = PlotPos(pos);
             auto level = pdb->getPermission(player.getUuid(), pps.toString());
 
-#ifdef DEBUG
-            player.sendMessage(utils::format(
-                "[Debug] 玩家交互方块: 位置: {0}, 权限: {1}",
-                pos.toString(),
-                std::to_string(static_cast<int>(level))
-            ));
-#endif
+            debugger("玩家交互方块: " << pos.toString() << ", 权限: " << std::to_string(static_cast<int>(level)));
 
             if (!pps.isValid() && level != PlotPermission::Admin) e.cancel();
 
@@ -336,13 +308,11 @@ bool registerEventListener() {
             if (gamemode == GameType::Creative || gamemode == GameType::Spectator) return; // 不处理创造模式和旁观模式
 
             auto pps   = PlotPos(pl->getPosition());
-            auto level = pdb->getPermission(pl->getUuid(), pps.toString());
+            auto level = pdb->getPermission(pl->getUuid(), pps.toString(), true);
 
-            if (pps.isValid() && level != PlotPermission::None) {
+            if (pps.isValid() && (level == PlotPermission::Owner || level == PlotPermission::Shared)) {
                 pl->setAbility(::AbilitiesIndex::MayFly, true);
-#ifdef DEBUG
-                pl->sendMessage("[Debug] 赋予飞行权限");
-#endif
+                debugger("赋予飞行权限");
             }
         });
 
@@ -354,13 +324,11 @@ bool registerEventListener() {
             if (gamemode == GameType::Creative || gamemode == GameType::Spectator) return; // 不处理创造模式和旁观模式
 
             auto pps   = PlotPos(pl->getPosition());
-            auto level = pdb->getPermission(pl->getUuid(), pps.toString());
+            auto level = pdb->getPermission(pl->getUuid(), pps.toString(), true);
 
-            if (!pps.isValid() && level != PlotPermission::Admin) {
+            if (!pps.isValid() && (level == PlotPermission::Owner || level == PlotPermission::Shared)) {
                 pl->setAbility(::AbilitiesIndex::MayFly, false);
-#ifdef DEBUG
-                pl->sendMessage("[Debug] 撤销飞行权限");
-#endif
+                debugger("撤销飞行权限");
             }
         });
     }

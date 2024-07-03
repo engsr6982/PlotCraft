@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - 修复 [#3](https://github.com/engsr6982/PlotCraft/issues/3)
+- 修复 `updateConfig` 引起的崩溃
 
 ## [0.3.0] - 2024-06-26
 

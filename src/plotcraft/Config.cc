@@ -36,11 +36,17 @@ void loadConfig() {
 
 
 void updateConfig() {
-    fs::path dir = my_plugin::MyPlugin::getInstance().getSelf().getConfigDir();
+    fs::path dir    = my_plugin::MyPlugin::getInstance().getSelf().getConfigDir();
+    fs::path source = dir / "Config.json";
+    fs::path target = dir / "Config.json.bak";
 
-    fs::copy(dir / "Config.json", dir / ("Config.json.bak"));
+    try {
+        fs::copy(source, target, fs::copy_options::overwrite_existing);
 
-    ll::config::saveConfig(cfg, dir / "Config.json");
+        ll::config::saveConfig(cfg, source);
+    } catch (std::exception const& e) {
+        my_plugin::MyPlugin::getInstance().getSelf().getLogger().error("更新配置文件失败: {}", e.what());
+    }
 }
 
 
