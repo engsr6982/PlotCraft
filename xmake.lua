@@ -102,6 +102,8 @@ target("PlotCraft")
     after_build(function (target)
         local plugin_packer = import("scripts.after_build")
 
+        cprint("${bright green}[Build Infomation]: ${reset}PlotGenerator: " .. tostring(get_config("gen")) .. " | Overworld: " .. tostring(get_config("overworld")) .. " | RemoteCall: " .. tostring(get_config("remote")))
+
         local tag = os.iorun("git describe --tags --abbrev=0 --always")
         local major, minor, patch, suffix = tag:match("v(%d+)%.(%d+)%.(%d+)(.*)")
         if not major then

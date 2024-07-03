@@ -336,28 +336,39 @@ bool registerEventListener() {
 
     // 监听自己插件的事件
     if (config::cfg.plotWorld.inPlotCanFly) {
-        mPlayerLeavePlotEventListener = bus.emplaceListener<PlayerLeavePlot>([](PlayerLeavePlot& e) {
-            auto pl = e.getPlayer();
-            if (pl == nullptr) return;
-            if (pl->getPlayerGameType() == GameType::Creative || pl->getPlayerGameType() == GameType::Spectator)
-                return; // 不处理创造模式和旁观模式
-            auto pps   = PlotPos(pl->getPosition());
-            auto level = database::PlotDB::getInstance().getPermission(pl->getUuid(), pps.toString());
-
-            if (!pps.isValid() && level != PlotPermission::Admin) {
-                pl->setAbility(::AbilitiesIndex::MayFly, false);
-            }
-        });
         mPlayerEnterPlotEventListener = bus.emplaceListener<PlayerEnterPlot>([](PlayerEnterPlot& e) {
             auto pl = e.getPlayer();
             if (pl == nullptr) return;
-            if (pl->getPlayerGameType() == GameType::Creative || pl->getPlayerGameType() == GameType::Spectator)
-                return; // 不处理创造模式和旁观模式
+
+            auto const gamemode = pl->getPlayerGameType();
+            if (gamemode == GameType::Creative || gamemode == GameType::Spectator) return; // 不处理创造模式和旁观模式
+
             auto pps   = PlotPos(pl->getPosition());
             auto level = database::PlotDB::getInstance().getPermission(pl->getUuid(), pps.toString());
 
             if (pps.isValid() && level != PlotPermission::None) {
                 pl->setAbility(::AbilitiesIndex::MayFly, true);
+#ifdef DEBUG
+                pl->sendMessage("[Debug] 赋予飞行权限");
+#endif
+            }
+        });
+
+        mPlayerLeavePlotEventListener = bus.emplaceListener<PlayerLeavePlot>([](PlayerLeavePlot& e) {
+            auto pl = e.getPlayer();
+            if (pl == nullptr) return;
+
+            auto const gamemode = pl->getPlayerGameType();
+            if (gamemode == GameType::Creative || gamemode == GameType::Spectator) return; // 不处理创造模式和旁观模式
+
+            auto pps   = PlotPos(pl->getPosition());
+            auto level = database::PlotDB::getInstance().getPermission(pl->getUuid(), pps.toString());
+
+            if (!pps.isValid() && level != PlotPermission::Admin) {
+                pl->setAbility(::AbilitiesIndex::MayFly, false);
+#ifdef DEBUG
+                pl->sendMessage("[Debug] 取消飞行权限");
+#endif
             }
         });
     }
@@ -372,11 +383,9 @@ bool registerEventListener() {
     // onStepOnPressurePlate    生物踩压力板           [lse]
     // onRide                   生物骑乘               [lse]
     // onWitherBossDestroy      凋灵破坏方块           [lse]
-    // onFarmLandDecay          耕地退化               [lse]
     // onPistonTryPush          活塞尝试推动           [lse]
     // onRedStoneUpdate         发生红石更新           [lse]
     // onBlockExplode           发生由方块引起的爆炸    [lse]
-    // onEntityExplode          发生由实体引起的爆炸    [lse]
     // onLiquidFlow             液体方块流动           [lse]
     return true;
 }
