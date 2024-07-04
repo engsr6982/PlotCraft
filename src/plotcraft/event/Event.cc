@@ -252,7 +252,7 @@ bool registerEventListener() {
                              << ", 权限: " << std::to_string(static_cast<int>(level))
             );
 
-            if (!pps.isValid() && level != PlotPermission::Admin) e.cancel();
+            // if (!pps.isValid() && level != PlotPermission::Admin) e.cancel();
 
             if (pps.isValid() && level == PlotPermission::None) e.cancel();
 
