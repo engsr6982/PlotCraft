@@ -110,7 +110,7 @@ bool registerEventListener() {
             int     dimid   = p.getDimensionId();
             int     plotDim = getPlotDimensionId();
             PlotPos pps{p.getPosition()};
-            auto    uuid = p.getUuid();
+            auto&   uuid = p.getUuid();
             auto    pair = pt.get(uuid);
 
             if (dimid != plotDim) {
