@@ -38,7 +38,7 @@ using PlotPermission = plo::database::PlotPermission;
 class CustomEventHelper {
 public:
     //               player           PlotPos     Dimension
-    std::unordered_map<UUID, std::pair<plo::PlotPos, int>> mPlayerPos;
+    std::unordered_map<UUID, std::pair<plo::PlotPos, int>> mPlayerPos; // 玩家位置缓存
 
     bool has(UUID const& uid) { return mPlayerPos.find(uid) != mPlayerPos.end(); }
 
@@ -107,16 +107,21 @@ bool registerEventListener() {
         lv->forEachPlayer([bus, pdb, ndb, impl](Player& p) {
             if (p.isSimulatedPlayer() || p.isLoading()) return true; // skip simulated player
 
-            int     dimid = p.getDimensionId();
+            int     dimid   = p.getDimensionId();
+            int     plotDim = getPlotDimensionId();
             PlotPos pps{p.getPosition()};
+            auto    uuid = p.getUuid();
+            auto    pair = pt.get(uuid);
 
-            if (dimid != getPlotDimensionId()) {
-                auto pair = pt.get(p.getUuid());
-                if (pair.second != -1 && pair.second != dimid) {
-                    // 玩家通过传送离开地皮维度
-                    bus->publish(PlayerLeavePlot(pair.first, &p));
-                    pt.set(p.getUuid(), pps, dimid);
+            if (dimid != plotDim) {
+                // 玩家通过传送离开地皮维度
+                // 地皮维度 => 其它维度  触发
+                // 其它维度 => 地皮维度  忽略
+                // 其它维度 => 其它维度  忽略
+                if (pair.second != -1 && pair.second != dimid && pair.second == plotDim) {
                     debugger("离开地皮（维度）: " << pps.toDebug());
+                    bus->publish(PlayerLeavePlot(pair.first, &p));
+                    pt.set(uuid, pps, dimid);
                 }
                 return true;
             }
@@ -126,19 +131,17 @@ bool registerEventListener() {
             buildTipMessage(p, pps, plot, impl, ndb);
 
             if (pps.isValid()) {
-                if (pt.get(p.getUuid()).first != pps) { // join
-                    bus->publish(PlayerEnterPlot(pps, &p));
-                    pt.set(p.getUuid(), pps, dimid);
+                if (pair.first != pps) { // join
                     debugger("进入地皮: " << pps.toDebug());
+                    bus->publish(PlayerEnterPlot(pps, &p));
                 }
             } else {
-                auto pair = pt.get(p.getUuid());
                 if (pair.first != pps) {
+                    debugger("离开地皮（移动）: " << pair.first.toDebug());
                     bus->publish(PlayerLeavePlot(pair.first, &p)); // use last position
-                    pt.set(p.getUuid(), pps, dimid);
-                    debugger("离开地皮（位置）: " << pair.first.toDebug());
                 }
             }
+            pt.set(uuid, pps, dimid);
             return true;
         });
     });
