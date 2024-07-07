@@ -6,7 +6,7 @@ add_repositories("liteldev-repo https://github.com/LiteLDev/xmake-repo.git")
 -- add_requires("levilamina develop") to use develop version
 -- please note that you should add bdslibrary yourself if using dev version
 add_requires(
-    "levilamina 0.13.0",
+    "levilamina 0.13.3",
     "sqlitecpp 3.2.1",
     "legacymoney 0.8.1"
 )

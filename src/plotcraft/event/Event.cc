@@ -313,7 +313,7 @@ bool registerEventListener() {
             auto pps   = PlotPos(pl->getPosition());
             auto level = pdb->getPermission(pl->getUuid(), pps.toString(), true);
 
-            if (pps.isValid() && (level == PlotPermission::Owner || level == PlotPermission::Shared)) {
+            if (level == PlotPermission::Owner || level == PlotPermission::Shared) {
                 pl->setAbility(::AbilitiesIndex::MayFly, true);
                 debugger("赋予飞行权限");
             }
@@ -329,7 +329,7 @@ bool registerEventListener() {
             auto pps   = PlotPos(pl->getPosition());
             auto level = pdb->getPermission(pl->getUuid(), pps.toString(), true);
 
-            if (!pps.isValid() && (level == PlotPermission::Owner || level == PlotPermission::Shared)) {
+            if (level == PlotPermission::Owner || level == PlotPermission::Shared) {
                 pl->setAbility(::AbilitiesIndex::MayFly, false);
                 debugger("撤销飞行权限");
             }
