@@ -37,7 +37,7 @@ void plot(Player& player, Plot plot, bool ret = false);
 void _pluginSetting(Player& player);
 
 void _plotShop(Player& player);
-void _plotShopShowPlot(Player& player, Plot pt, PlotSale sl) ;
+void _plotShopShowPlot(Player& player, Plot pt, PlotSale sl);
 
 void _addSharePlayer(Player& player, Plot pt);
 

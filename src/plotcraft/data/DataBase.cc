@@ -209,7 +209,7 @@ bool PlotDBImpl::addPlot(PlotPos& pos, UUID const& uid, string const& name) {
         query.bind(4, pos.x);
         query.bind(5, pos.z);
         query.exec();
-        PlotDB::getInstance().cache(Plot{pos.toString(), name, uid, pos.x, pos.z}); // cache
+        PlotDB::getInstance().cache(PlotItem{pos.toString(), name, uid, pos.x, pos.z}); // cache
         return true;
     }
     HandleSQLiteExceptionAndReturn(false);
@@ -248,11 +248,11 @@ bool PlotDBImpl::updatePlotName(PlotID const& pid, string const& newName) {
     HandleSQLiteExceptionAndReturn(false);
 }
 
-std::optional<Plot> PlotDBImpl::getPlot(PlotID const& id) {
+std::optional<PlotItem> PlotDBImpl::getPlot(PlotID const& id) {
     SQLite::Statement query(*mSQLite, "SELECT * FROM Plots WHERE mPlotID = ?");
     query.bind(1, id);
     if (query.executeStep()) {
-        Plot plot;
+        PlotItem plot;
         plot.mPlotID    = query.getColumn("mPlotID").getText();
         plot.mPlotName  = query.getColumn("mPlotName").getText();
         plot.mPlotOwner = UUID::fromString(query.getColumn("mPlotOwner").getText());
@@ -269,7 +269,7 @@ Plots PlotDBImpl::getPlots(UUID const& uid) {
     SQLite::Statement query(*mSQLite, "SELECT * FROM Plots WHERE mPlotOwner = ?");
     query.bind(1, uid.asString());
     while (query.executeStep()) {
-        Plot plot;
+        PlotItem plot;
         plot.mPlotID    = query.getColumn("mPlotID").getText();
         plot.mPlotName  = query.getColumn("mPlotName").getText();
         plot.mPlotOwner = UUID::fromString(query.getColumn("mPlotOwner").getText());
@@ -285,7 +285,7 @@ Plots PlotDBImpl::getPlots() {
     Plots             plots;
     SQLite::Statement query(*mSQLite, "SELECT * FROM Plots");
     while (query.executeStep()) {
-        Plot plot;
+        PlotItem plot;
         plot.mPlotID    = query.getColumn("mPlotID").getText();
         plot.mPlotName  = query.getColumn("mPlotName").getText();
         plot.mPlotOwner = UUID::fromString(query.getColumn("mPlotOwner").getText());
@@ -323,7 +323,7 @@ bool PlotDBImpl::addShareInfo(PlotID const& id, UUID const& targetPlayer) {
         query.bind(1, id);
         query.bind(2, targetPlayer.asString());
         query.exec();
-        PlotDB::getInstance().cache(PlotShare{id, targetPlayer, plo::utils::Date{}.toString()}); // cache
+        PlotDB::getInstance().cache(PlotShareItem{id, targetPlayer, plo::utils::Date{}.toString()}); // cache
         return true;
     }
     HandleSQLiteExceptionAndReturn(false);
@@ -349,12 +349,12 @@ bool PlotDBImpl::resetPlotShareInfo(PlotID const& id) {
     }
     HandleSQLiteExceptionAndReturn(false);
 }
-std::optional<PlotShare> PlotDBImpl::getSharedPlot(PlotID const& id, UUID const& uid) {
+std::optional<PlotShareItem> PlotDBImpl::getSharedPlot(PlotID const& id, UUID const& uid) {
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotShares WHERE mPlotID = ? AND mSharedPlayer = ?");
     query.bind(1, id);
     query.bind(2, uid.asString());
     if (query.executeStep()) {
-        PlotShare share;
+        PlotShareItem share;
         share.mPlotID       = query.getColumn("mPlotID").getText();
         share.mSharedPlayer = UUID::fromString(query.getColumn("mSharedPlayer").getText());
         share.mSharedTime   = query.getColumn("mSharedTime").getText();
@@ -368,7 +368,7 @@ PlotShares PlotDBImpl::getSharedPlots(PlotID const& id) {
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotShares WHERE mPlotID = ?");
     query.bind(1, id);
     while (query.executeStep()) {
-        PlotShare share;
+        PlotShareItem share;
         share.mPlotID       = query.getColumn("mPlotID").getText();
         share.mSharedPlayer = UUID::fromString(query.getColumn("mSharedPlayer").getText());
         share.mSharedTime   = query.getColumn("mSharedTime").getText();
@@ -382,7 +382,7 @@ PlotShares PlotDBImpl::getSharedPlots(UUID const& uid) {
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotShares WHERE mSharedPlayer = ?");
     query.bind(1, uid.asString());
     while (query.executeStep()) {
-        PlotShare share;
+        PlotShareItem share;
         share.mPlotID       = query.getColumn("mPlotID").getText();
         share.mSharedPlayer = UUID::fromString(query.getColumn("mSharedPlayer").getText());
         share.mSharedTime   = query.getColumn("mSharedTime").getText();
@@ -396,7 +396,7 @@ PlotShares PlotDBImpl::getSharedPlots() {
     PlotShares        shares;
     SQLite::Statement query(*mSQLite, "SELECT * FROM PlotShares");
     while (query.executeStep()) {
-        PlotShare share;
+        PlotShareItem share;
         share.mPlotID       = query.getColumn("mPlotID").getText();
         share.mSharedPlayer = UUID::fromString(query.getColumn("mSharedPlayer").getText());
         share.mSharedTime   = query.getColumn("mSharedTime").getText();
@@ -769,12 +769,12 @@ size_t PlotDB::hash(PlotID const& pid) { return std::hash<string>()(pid); }
 size_t PlotDB::hash(PlotID const& pid, UUID const& uid) { return std::hash<string>()(pid + uid.asString()); }
 
 
-bool PlotDB::cache(Plot const& plot) {
-    mPlots[hash(plot.mPlotID)] = Plot{plot}; // copy
+bool PlotDB::cache(PlotItem const& plot) {
+    mPlots[hash(plot.mPlotID)] = PlotItem{plot}; // copy
     return true;
 }
-bool PlotDB::cache(PlotShare const& share) {
-    mPlotShares[hash(share.mPlotID, share.mSharedPlayer)] = PlotShare{share}; // copy
+bool PlotDB::cache(PlotShareItem const& share) {
+    mPlotShares[hash(share.mPlotID, share.mSharedPlayer)] = PlotShareItem{share}; // copy
     return true;
 }
 bool PlotDB::cache(UUID const& uuid) {
@@ -784,10 +784,10 @@ bool PlotDB::cache(UUID const& uuid) {
 bool PlotDB::cache(size_t const& key, CacheType type, DynamicCache const& data) {
     switch (type) {
     case CacheType::Plot:
-        mPlots[key] = std::get<Plot>(data); // copy
+        mPlots[key] = std::get<PlotItem>(data); // copy
         break;
     case CacheType::PlotShare:
-        mPlotShares[key] = std::get<PlotShare>(data); // copy
+        mPlotShares[key] = std::get<PlotShareItem>(data); // copy
         break;
     case CacheType::Admin:
         mAdmins[key] = std::get<bool>(data); // copy
@@ -828,12 +828,12 @@ bool PlotDB::hasCached(size_t const& key, CacheType type) {
 }
 
 
-std::optional<Plot> PlotDB::getCached(PlotID const& id) {
+std::optional<PlotItem> PlotDB::getCached(PlotID const& id) {
     auto it = mPlots.find(hash(id));
     if (it == mPlots.end()) return std::nullopt;
     return it->second;
 }
-std::optional<PlotShare> PlotDB::getCached(PlotID const& id, UUID const& uid) {
+std::optional<PlotShareItem> PlotDB::getCached(PlotID const& id, UUID const& uid) {
     auto it = mPlotShares.find(hash(id, uid));
     if (it == mPlotShares.end()) return std::nullopt;
     return it->second;
