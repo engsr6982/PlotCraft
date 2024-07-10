@@ -34,13 +34,13 @@ struct PlotShareItem {
 class PlotMetadata {
 public: // private:
     PlotID mPlotID;
-    string mPlotName{""};
-    UUID   mPlotOwner{""};
+    string mPlotName  = "";
+    UUID   mPlotOwner = "";
     int    mPlotX;
     int    mPlotZ;
 
-    bool mIsSale{false}; // 是否是出售的
-    int  mPrice{0};      // 出售价格
+    bool mIsSale = false; // 是否是出售的
+    int  mPrice  = 0;     // 出售价格
 
     std::vector<PlotShareItem> mSharedPlayers; // 共享者列表
 

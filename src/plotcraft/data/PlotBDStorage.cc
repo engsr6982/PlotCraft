@@ -1,9 +1,7 @@
 #include "plotcraft/data/PlotBDStorage.h"
-#include "ll/api/chrono/GameChrono.h"
 #include "ll/api/data/KeyValueDB.h"
-#include "ll/api/schedule/Scheduler.h"
-#include "ll/api/schedule/Task.h"
 #include "nlohmann/json_fwd.hpp"
+#include "plotcraft/utils/Date.h"
 #include "plotcraft/utils/JsonHelper.h"
 #include "plugin/MyPlugin.h"
 #include <memory>
@@ -12,9 +10,13 @@
 #include <vector>
 
 
-using namespace plo::utils;
+#ifdef DEBUG
+#define debugger(...) std::cout << "[Debug] " << __VA_ARGS__ << std::endl;
+#else
+#define debugger(...) ((void)0)
+#endif
 
-ll::schedule::ServerTimeScheduler mServerTimeScheduler;
+using namespace plo::utils;
 
 namespace plo::data {
 
@@ -22,10 +24,14 @@ void PlotBDStorage::tryStartSaveThread() {
     static bool isStarted = false;
     if (isStarted) return;
     isStarted = true;
-    mServerTimeScheduler.add<ll::schedule::RepeatTask>(ll::chrono::minutes(2), [this]() {
-        my_plugin::MyPlugin::getInstance().getSelf().getLogger().info("Saveing PlotBDStorage...");
-        std::thread([this]() { this->save(); }).detach();
-    });
+    std::thread([this]() {
+        while (true) {
+            debugger(" [" << Date{}.toString() << "] Saveing...");
+            this->save();
+            debugger(" [" << Date{}.toString() << "] Save done.");
+            std::this_thread::sleep_for(std::chrono::minutes(2));
+        }
+    }).detach();
 }
 
 PlotBDStorage& PlotBDStorage::getInstance() {
