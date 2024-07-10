@@ -35,6 +35,8 @@ public:
     PLAPI void save(); // 保存所有数据
     PLAPI void save(PlotMetadata const& plot);
 
+    PLAPI void tryStartSaveThread(); // 启动自动保存线程
+
     PLAPI void initKey();
 
     PLAPI void tryConvertOldDB();

@@ -73,7 +73,7 @@ public:
         if (it == mPlayerPos.end()) return std::make_pair(plo::PlotPos{}, -1);
         return it->second;
     }
-} pt;
+} helper;
 
 
 // Global variables
@@ -95,25 +95,38 @@ namespace plo::event {
 
 using namespace core_utils;
 
-void buildTipMessage(Player& p, PlotPos& pps, PlotMetadata* plot, PlayerNameDB* ndb) {
-    TextPacket pkt = TextPacket();
-    pkt.mType      = TextPacketType::Tip;
-    if (pps.isValid()) {
-        auto owner = plot->getPlotOwner();
-        // clang-format off
-        pkt.mMessage = fmt::format(
-            "地皮: {0}\n主人: {1}  |  名称: {2}\n出售: {3}  |  价格: {4}{5}",
-            pps.toDebug(),
-            owner.empty() ? "无主" : ndb->getPlayerName(owner),
-            plot->getPlotName(),
-            owner.empty() ? "§a✔§r" : plot->isSale() ? "§a✔§r" : "§c✘§r",
-            owner.empty() ? config::cfg.plotWorld.buyPlotPrice : plot->isSale() ? plot->getSalePrice() : 0,
-            owner.empty() ? "\n输入：/plo plot 打开购买菜单" : ""
-        );
-        // clang-format on
-    } else pkt.mMessage = fmt::format("{0} | 地皮世界\n输入: /plo 打开地皮菜单", PLUGIN_TITLE); // Tip3
+void buildTipMessage(Player& p, PlotPos& pps, PlayerNameDB* ndb, PlotBDStorage* pdb) {
+    try {
+        PlotMetadata* plot{};
+        if (pdb->hasPlot(pps.getPlotID())) plot = pdb->getPlot(pps.getPlotID()).get(); // 取原始指针
 
-    p.sendNetworkPacket(pkt);
+        TextPacket pkt = TextPacket();
+        pkt.mType      = TextPacketType::Tip;
+        if (pps.isValid()) {
+            auto owner = plot->mPlotOwner;
+            // clang-format off
+            pkt.mMessage = fmt::format(
+                "地皮: {0}\n主人: {1}  |  名称: {2}\n出售: {3}  |  价格: {4}{5}",
+                pps.toDebug(),
+                owner.empty() ? "无主" : ndb->getPlayerName(owner),
+                plot->getPlotName(),
+                owner.empty() ? "§a✔§r" : plot->isSale() ? "§a✔§r" : "§c✘§r",
+                owner.empty() ? config::cfg.plotWorld.buyPlotPrice : plot->isSale() ? plot->getSalePrice() : 0,
+                owner.empty() ? "\n输入：/plo plot 打开购买菜单" : ""
+            );
+            // clang-format on
+        } else pkt.mMessage = fmt::format("{0} | 地皮世界\n输入: /plo 打开地皮菜单", PLUGIN_TITLE); // Tip3
+
+        p.sendNetworkPacket(pkt);
+    } catch (std::exception const& e) {
+        my_plugin::MyPlugin::getInstance().getSelf().getLogger().error(
+            "Fail in {}\nstd::exception: {}",
+            __FUNCTION__,
+            e.what()
+        );
+    } catch (...) {
+        my_plugin::MyPlugin::getInstance().getSelf().getLogger().error("Fail in {}\nunknown exception", __FUNCTION__);
+    }
 }
 
 
@@ -134,7 +147,7 @@ bool registerEventListener() {
             int     plotDim = getPlotDimensionId();
             PlotPos pps{p.getPosition()};
             auto    uuid = p.getUuid().asString();
-            auto    pair = pt.get(uuid);
+            auto    pair = helper.get(uuid);
 
             if (dimid != plotDim) {
                 // 玩家通过传送离开地皮维度
@@ -144,14 +157,12 @@ bool registerEventListener() {
                 if (pair.second != -1 && pair.second != dimid && pair.second == plotDim) {
                     debugger("离开地皮（维度）: " << pps.toDebug());
                     bus->publish(PlayerLeavePlot(pair.first, &p));
-                    pt.set(uuid, pps, dimid);
+                    helper.set(uuid, pps, dimid);
                 }
                 return true;
             }
 
-            PlotMetadata* plot{};
-            if (pdb->hasPlot(pps.getPlotID())) plot = pdb->getPlot(pps.getPlotID()).get(); // 取原始指针
-            buildTipMessage(p, pps, plot, ndb);
+            buildTipMessage(p, pps, ndb, pdb);
 
             if (pps.isValid()) {
                 if (pair.first != pps) { // join
@@ -164,7 +175,7 @@ bool registerEventListener() {
                     bus->publish(PlayerLeavePlot(pair.first, &p)); // use last position
                 }
             }
-            pt.set(uuid, pps, dimid);
+            helper.set(uuid, pps, dimid);
             return true;
         });
     });

@@ -1,15 +1,32 @@
 #include "plotcraft/data/PlotBDStorage.h"
+#include "ll/api/chrono/GameChrono.h"
 #include "ll/api/data/KeyValueDB.h"
+#include "ll/api/schedule/Scheduler.h"
+#include "ll/api/schedule/Task.h"
 #include "nlohmann/json_fwd.hpp"
 #include "plotcraft/utils/JsonHelper.h"
 #include "plugin/MyPlugin.h"
 #include <memory>
 #include <stdexcept>
+#include <thread>
 #include <vector>
+
 
 using namespace plo::utils;
 
+ll::schedule::ServerTimeScheduler mServerTimeScheduler;
+
 namespace plo::data {
+
+void PlotBDStorage::tryStartSaveThread() {
+    static bool isStarted = false;
+    if (isStarted) return;
+    isStarted = true;
+    mServerTimeScheduler.add<ll::schedule::RepeatTask>(ll::chrono::minutes(2), [this]() {
+        my_plugin::MyPlugin::getInstance().getSelf().getLogger().info("Saveing PlotBDStorage...");
+        std::thread([this]() { this->save(); }).detach();
+    });
+}
 
 PlotBDStorage& PlotBDStorage::getInstance() {
     static PlotBDStorage instance;
@@ -72,6 +89,7 @@ void PlotBDStorage::save(PlotMetadata const& plot) {
 }
 
 void PlotBDStorage::save() {
+    // Save PlotMetadata
     for (auto const& [id, ptr] : mPlots) {
         save(*ptr);
     }

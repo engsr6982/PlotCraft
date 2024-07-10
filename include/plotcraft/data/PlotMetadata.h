@@ -35,7 +35,7 @@ class PlotMetadata {
 public: // private:
     PlotID mPlotID;
     string mPlotName{""};
-    UUID   mPlotOwner;
+    UUID   mPlotOwner{""};
     int    mPlotX;
     int    mPlotZ;
 

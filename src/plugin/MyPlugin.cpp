@@ -98,14 +98,20 @@ bool MyPlugin::enable() {
     more_dimensions::CustomDimensionManager::getInstance().addDimension<plo::core::PlotDimension>("plot");
 #endif
 
-    plo::event::registerEventListener(); // 注册事件监听器
-    plo::command::registerCommand();     // 注册命令
+    plo::event::registerEventListener();                          // 注册事件监听器
+    plo::command::registerCommand();                              // 注册命令
+    plo::data::PlotBDStorage::getInstance().tryStartSaveThread(); // 尝试启动自动保存线程
 
     return true;
 }
 
 bool MyPlugin::disable() {
-    getSelf().getLogger().info("Disabling...");
+    auto& logger = getSelf().getLogger();
+    logger.info("Disabling...");
+
+    logger.warn("Data is being saved, please do not force close the process...");
+    logger.warn("正在保存数据，请不要强制关闭进程...");
+    plo::data::PlotBDStorage::getInstance().save();
 
     plo::event::unRegisterEventListener();
 
