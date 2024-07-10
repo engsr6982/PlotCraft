@@ -13,7 +13,8 @@
 #include "mc/world/level/chunk/LevelChunk.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "plotcraft/Config.h"
-#include "plotcraft/DataBase.h"
+#include "plotcraft/data/PlayerNameDB.h"
+#include "plotcraft/data/PlotBDStorage.h"
 #include "plotcraft/gui/index.h"
 #include "plotcraft/utils/Area.h"
 #include "plotcraft/utils/Text.h"
@@ -30,25 +31,25 @@ struct ParamOp {
 };
 const auto LambdaOP = [](CommandOrigin const& origin, CommandOutput& output, ParamOp const& param) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::DedicatedServer);
-    auto& pdb  = database::PlayerNameDB::getInstance();
+    auto& pdb  = data::PlayerNameDB::getInstance();
     auto  uuid = pdb.getPlayerUUID(param.name);
-    if (uuid.has_value() && !uuid->isEmpty()) {
-        auto& impl = database::PlotDB::getInstance().getImpl();
+    if (!uuid.empty()) {
+        auto& impl = data::PlotBDStorage::getInstance();
         if (param.op == ParamOp::Op) {
-            if (impl.isAdmin(*uuid)) {
+            if (impl.isAdmin(uuid)) {
                 sendText<Level::Error>(output, "玩家 \"{}\" 已经是管理员!", param.name);
             } else {
-                if (impl.addAdmin(*uuid)) {
+                if (impl.addAdmin(uuid)) {
                     sendText<Level::Success>(output, "成功将玩家 \"{}\" 设为管理员!", param.name);
                 } else {
                     sendText<Level::Error>(output, "设置玩家 \"{}\" 为管理员失败!", param.name);
                 }
             }
         } else if (param.op == ParamOp::Deop) {
-            if (!impl.isAdmin(*uuid)) {
+            if (!impl.isAdmin(uuid)) {
                 sendText<Level::Error>(output, "玩家 \"{}\" 不是管理员!", param.name);
             } else {
-                if (impl.removeAdmin(*uuid)) {
+                if (impl.delAdmin(uuid)) {
                     sendText<Level::Success>(output, "成功将玩家 \"{}\" 取消管理员权限!", param.name);
                 } else {
                     sendText<Level::Error>(output, "取消玩家 \"{}\" 管理员权限失败!", param.name);

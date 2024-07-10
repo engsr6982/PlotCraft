@@ -23,13 +23,11 @@ declare class PLAPI {
    * @param uuid 玩家UUID
    * @param plotID 地皮ID
    * @param ignoreAdmin 是否忽略管理员权限
-   * @param ignoreCache 是否忽略缓存
    */
   static getPlayerPermission(
     uuid: string,
     plotID: string,
-    ignoreAdmin: boolean,
-    ignoreCache: boolean
+    ignoreAdmin: boolean
   ): PlotPermission;
 
   /**

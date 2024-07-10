@@ -1,22 +1,46 @@
 #include "Event.h"
+#include "fmt/format.h"
+#include "ll/api/chrono/GameChrono.h"
+#include "ll/api/event/Event.h"
+#include "ll/api/event/EventBus.h"
+#include "ll/api/event/Listener.h"
 #include "ll/api/event/ListenerBase.h"
 #include "ll/api/event/player/PlayerAttackEvent.h"
 #include "ll/api/event/player/PlayerDestroyBlockEvent.h"
 #include "ll/api/event/player/PlayerInteractBlockEvent.h"
+#include "ll/api/event/player/PlayerJoinEvent.h"
 #include "ll/api/event/player/PlayerPickUpItemEvent.h"
 #include "ll/api/event/player/PlayerPlaceBlockEvent.h"
 #include "ll/api/event/world/FireSpreadEvent.h"
+#include "ll/api/event/world/SpawnMobEvent.h"
+#include "ll/api/schedule/Scheduler.h"
+#include "ll/api/schedule/Task.h"
+#include "ll/api/service/Bedrock.h"
 #include "mc/_HeaderOutputPredefine.h"
+#include "mc/common/wrapper/optional_ref.h"
 #include "mc/enums/GameType.h"
+#include "mc/enums/TextPacketType.h"
+#include "mc/network/packet/TextPacket.h"
 #include "mc/server/ServerPlayer.h"
+#include "mc/world/actor/player/Player.h"
 #include "mc/world/gamemode/GameMode.h"
+#include "mc/world/level/Level.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/EconomyQueue.h"
+#include "plotcraft/PlotPos.h"
 #include "plotcraft/core/CoreUtils.h"
+#include "plotcraft/data/PlayerNameDB.h"
+#include "plotcraft/data/PlotBDStorage.h"
+#include "plotcraft/data/PlotMetadata.h"
+#include "plotcraft/event/PlotEvents.h"
 #include "plotcraft/utils/Text.h"
 #include "plotcraft/utils/Utils.h"
+#include "plugin/MyPlugin.h"
+#include <memory>
+#include <string>
+#include <thread>
 #include <unordered_map>
 
 
@@ -33,7 +57,7 @@
 
 using string = std::string;
 using ll::chrono_literals::operator""_tick;
-using PlotPermission = plo::database::PlotPermission;
+using PlotPermission = plo::data::PlotPermission;
 
 class CustomEventHelper {
 public:
@@ -71,20 +95,20 @@ namespace plo::event {
 
 using namespace core_utils;
 
-void buildTipMessage(Player& p, PlotPos& pps, Plot& plot, PlotDBImpl* impl, PlayerNameDB* ndb) {
+void buildTipMessage(Player& p, PlotPos& pps, PlotMetadata* plot, PlayerNameDB* ndb) {
     TextPacket pkt = TextPacket();
     pkt.mType      = TextPacketType::Tip;
     if (pps.isValid()) {
-        auto sale = impl->getSale(pps.toString());
+        auto owner = plot->getPlotOwner();
         // clang-format off
         pkt.mMessage = fmt::format(
             "地皮: {0}\n主人: {1}  |  名称: {2}\n出售: {3}  |  价格: {4}{5}",
             pps.toDebug(),
-            plot.mPlotOwner.isEmpty() ? "无主" : ndb->getPlayerName(plot.mPlotOwner),
-            plot.mPlotName,
-            plot.mPlotOwner.isEmpty() ? "§a✔§r" : sale.has_value() ? "§a✔§r" : "§c✘§r",
-            plot.mPlotOwner.isEmpty() ? config::cfg.plotWorld.buyPlotPrice : sale.has_value() ? sale->mPrice : 0,
-            plot.mPlotOwner.isEmpty() ? "\n输入：/plo plot 打开购买菜单" : ""
+            owner.empty() ? "无主" : ndb->getPlayerName(owner),
+            plot->getPlotName(),
+            owner.empty() ? "§a✔§r" : plot->isSale() ? "§a✔§r" : "§c✘§r",
+            owner.empty() ? config::cfg.plotWorld.buyPlotPrice : plot->isSale() ? plot->getSalePrice() : 0,
+            owner.empty() ? "\n输入：/plo plot 打开购买菜单" : ""
         );
         // clang-format on
     } else pkt.mMessage = fmt::format("{0} | 地皮世界\n输入: /plo 打开地皮菜单", PLUGIN_TITLE); // Tip3
@@ -94,23 +118,22 @@ void buildTipMessage(Player& p, PlotPos& pps, Plot& plot, PlotDBImpl* impl, Play
 
 
 bool registerEventListener() {
-    auto* bus  = &ll::event::EventBus::getInstance();
-    auto* pdb  = &database::PlotDB::getInstance();
-    auto* impl = &pdb->getImpl();
-    auto* ndb  = &database::PlayerNameDB::getInstance();
+    auto* bus = &ll::event::EventBus::getInstance();
+    auto* pdb = &data::PlotBDStorage::getInstance();
+    auto* ndb = &data::PlayerNameDB::getInstance();
 
     // Tick scheduler => 处理自定义事件
-    mTickScheduler.add<ll::schedule::RepeatTask>(4_tick, [bus, impl, pdb, ndb]() {
+    mTickScheduler.add<ll::schedule::RepeatTask>(4_tick, [bus, pdb, ndb]() {
         auto lv = ll::service::getLevel();
         if (!lv) return; // nullptr
 
-        lv->forEachPlayer([bus, pdb, ndb, impl](Player& p) {
+        lv->forEachPlayer([bus, pdb, ndb](Player& p) {
             if (p.isSimulatedPlayer() || p.isLoading()) return true; // skip simulated player
 
             int     dimid   = p.getDimensionId();
             int     plotDim = getPlotDimensionId();
             PlotPos pps{p.getPosition()};
-            auto&   uuid = p.getUuid();
+            auto    uuid = p.getUuid().asString();
             auto    pair = pt.get(uuid);
 
             if (dimid != plotDim) {
@@ -126,9 +149,9 @@ bool registerEventListener() {
                 return true;
             }
 
-            Plot plot{};
-            if (pdb->hasCached(pps.getPlotID())) plot = *pdb->getCached(pps.getPlotID());
-            buildTipMessage(p, pps, plot, impl, ndb);
+            PlotMetadata* plot{};
+            if (pdb->hasPlot(pps.getPlotID())) plot = pdb->getPlot(pps.getPlotID()).get(); // 取原始指针
+            buildTipMessage(p, pps, plot, ndb);
 
             if (pps.isValid()) {
                 if (pair.first != pps) { // join
@@ -170,7 +193,7 @@ bool registerEventListener() {
 
             auto pos   = e.pos();
             auto pps   = PlotPos(pos);
-            auto level = pdb->getPermission(player.getUuid(), pps.toString());
+            auto level = pdb->getPlayerPermission(player.getUuid().asString(), pps.toString());
 
             debugger("破坏方块: " << pos.toString() << ", 权限: " << std::to_string(static_cast<int>(level)));
 
@@ -192,7 +215,7 @@ bool registerEventListener() {
 
             auto pos   = e.pos();
             auto pps   = PlotPos(pos);
-            auto level = pdb->getPermission(player.getUuid(), pps.toString());
+            auto level = pdb->getPlayerPermission(player.getUuid().asString(), pps.toString());
 
             debugger("放置方块: " << pos.toString() << ", 权限: " << std::to_string(static_cast<int>(level)));
 
@@ -214,7 +237,7 @@ bool registerEventListener() {
 
             auto pos   = e.clickPos();
             auto pps   = PlotPos(pos);
-            auto level = pdb->getPermission(player.getUuid(), pps.toString());
+            auto level = pdb->getPlayerPermission(player.getUuid().asString(), pps.toString());
 
             // 忽略的物品
             static std::vector<string> ignoreItems = {"minecraft:clock"};
@@ -248,7 +271,7 @@ bool registerEventListener() {
 
             auto pos   = e.target().getPosition();
             auto pps   = PlotPos(pos);
-            auto level = pdb->getPermission(player.getUuid(), pps.toString());
+            auto level = pdb->getPlayerPermission(player.getUuid().asString(), pps.toString());
 
             debugger(
                 "玩家攻击: " << e.target().getEntityLocNameString() << ", 位置: " << pos.toString()
@@ -269,7 +292,7 @@ bool registerEventListener() {
 
             auto pos   = e.itemActor().getPosition();
             auto pps   = PlotPos(pos);
-            auto level = pdb->getPermission(player.getUuid(), pps.toString());
+            auto level = pdb->getPlayerPermission(player.getUuid().asString(), pps.toString());
 
             debugger(
                 "玩家捡起物品: " << e.itemActor().getEntityLocNameString() << ", 位置: " << pos.toString()
@@ -289,7 +312,7 @@ bool registerEventListener() {
             if (player.getDimensionId() != getPlotDimensionId()) return true;
             auto pos   = e.blockPos(); // 交互的方块位置
             auto pps   = PlotPos(pos);
-            auto level = pdb->getPermission(player.getUuid(), pps.toString());
+            auto level = pdb->getPlayerPermission(player.getUuid().asString(), pps.toString());
 
             debugger("玩家交互方块: " << pos.toString() << ", 权限: " << std::to_string(static_cast<int>(level)));
 
@@ -311,7 +334,7 @@ bool registerEventListener() {
             if (gamemode == GameType::Creative || gamemode == GameType::Spectator) return; // 不处理创造模式和旁观模式
 
             auto pps   = PlotPos(pl->getPosition());
-            auto level = pdb->getPermission(pl->getUuid(), pps.toString(), true);
+            auto level = pdb->getPlayerPermission(pl->getUuid().asString(), pps.toString(), true);
 
             if (pps.isValid() && (level == PlotPermission::Owner || level == PlotPermission::Shared)) {
                 pl->setAbility(::AbilitiesIndex::MayFly, true);
@@ -327,29 +350,14 @@ bool registerEventListener() {
             if (gamemode == GameType::Creative || gamemode == GameType::Spectator) return; // 不处理创造模式和旁观模式
 
             auto pps   = PlotPos(pl->getPosition());
-            auto level = pdb->getPermission(pl->getUuid(), pps.toString(), true);
+            auto level = pdb->getPlayerPermission(pl->getUuid().asString(), pps.toString(), true);
 
-            if (!pps.isValid() && (level == PlotPermission::Owner || level == PlotPermission::Shared)) {
+            if (level == PlotPermission::Owner || level == PlotPermission::Shared) {
                 pl->setAbility(::AbilitiesIndex::MayFly, false);
                 debugger("撤销飞行权限");
             }
         });
     }
-
-    // TODO:
-    // onMobHurt                生物受伤（包括玩家）
-    // onAttackBlock            玩家攻击方块           [lse]
-    // onChangeArmorStand       操作盔甲架             [lse]
-    // onDropItem               玩家丢出物品           [lse]
-    // onUseFrameBlock          操作物品展示框         [lse]
-    // onSpawnProjectile        弹射物创建             [lse]
-    // onStepOnPressurePlate    生物踩压力板           [lse]
-    // onRide                   生物骑乘               [lse]
-    // onWitherBossDestroy      凋灵破坏方块           [lse]
-    // onPistonTryPush          活塞尝试推动           [lse]
-    // onRedStoneUpdate         发生红石更新           [lse]
-    // onBlockExplode           发生由方块引起的爆炸    [lse]
-    // onLiquidFlow             液体方块流动           [lse]
     return true;
 }
 

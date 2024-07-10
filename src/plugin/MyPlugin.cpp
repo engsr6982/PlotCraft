@@ -17,13 +17,15 @@
 #include "mc/server/commands/ServerCommandOrigin.h"
 #include "mc/world/Minecraft.h"
 #include "plotcraft/Config.h"
-#include "plotcraft/DataBase.h"
 #include "plotcraft/EconomyQueue.h"
 #include "plotcraft/command/Command.h"
 #include "plotcraft/core/PlotDimension.h"
+#include "plotcraft/data/PlayerNameDB.h"
+#include "plotcraft/data/PlotBDStorage.h"
 #include "plotcraft/event/Event.h"
 #include "plotcraft/utils/Mc.h"
 #include "plotcraft/utils/Moneys.h"
+
 
 #ifdef REMOTE_API
 #include "remote/Remote.h"
@@ -66,8 +68,8 @@ bool MyPlugin::load() {
     logger.info("Try loading config、database...");
     plo::config::loadConfig();
     ll::i18n::load(getSelf().getLangDir());
-    plo::database::PlotDB::getInstance().load();
-    plo::database::PlayerNameDB::getInstance().initPlayerNameDB();
+    plo::data::PlotBDStorage::getInstance().load();
+    plo::data::PlayerNameDB::getInstance().initPlayerNameDB();
     plo::EconomyQueue::getInstance().load();
 
     plo::utils::Moneys::getInstance().updateConfig(plo::config::cfg.moneys);

@@ -12,7 +12,7 @@ using string = std::string;
 
 class PlotPos;
 
-namespace plo::database {
+namespace plo::data {
 
 
 class PlotBDStorage {
@@ -29,10 +29,11 @@ public:
     PlotBDStorage& operator=(const PlotBDStorage&) = delete;
 
     PLAPI ll::data::KeyValueDB& getDB();
-    PLAPI PlotBDStorage&        getInstance();
+    PLAPI static PlotBDStorage& getInstance();
 
     PLAPI void load();
-    PLAPI void save();
+    PLAPI void save(); // 保存所有数据
+    PLAPI void save(PlotMetadata const& plot);
 
     PLAPI void initKey();
 
@@ -50,7 +51,7 @@ public:
 
     PLAPI bool delPlot(const PlotID& id);
 
-    PLAPI bool addPlot(PlotID const& id, UUID const& owner, int const& x, int const& z);
+    PLAPI bool addPlot(PlotID const& id, UUID const& owner, int x, int z);
     PLAPI bool addPlot(std::shared_ptr<PlotMetadata> plot);
 
     PLAPI std::shared_ptr<PlotMetadata> getPlot(PlotID const& id) const;
@@ -59,7 +60,7 @@ public:
 
 
     // 辅助API
-    PLAPI std::vector<std::shared_ptr<PlotMetadata>> getSaleingPlots(); // 出售中的地皮
+    PLAPI std::vector<std::shared_ptr<PlotMetadata>> getSaleingPlots() const; // 出售中的地皮
 
     PLAPI bool buyPlotFromSale(PlotID const& pid, UUID const& buyer, bool resetShares = true); // 购买出售中的地皮
 
@@ -68,4 +69,4 @@ public:
 };
 
 
-} // namespace plo::database
+} // namespace plo::data

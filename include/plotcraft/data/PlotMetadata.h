@@ -1,3 +1,4 @@
+#pragma once
 #include "mc/deps/core/mce/UUID.h"
 #include <optional>
 #include <string>
@@ -7,10 +8,11 @@
 using string = std::string;
 
 
-namespace plo::database {
+namespace plo::data {
 
 typedef string    PlotID; // PlotPos::toString()
-typedef mce::UUID UUID;
+typedef mce::UUID UUID_;
+typedef string    UUID;
 typedef int       CommentID;
 
 
@@ -30,7 +32,7 @@ struct PlotShareItem {
 
 
 class PlotMetadata {
-private:
+public: // private:
     PlotID mPlotID;
     string mPlotName{""};
     UUID   mPlotOwner;
@@ -48,15 +50,21 @@ public:
     // PlotMetadata();
     // PlotMetadata(PlotID const& plotID, UUID const& owner, int x, int z);
 
-    PlotMetadata(const PlotMetadata&)            = delete; // 禁止拷贝构造函数
-    PlotMetadata& operator=(const PlotMetadata&) = delete; // 禁止拷贝赋值函数
-    PlotMetadata(PlotMetadata&&)                 = delete; // 禁止移动构造函数
-    PlotMetadata& operator=(PlotMetadata&&)      = delete; // 禁止移动赋值函数
+    // PlotMetadata(const PlotMetadata&)            = delete;
+    // PlotMetadata& operator=(const PlotMetadata&) = delete;
+    // PlotMetadata(PlotMetadata&&)                 = delete;
+    // PlotMetadata& operator=(PlotMetadata&&)      = delete;
 
     // APIs:
     bool isOwner(UUID const& uuid) const;
 
     bool setPlotName(string const& name);
+
+    bool setPlotID(PlotID const& plotID);
+
+    bool setX(int x);
+
+    bool setZ(int z);
 
     bool setPlotOwner(UUID const& owner);
 
@@ -68,11 +76,11 @@ public:
 
     bool resetSharedPlayers();
 
-    std::vector<UUID> getSharedPlayers() const;
+    std::vector<PlotShareItem> getSharedPlayers() const;
 
     bool hasComment(CommentID const& commentID) const;
 
-    bool isCommentOwner(UUID const& uuid, CommentID const& commentID) const;
+    bool isCommentOwner(CommentID const& commentID, UUID const& uuid) const;
 
     bool addComment(UUID const& uuid, string const& content);
 
@@ -96,22 +104,22 @@ public:
 
     int getSalePrice() const;
 
-    PlotID const& getPlotID() const;
+    PlotID getPlotID() const;
 
-    string const& getPlotName() const;
+    string getPlotName() const;
 
-    UUID const& getPlotOwner() const;
+    UUID getPlotOwner() const;
 
-    int getPlotX() const;
+    int getX() const;
 
-    int getPlotZ() const;
+    int getZ() const;
 
     PlotPermission getPlayerInThisPlotPermission(UUID const& uuid) const; // 玩家在此地皮的权限
 
-    bool save();
+    void save();
 
     string toString() const;
 };
 
 
-} // namespace plo::database
+} // namespace plo::data

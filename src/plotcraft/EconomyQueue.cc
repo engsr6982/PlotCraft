@@ -50,7 +50,7 @@ bool EconomyQueue::del(UUID const& target) {
 }
 
 bool EconomyQueue::transfer(Player& target) {
-    UUID uid = target.getUuid();
+    UUID uid = target.getUuid().asString();
     if (!has(uid)) return false;
 
     auto&      ms  = utils::Moneys::getInstance();
@@ -74,7 +74,7 @@ bool EconomyQueue::save() {
      */
     json j = json::array();
     for (auto const& pair : *mQueue) {
-        j.push_back({pair->first.asString(), pair->second});
+        j.push_back({pair->first, pair->second});
     }
     std::ofstream ofs(mPath);
     ofs << j.dump(4);
@@ -103,7 +103,7 @@ bool EconomyQueue::load() {
     ifs >> j;
     ifs.close();
     for (auto const& item : j) {
-        mQueue->push_back(std::make_shared<std::pair<UUID, uint64_t>>(std::make_pair(UUID::fromString(item[0]), item[1])
+        mQueue->push_back(std::make_shared<std::pair<UUID, uint64_t>>(std::make_pair(UUID(item[0]), item[1])
         ));
     }
     return true;

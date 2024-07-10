@@ -1,7 +1,7 @@
 #ifdef REMOTE_API
 #include "Remote.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
-
+#include "plotcraft/data/PlotBDStorage.h"
 
 namespace plo::remote {
 
@@ -60,17 +60,12 @@ void exportPLAPI() {
         return ret;
     });
 
-    using namespace database;
-    exportAs(
-        sp,
-        "getPlayerPermission",
-        [](string const& uuid, PlotID const& pid, bool ignoreAdmin, bool ignoreCache) -> int {
-            auto const     uid  = UUID::fromString(uuid);
-            auto&          db   = database::PlotDB::getInstance();
-            PlotPermission perm = db.getPermission(uid, pid, ignoreAdmin, ignoreCache);
-            return static_cast<int>(perm);
-        }
-    );
+    using namespace data;
+    exportAs(sp, "getPlayerPermission", [](string const& uuid, PlotID const& pid, bool ignoreAdmin) -> int {
+        auto&          db   = data::PlotBDStorage::getInstance();
+        PlotPermission perm = db.getPlayerPermission(uuid, pid, ignoreAdmin);
+        return static_cast<int>(perm);
+    });
 }
 
 
