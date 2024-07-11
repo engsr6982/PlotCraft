@@ -9,6 +9,7 @@
 #include "plotcraft/core/CoreUtils.h"
 #include "plotcraft/utils/Moneys.h"
 #include <cstdint>
+#include <memory>
 #include <regex>
 
 
@@ -53,53 +54,52 @@ void _plotShop(Player& player) {
 
     fm.setContent("PlotCraft > 地皮商店(玩家出售)");
 
-    auto* impl = &PlotDB::getInstance().getImpl();
+    auto* impl = &data::PlotBDStorage::getInstance();
 
-    auto sls = impl->getSales();
+    auto sls = impl->getSaleingPlots();
     for (auto const& sl : sls) {
-        auto pt = impl->getPlot(sl.mPlotID);
-        if (!pt.has_value()) continue;
-        if (pt->mPlotOwner == player.getUuid()) continue;
+        auto pt = impl->getPlot(sl->getPlotID());
+        if (!pt) continue;
+        if (pt->isOwner(player.getUuid().asString())) continue; // 跳过自己的地皮
         fm.appendButton(
-            fmt::format("{}\nID: {} | 价格: {}", pt->mPlotName, sl.mPlotID, sl.mPrice),
-            [pt, sl](Player& pl) { _plotShopShowPlot(pl, pt.value(), sl); }
+            fmt::format("{}\nID: {} | 价格: {}", pt->getPlotName(), sl->getPlotID(), sl->getSalePrice()),
+            [pt, sl](Player& pl) { _plotShopShowPlot(pl, pt.get()); }
         );
     }
 
     fm.sendTo(player);
 }
 
-void _plotShopShowPlot(Player& player, Plot pt, PlotSale sl) {
+void _plotShopShowPlot(Player& player, PlotMetadata* pt) {
     SimpleForm fm{PLUGIN_TITLE};
 
     auto* ndb = &PlayerNameDB::getInstance();
 
     fm.setContent(fmt::format(
-        "地皮ID: {}\n地皮名称: {}\n地皮主人: {}\n出售价格: {}\n出售时间: {}",
-        pt.mPlotID,
-        pt.mPlotName,
-        ndb->getPlayerName(pt.mPlotOwner),
-        sl.mPrice,
-        sl.mSaleTime
+        "地皮ID: {}\n地皮名称: {}\n地皮主人: {}\n出售价格: {}",
+        pt->getPlotID(),
+        pt->getPlotName(),
+        ndb->getPlayerName(pt->getPlotOwner()),
+        pt->getSalePrice()
     ));
 
     fm.appendButton("购买地皮", "textures/ui/confirm", "path", [pt](Player& pl) { _buyPlot(pl, pt); });
 
     fm.appendButton("传送到此地皮", "textures/ui/send_icon", "path", [pt](Player& pl) {
-        PlotPos pps{pt.mPlotX, pt.mPlotZ};
+        PlotPos pps{pt->getX(), pt->getZ()};
         pl.teleport(pps.getSafestPos(), getPlotDimensionId());
     });
 
-    fm.appendButton("返回", "textures/ui/icon_import", "path", [pt](Player& pl) { _plotShop(pl); });
+    fm.appendButton("返回", "textures/ui/icon_import", "path", [](Player& pl) { _plotShop(pl); });
 
     fm.sendTo(player);
 }
 
 void _pluginSetting(Player& player) {
-    auto* impl = &PlotDB::getInstance().getImpl();
+    auto* impl = &data::PlotBDStorage::getInstance();
     auto* cfg  = &config::cfg.switchDim;
 
-    if (impl->getPlayerPermission(player.getUuid(), "") != PlotPermission::Admin) {
+    if (impl->getPlayerPermission(player.getUuid().asString(), "") != PlotPermission::Admin) {
         sendText<utils::Level::Error>(player, "你没有权限执行此操作");
         return;
     }
@@ -144,11 +144,13 @@ void _selectPlot(Player& player) {
     fm.appendButton("返回", "textures/ui/icon_import", "path", [](Player& pl) { index(pl); });
 
 
-    auto plots = PlotDB::getInstance().getCachedPlots();
+    auto plots = data::PlotBDStorage::getInstance().getPlots();
 
     for (auto const& plt : plots) {
-        if (plt.mPlotOwner != player.getUuid()) continue; // 不是自己的地皮
-        fm.appendButton(fmt::format("{}\n{}", plt.mPlotName, plt.mPlotID), [plt](Player& pl) { plot(pl, plt, true); });
+        if (!plt->isOwner(player.getUuid().asString())) continue; // 不是自己的地皮
+        fm.appendButton(fmt::format("{}\n{}", plt->getPlotName(), plt->getPlotID()), [plt](Player& pl) {
+            plot(pl, plt.get(), true);
+        });
     }
 
     fm.sendTo(player);
@@ -162,38 +164,34 @@ void plot(Player& player, PlotPos plotPos) {
         return;
     }
 
-    auto& db = PlotDB::getInstance();
+    std::shared_ptr<PlotMetadata> plot = data::PlotBDStorage::getInstance().getPlot(plotPos.getPlotID());
 
-    auto pt = db.getCached(plotPos.getPlotID());
-
-    if (pt.has_value()) {
-        plot(player, pt.value());
-    } else {
-        plot(player, Plot{plotPos.getPlotID(), "", UUID{}, plotPos.x, plotPos.z}); // fake plot
+    if (plot == nullptr) {
+        plot = PlotMetadata::make(plotPos.getPlotID(), plotPos.x, plotPos.z);
     }
+
+    gui::plot(player, plot.get(), false);
 }
 
 
-void plot(Player& player, Plot pt, bool ret) {
+void plot(Player& player, PlotMetadata* pt, bool ret) {
     SimpleForm fm{PLUGIN_TITLE};
 
-    auto& ndb  = PlayerNameDB::getInstance();
-    auto& pdb  = PlotDB::getInstance();
-    auto& impl = pdb.getImpl();
-    auto& cfg  = config::cfg;
+    auto& ndb = PlayerNameDB::getInstance();
+    auto& cfg = config::cfg;
 
-    bool const hasOwner       = !pt.mPlotOwner.isEmpty();                              // 是否有主人
-    bool const hasSale        = impl.hasSale(pt.mPlotID);                              // 是否出售
-    bool const isOwner        = hasOwner && player.getUuid() == pt.mPlotOwner;         // 是否是主人
-    bool const isSharedMember = impl.isPlotSharedPlayer(pt.mPlotID, player.getUuid()); // 是否是地皮共享成员
+    bool const hasOwner       = !pt->getPlotOwner().empty();                                   // 是否有主人
+    bool const hasSale        = pt->isSale();                                                  // 是否出售
+    bool const isOwner        = hasOwner && player.getUuid().asString() == pt->getPlotOwner(); // 是否是主人
+    bool const isSharedMember = pt->isSharedPlayer(player.getUuid().asString()); // 是否是地皮共享成员
 
     fm.setContent(fmt::format(
         "地皮 {} 的元数据:\n地皮主人: {}\n地皮名称: {}\n是否出售: {}\n出售价格: {}\n  ",
-        pt.mPlotID,
-        !hasOwner ? "无主" : ndb.getPlayerName(pt.mPlotOwner),
-        pt.mPlotName,
+        pt->getPlotID(),
+        !hasOwner ? "无主" : ndb.getPlayerName(pt->getPlotOwner()),
+        pt->getPlotName(),
         hasOwner ? hasSale ? "是" : "否" : "是",
-        hasOwner ? hasSale ? std::to_string(impl.getSale(pt.mPlotID)->mPrice) : "null"
+        hasOwner ? hasSale ? std::to_string(pt->getSalePrice()) : "null"
                  : std::to_string(config::cfg.plotWorld.buyPlotPrice)
     ));
 
@@ -203,7 +201,7 @@ void plot(Player& player, Plot pt, bool ret) {
 
     if ((isOwner || isSharedMember) && utils::some(cfg.allowedPlotTeleportDim, player.getDimensionId().id))
         fm.appendButton("传送到此地皮", "textures/ui/move", "path", [pt](Player& pl) {
-            auto const v3 = PlotPos{pt.mPlotX, pt.mPlotZ}.getSafestPos();
+            auto const v3 = PlotPos{pt->getX(), pt->getZ()}.getSafestPos();
             pl.teleport(v3, getPlotDimensionId());
             sendText(pl, "传送成功");
         });
@@ -229,21 +227,19 @@ void plot(Player& player, Plot pt, bool ret) {
 }
 
 
-void _sellMyPlot(Player& player, Plot pt) {
-    auto* impl = &PlotDB::getInstance().getImpl();
-
-    bool const isSaleing = impl->hasSale(pt.mPlotID);
+void _sellMyPlot(Player& player, PlotMetadata* pt) {
+    bool const isSaleing = pt->isSale();
 
     SimpleForm fm{PLUGIN_TITLE};
 
     if (isSaleing) {
-        fm.setContent(fmt::format("你正在出售地皮 {}，价格为 {}。", pt.mPlotID, impl->getSale(pt.mPlotID)->mPrice));
+        fm.setContent(fmt::format("你正在出售地皮 {}，价格为 {}。", pt->getPlotID(), pt->getSalePrice()));
 
         fm.appendButton("编辑出售价格", "textures/ui/book_edit_default", "path", [pt](Player& pl) {
             _sellPlotAndEditPrice(pl, pt, true);
         });
-        fm.appendButton("取消出售", "textures/ui/cancel", "path", [pt, impl](Player& pl) {
-            bool const ok = impl->removeSale(pt.mPlotID);
+        fm.appendButton("取消出售", "textures/ui/cancel", "path", [pt](Player& pl) {
+            bool const ok = pt->setSaleStatus(false, 0);
             if (ok) sendText(pl, "出售已取消");
             else sendText<utils::Level::Error>(pl, "出售取消失败");
         });
@@ -261,18 +257,16 @@ void _sellMyPlot(Player& player, Plot pt) {
 }
 
 
-void _sellPlotAndEditPrice(Player& player, Plot pt, bool edit) {
-    auto* impl = &PlotDB::getInstance().getImpl();
-
+void _sellPlotAndEditPrice(Player& player, PlotMetadata* pt, bool edit) {
     CustomForm fm{PLUGIN_TITLE};
 
     fm.appendLabel("地皮确认出售后，其它玩家可以查看到你的出售信息。当玩家购买后，你的地皮将被转移到购买者的名下("
                    "自动重置共享信息)。");
 
-    if (edit) fm.appendInput("pr", "请输入出售价格:", "integer", std::to_string(impl->getSale(pt.mPlotID)->mPrice));
+    if (edit) fm.appendInput("pr", "请输入出售价格:", "integer", std::to_string(pt->getSalePrice()));
     else fm.appendInput("pr", "请输入出售价格:", "integer");
 
-    fm.sendTo(player, [pt, impl, edit](Player& pl, CustomFormResult const& dt, FormCancelReason) {
+    fm.sendTo(player, [pt, edit](Player& pl, CustomFormResult const& dt, FormCancelReason) {
         if (!dt) {
             sendText(pl, "表单已放弃");
             return;
@@ -292,11 +286,11 @@ void _sellPlotAndEditPrice(Player& player, Plot pt, bool edit) {
         }
 
         if (edit) {
-            bool const ok = impl->updateSale(pt.mPlotID, p);
+            bool const ok = pt->setSalePrice(p);
             if (ok) sendText(pl, "出售价格已修改");
             else sendText<utils::Level::Error>(pl, "出售价格修改失败");
         } else {
-            bool const ok = impl->addSale(pt.mPlotID, p);
+            bool const ok = pt->setSaleStatus(true, p);
             if (ok) sendText(pl, "出售成功");
             else sendText<utils::Level::Error>(pl, "出售失败");
         }
@@ -304,10 +298,8 @@ void _sellPlotAndEditPrice(Player& player, Plot pt, bool edit) {
 }
 
 
-void _plotShareManage(Player& player, Plot pt) {
-    auto* impl = &PlotDB::getInstance().getImpl();
-    auto* ndb  = &PlayerNameDB::getInstance();
-
+void _plotShareManage(Player& player, PlotMetadata* pt) {
+    auto* ndb = &PlayerNameDB::getInstance();
 
     SimpleForm fm{PLUGIN_TITLE};
     fm.setContent("地皮共享设置\n将玩家设置为当前地皮共享者(信任者)后\n被授权的玩家拥有共享的地皮权限(放置、破坏、修改)"
@@ -315,8 +307,8 @@ void _plotShareManage(Player& player, Plot pt) {
 
     fm.appendButton("返回", "textures/ui/icon_import", "path", [pt](Player& pl) { plot(pl, pt, true); });
 
-    fm.appendButton("清除所有共享者", "textures/ui/recap_glyph_color_2x", "path", [pt, impl](Player& pl) {
-        bool const ok = impl->resetPlotShareInfo(pt.mPlotID);
+    fm.appendButton("清除所有共享者", "textures/ui/recap_glyph_color_2x", "path", [pt](Player& pl) {
+        bool const ok = pt->resetSharedPlayers();
         if (ok) sendText(pl, "共享信息已清除");
         else sendText<utils::Level::Error>(pl, "共享信息清除失败");
     });
@@ -324,23 +316,18 @@ void _plotShareManage(Player& player, Plot pt) {
     fm.appendButton("添加共享者", "textures/ui/color_plus", "path", [pt](Player& pl) { _addSharePlayer(pl, pt); });
 
 
-    auto sharedInfos = impl->getSharedPlots(pt.mPlotID);
+    auto sharedInfos = pt->getSharedPlayers();
     for (auto const& si : sharedInfos) {
         fm.appendButton(
             fmt::format("{}\n{}", ndb->getPlayerName(si.mSharedPlayer), si.mSharedTime),
-            [pt, si, ndb, impl](Player& pl) {
+            [pt, si, ndb](Player& pl) {
                 ModalForm{
                     PLUGIN_TITLE,
-                    fmt::format(
-                        "地皮ID: {}\n共享者: {}\n共享时间: {}",
-                        si.mPlotID,
-                        ndb->getPlayerName(si.mSharedPlayer),
-                        si.mSharedTime
-                    ),
+                    fmt::format("共享者: {}\n共享时间: {}", ndb->getPlayerName(si.mSharedPlayer), si.mSharedTime),
                     "删除此玩家的共享权限",
                     "返回"
                 }
-                    .sendTo(pl, [pt, si, ndb, impl](Player& pl, ModalFormResult const& dt, FormCancelReason) {
+                    .sendTo(pl, [pt, si, ndb](Player& pl, ModalFormResult const& dt, FormCancelReason) {
                         if (!dt) {
                             sendText(pl, "表单已放弃");
                             return;
@@ -350,7 +337,7 @@ void _plotShareManage(Player& player, Plot pt) {
                             return;
                         }
 
-                        bool const ok = impl->removeSharedInfo(si.mPlotID, si.mSharedPlayer);
+                        bool const ok = pt->delSharedPlayer(si.mSharedPlayer);
                         if (ok) _plotShareManage(pl, pt);
                         else
                             sendText<utils::Level::Error>(
@@ -366,9 +353,8 @@ void _plotShareManage(Player& player, Plot pt) {
     fm.sendTo(player);
 }
 
-void _addSharePlayer(Player& player, Plot pt) {
-    auto* impl = &PlotDB::getInstance().getImpl();
-    auto* ndb  = &PlayerNameDB::getInstance();
+void _addSharePlayer(Player& player, PlotMetadata* pt) {
+    auto* ndb = &PlayerNameDB::getInstance();
 
     CustomForm fm{PLUGIN_TITLE};
 
@@ -385,7 +371,7 @@ void _addSharePlayer(Player& player, Plot pt) {
 
     fm.appendToggle("sw", "在线 <-> 离线");
 
-    fm.sendTo(player, [pt, impl, ndb](Player& pl, CustomFormResult const& dt, FormCancelReason) {
+    fm.sendTo(player, [pt, ndb](Player& pl, CustomFormResult const& dt, FormCancelReason) {
         if (!dt) {
             sendText(pl, "表单已放弃");
             return;
@@ -405,15 +391,15 @@ void _addSharePlayer(Player& player, Plot pt) {
             }
 
             auto const uuid = ndb->getPlayerUUID(in);
-            if (!uuid.has_value()) {
+            if (uuid.empty()) {
                 sendText(pl, "输入的共享者不存在,获取UUID失败");
                 return;
             }
 
-            ok = impl->addShareInfo(pt.mPlotID, uuid.value());
+            ok = pt->addSharedPlayer(uuid);
         } else {
             // 在线
-            ok = impl->addShareInfo(pt.mPlotID, *ndb->getPlayerUUID(sp));
+            ok = pt->addSharedPlayer(ndb->getPlayerUUID(sp));
         }
 
         if (ok) sendText(pl, "共享权限添加成功");
@@ -422,7 +408,7 @@ void _addSharePlayer(Player& player, Plot pt) {
 }
 
 
-void _changePlotName(Player& player, Plot pt) {
+void _changePlotName(Player& player, PlotMetadata* pt) {
     auto* bus = &ll::event::EventBus::getInstance();
 
     pev::PlayerChangePlotNameBefore ev{&player, pt};
@@ -431,7 +417,7 @@ void _changePlotName(Player& player, Plot pt) {
 
     CustomForm fm{PLUGIN_TITLE};
 
-    fm.appendInput("pn", "地皮名称:", "string", pt.mPlotName);
+    fm.appendInput("pn", "地皮名称:", "string", pt->getPlotName());
 
     fm.sendTo(player, [pt, bus](Player& pl, CustomFormResult const& dt, FormCancelReason) {
         if (!dt) {
@@ -445,8 +431,7 @@ void _changePlotName(Player& player, Plot pt) {
             return;
         }
 
-        auto&      impl = PlotDB::getInstance().getImpl();
-        bool const ok   = impl.updatePlotName(pt.mPlotID, pn);
+        bool const ok = pt->setPlotName(pn);
 
         if (ok) {
             pev::PlayerChangePlotNameAfter ev{&pl, pt, pn};
@@ -460,28 +445,27 @@ void _changePlotName(Player& player, Plot pt) {
 }
 
 
-void _buyPlot(Player& player, Plot pt) {
+void _buyPlot(Player& player, PlotMetadata* pt) {
 
-    auto* impl = &PlotDB::getInstance().getImpl();
+    auto* impl = &data::PlotBDStorage::getInstance();
     auto& cfg  = config::cfg.plotWorld;
 
-    if (static_cast<int>(impl->getPlots(player.getUuid()).size()) >= cfg.maxBuyPlotCount) {
+    if (static_cast<int>(impl->getPlots(player.getUuid().asString()).size()) >= cfg.maxBuyPlotCount) {
         sendText<utils::Level::Warn>(player, "你已经购买了太多地皮，无法购买新的地皮。");
         return;
     }
 
-
     auto*      ms       = &Moneys::getInstance();
-    bool const hasOwner = !pt.mPlotOwner.isEmpty();
-    bool const hasSale  = impl->hasSale(pt.mPlotID);
+    bool const hasOwner = !pt->getPlotOwner().empty();
+    bool const hasSale  = pt->isSale();
     bool const fromSale = hasOwner && hasSale; // 是否从出售地皮购买(玩家)
-    int const  price    = fromSale ? impl->getSale(pt.mPlotID)->mPrice : cfg.buyPlotPrice;
+    int const  price    = fromSale ? pt->getSalePrice() : cfg.buyPlotPrice;
 
     if (hasOwner && !hasSale) {
         sendText<utils::Level::Warn>(player, "这个地皮没有出售，无法购买。");
         return;
     }
-    if (pt.mPlotOwner == player.getUuid()) {
+    if (pt->getPlotOwner() == player.getUuid().asString()) {
         sendText<utils::Level::Warn>(player, "你不能购买自己的地皮。");
         return;
     }
@@ -492,7 +476,7 @@ void _buyPlot(Player& player, Plot pt) {
 
     ModalForm{
         PLUGIN_TITLE,
-        fmt::format("是否确认购买地皮 {} ?\n{}", pt.mPlotID, ms->getMoneySpendTipStr(player, price)),
+        fmt::format("是否确认购买地皮 {} ?\n{}", pt->getPlotID(), ms->getMoneySpendTipStr(player, price)),
         "确认",
         "返回"
     }
@@ -510,33 +494,33 @@ void _buyPlot(Player& player, Plot pt) {
                 pev::PlayerBuyPlotAfter ev{&pl, pt, price};
                 auto&                   bus = ll::event::EventBus::getInstance();
                 if (fromSale) {
-                    bool const ok = impl->buyPlotFromSale(pt.mPlotID, pl.getUuid());
+                    bool const ok = impl->buyPlotFromSale(pt->getPlotID(), pl.getUuid().asString());
                     if (ok) {
                         // 计算税率
                         int const tax      = cfg.playerSellPlotTax * price / 100;
                         int       newPrice = price - tax;
                         if (newPrice < 0) newPrice = 0;
                         // 把扣除的经济转移给出售者
-                        auto plptr = ll::service::getLevel()->getPlayer(pt.mPlotOwner);
+                        auto plptr = ll::service::getLevel()->getPlayer(pt->getPlotOwner());
                         if (plptr) {
                             ms->addMoney(plptr, newPrice); // 出售者(当前地皮主人)在线
                             sendText(
                                 plptr,
                                 "玩家 {} 购买了您出售的地皮 {}, 经济 +{}",
                                 pl.getRealName(),
-                                pt.mPlotName,
+                                pt->getPlotName(),
                                 newPrice
                             );
                         } else {
-                            EconomyQueue::getInstance().set(pt.mPlotOwner, newPrice); // 出售者(当前地皮主人)离线
+                            EconomyQueue::getInstance().set(pt->getPlotOwner(), newPrice); // 出售者(当前地皮主人)离线
                         }
 
                         bus.publish(ev);
                         sendText(pl, "地皮购买成功");
                     } else sendText<utils::Level::Error>(pl, "地皮购买失败");
                 } else {
-                    PlotPos    ps{pt.mPlotX, pt.mPlotZ};
-                    bool const ok = impl->addPlot(ps, pl.getUuid(), pt.mPlotID);
+                    PlotPos    ps{pt->getX(), pt->getZ()};
+                    bool const ok = impl->addPlot(ps.getPlotID(), pl.getUuid().asString(), pt->getX(), pt->getZ());
                     if (ok) {
                         bus.publish(ev);
                         sendText(pl, "地皮购买成功");
@@ -547,9 +531,9 @@ void _buyPlot(Player& player, Plot pt) {
 }
 
 
-void _plotcomment(Player& player, Plot pt) {
+void _plotcomment(Player& player, PlotMetadata* pt) {
 
-    bool const hasOwner = !pt.mPlotOwner.isEmpty(); // 是否有主人
+    bool const hasOwner = !pt->getPlotOwner().empty(); // 是否有主人
 
     if (!hasOwner) {
         sendText<utils::Level::Warn>(player, "你不能评论这个地皮，因为它没有主人。");
@@ -558,7 +542,7 @@ void _plotcomment(Player& player, Plot pt) {
 
     SimpleForm fm{PLUGIN_TITLE};
 
-    fm.setContent(fmt::format("地皮 '{}' 的评论区:", pt.mPlotID));
+    fm.setContent(fmt::format("地皮 '{}' 的评论区:", pt->getPlotID()));
 
     fm.appendButton("返回", "textures/ui/icon_import", "path", [pt](Player& pl) { plot(pl, pt, true); });
 
@@ -566,7 +550,7 @@ void _plotcomment(Player& player, Plot pt) {
 
 
     auto& ndb = PlayerNameDB::getInstance();
-    auto  cts = PlotDB::getInstance().getImpl().getComments(pt.mPlotID);
+    auto  cts = pt->getComments();
 
     std::sort(cts.begin(), cts.end(), [](auto const& a, auto const& b) {
         return Date::parse(a.mCommentTime) < Date::parse(b.mCommentTime);
@@ -575,7 +559,7 @@ void _plotcomment(Player& player, Plot pt) {
     for (auto const& ct : cts) {
         fm.appendButton(
             fmt::format("{}  {}\n{}", ndb.getPlayerName(ct.mCommentPlayer), ct.mCommentTime, ct.mContent),
-            [ct, pt](Player& pl) { _showCommentOperation(pl, pt, ct); }
+            [ct, pt](Player& pl) { _showCommentOperation(pl, pt, ct.mCommentID); }
         );
     }
 
@@ -583,7 +567,7 @@ void _plotcomment(Player& player, Plot pt) {
 }
 
 
-void _publishComment(Player& player, Plot pt) {
+void _publishComment(Player& player, PlotMetadata* pt) {
     pev::PlayerCommentPlotBefore ev{&player, pt};
     ll::event::EventBus::getInstance().publish(ev);
     if (ev.isCancelled()) return; // 事件被取消
@@ -605,8 +589,7 @@ void _publishComment(Player& player, Plot pt) {
             return;
         }
 
-        auto&      impl = PlotDB::getInstance().getImpl();
-        bool const ok   = impl.addComment(pt.mPlotID, pl.getUuid(), ct);
+        bool const ok = pt->addComment(pl.getUuid().asString(), ct);
 
         if (ok) {
             pev::PlayerCommentPlotAfter ev{&pl, pt, ct};
@@ -620,10 +603,10 @@ void _publishComment(Player& player, Plot pt) {
 }
 
 
-void _showCommentOperation(Player& player, Plot pt, PlotComment ct) {
-
-    bool const isOwner        = player.getUuid() == pt.mPlotOwner;
-    bool const isCommentOwner = player.getUuid() == ct.mCommentPlayer;
+void _showCommentOperation(Player& player, PlotMetadata* pt, CommentID id) {
+    auto const ct             = *pt->getComment(id);
+    bool const isOwner        = player.getUuid().asString() == pt->getPlotOwner();
+    bool const isCommentOwner = player.getUuid().asString() == ct.mCommentPlayer;
 
     auto& ndb = PlayerNameDB::getInstance();
 
@@ -638,19 +621,18 @@ void _showCommentOperation(Player& player, Plot pt, PlotComment ct) {
     ));
 
     if (isCommentOwner) {
-        fm.appendButton("编辑评论", "textures/ui/book_edit_default", "path", [pt, ct](Player& pl) {
-            _editComment(pl, pt, ct);
+        fm.appendButton("编辑评论", "textures/ui/book_edit_default", "path", [pt, id](Player& pl) {
+            _editComment(pl, pt, id);
         });
     }
 
     if (isCommentOwner || isOwner) {
-        fm.appendButton("删除评论", "textures/ui/icon_trash", "path", [pt, ct](Player& pl) {
-            pev::PlayerDeletePlotComment ev{&pl, pt, ct};
+        fm.appendButton("删除评论", "textures/ui/icon_trash", "path", [pt, id](Player& pl) {
+            pev::PlayerDeletePlotComment ev{&pl, pt, id};
             ll::event::EventBus::getInstance().publish(ev);
             if (ev.isCancelled()) return; // 事件被取消
 
-            auto&      impl = PlotDB::getInstance().getImpl();
-            bool const ok   = impl.removeComment(ct.mCommentID);
+            bool const ok = pt->delComment(id);
 
             if (ok) {
                 sendText(pl, "评论已删除");
@@ -666,16 +648,18 @@ void _showCommentOperation(Player& player, Plot pt, PlotComment ct) {
 }
 
 
-void _editComment(Player& player, Plot pt, PlotComment ct) {
-    pev::PlayerEditCommentBefore ev{&player, pt, ct};
+void _editComment(Player& player, PlotMetadata* pt, CommentID id) {
+    pev::PlayerEditCommentBefore ev{&player, pt, id};
     ll::event::EventBus::getInstance().publish(ev);
     if (ev.isCancelled()) return; // 事件被取消
+
+    auto const& ct = *pt->getComment(id);
 
     CustomForm fm{PLUGIN_TITLE};
 
     fm.appendInput("cm", "评论内容:", "string", ct.mContent);
 
-    fm.sendTo(player, [pt, ct](Player& pl, CustomFormResult const& dt, FormCancelReason) {
+    fm.sendTo(player, [pt, id](Player& pl, CustomFormResult const& dt, FormCancelReason) {
         if (!dt) {
             sendText(pl, "表单已放弃");
             return;
@@ -688,11 +672,10 @@ void _editComment(Player& player, Plot pt, PlotComment ct) {
             return;
         }
 
-        auto&      impl = PlotDB::getInstance().getImpl();
-        bool const ok   = impl.updateComment(ct.mCommentID, cm);
+        bool const ok = pt->setCommentContent(id, cm);
 
         if (ok) {
-            pev::PlayerEditCommentAfter ev{&pl, pt, ct, cm};
+            pev::PlayerEditCommentAfter ev{&pl, pt, id, cm};
             ll::event::EventBus::getInstance().publish(ev);
 
             sendText(pl, "评论已修改");

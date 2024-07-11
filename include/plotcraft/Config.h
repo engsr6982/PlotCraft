@@ -46,10 +46,10 @@ struct _Config {
     } switchDim;
 
     struct PlotWorld {
-        int   maxBuyPlotCount   = 25;   // 最大购买地皮数量
-        int   buyPlotPrice      = 1000; // 购买地皮价格
-        bool  inPlotCanFly      = true; // 地皮内可飞行
-        float playerSellPlotTax = 0.1;  // 玩家出售地皮扣除税率
+        int    maxBuyPlotCount   = 25;   // 最大购买地皮数量
+        int    buyPlotPrice      = 1000; // 购买地皮价格
+        bool   inPlotCanFly      = true; // 地皮内可飞行
+        double playerSellPlotTax = 0.1;  // 玩家出售地皮扣除税率
 
         bool spawnMob = false; // 地皮世界是否生成生物
     } plotWorld;

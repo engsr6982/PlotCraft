@@ -1,5 +1,5 @@
 #pragma once
-#include "DataBase.h"
+#include "data/PlotMetadata.h"
 #include "mc/deps/core/mce/UUID.h"
 #include "plotcraft/Macro.h"
 #include "plotcraft/utils/Moneys.h"
@@ -9,12 +9,13 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <nlohmann/json.hpp>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 
-using UUID   = plo::database::UUID;
+using UUID   = plo::data::UUID;
 using json   = nlohmann::json;
 namespace fs = std::filesystem;
 

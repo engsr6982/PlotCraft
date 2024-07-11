@@ -57,16 +57,14 @@ class PLAPI {
    * @param {string} uuid 玩家 UUID
    * @param {string} plotID 地皮 ID
    * @param {boolean} ignoreAdmin 忽略管理员
-   * @param {boolean} ignoreCache 忽略缓存
    * @returns {0|1|2|3} 无权限 | 共享者 | 所有者 | 管理员
    */
   static getPlayerPermission(
     uuid,
     plotID,
-    ignoreAdmin = false,
-    ignoreCache = false
+    ignoreAdmin = false
   ) {
-    return _Remote_.getPlayerPermission(uuid, plotID, ignoreAdmin, ignoreCache);
+    return _Remote_.getPlayerPermission(uuid, plotID, ignoreAdmin);
   }
 
   /**
