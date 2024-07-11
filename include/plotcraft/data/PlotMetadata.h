@@ -1,10 +1,12 @@
 #pragma once
 #include "mc/deps/core/mce/UUID.h"
+#include "plotcraft/Macro.h"
 #include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
+
 
 using string = std::string;
 
@@ -57,79 +59,79 @@ public:
     // PlotMetadata& operator=(PlotMetadata&&)      = delete;
 
 
-    static std::shared_ptr<PlotMetadata> make(PlotID const& plotID, UUID const& owner, int x, int z);
+    PLAPI static std::shared_ptr<PlotMetadata> make(PlotID const& plotID, UUID const& owner, int x, int z);
 
-    static std::shared_ptr<PlotMetadata>
+    PLAPI static std::shared_ptr<PlotMetadata>
     make(PlotID const& plotID, UUID const& owner, string const& name, int x, int z);
 
-    static std::shared_ptr<PlotMetadata> make(PlotID const& plotID, int x, int z);
+    PLAPI static std::shared_ptr<PlotMetadata> make(PlotID const& plotID, int x, int z);
 
-    static std::shared_ptr<PlotMetadata> make();
+    PLAPI static std::shared_ptr<PlotMetadata> make();
 
     // APIs:
-    bool isOwner(UUID const& uuid) const;
+    PLAPI bool isOwner(UUID const& uuid) const;
 
-    bool setPlotName(string const& name);
+    PLAPI bool setPlotName(string const& name);
 
-    bool setPlotID(PlotID const& plotID);
+    PLAPI bool setPlotID(PlotID const& plotID);
 
-    bool setX(int x);
+    PLAPI bool setX(int x);
 
-    bool setZ(int z);
+    PLAPI bool setZ(int z);
 
-    bool setPlotOwner(UUID const& owner);
+    PLAPI bool setPlotOwner(UUID const& owner);
 
-    bool isSharedPlayer(UUID const& uuid) const;
+    PLAPI bool isSharedPlayer(UUID const& uuid) const;
 
-    bool addSharedPlayer(UUID const& uuid);
+    PLAPI bool addSharedPlayer(UUID const& uuid);
 
-    bool delSharedPlayer(UUID const& uuid);
+    PLAPI bool delSharedPlayer(UUID const& uuid);
 
-    bool resetSharedPlayers();
+    PLAPI bool resetSharedPlayers();
 
-    std::vector<PlotShareItem> getSharedPlayers() const;
+    PLAPI std::vector<PlotShareItem> getSharedPlayers() const;
 
-    bool hasComment(CommentID const& commentID) const;
+    PLAPI bool hasComment(CommentID const& commentID) const;
 
-    bool isCommentOwner(CommentID const& commentID, UUID const& uuid) const;
+    PLAPI bool isCommentOwner(CommentID const& commentID, UUID const& uuid) const;
 
-    bool addComment(UUID const& uuid, string const& content);
+    PLAPI bool addComment(UUID const& uuid, string const& content);
 
-    bool delComment(CommentID const& commentID);
+    PLAPI bool delComment(CommentID const& commentID);
 
-    bool resetComments();
+    PLAPI bool resetComments();
 
-    bool setCommentContent(CommentID const& commentID, string const& content);
+    PLAPI bool setCommentContent(CommentID const& commentID, string const& content);
 
-    std::optional<PlotCommentItem> getComment(CommentID const& commentID) const;
-    std::vector<PlotCommentItem>   getComments() const;
-    std::vector<PlotCommentItem>   getComments(UUID const& uuid) const;
+    PLAPI std::optional<PlotCommentItem> getComment(CommentID const& commentID) const;
+    PLAPI std::vector<PlotCommentItem> getComments() const;
+    PLAPI std::vector<PlotCommentItem> getComments(UUID const& uuid) const;
 
-    bool setSaleStatus(bool isSale);
+    PLAPI bool setSaleStatus(bool isSale);
 
-    bool setSaleStatus(bool isSale, int price);
+    PLAPI bool setSaleStatus(bool isSale, int price);
 
-    bool setSalePrice(int price);
+    PLAPI bool setSalePrice(int price);
 
-    bool isSale() const;
+    PLAPI bool isSale() const;
 
-    int getSalePrice() const;
+    PLAPI int getSalePrice() const;
 
-    PlotID getPlotID() const;
+    PLAPI PlotID getPlotID() const;
 
-    string getPlotName() const;
+    PLAPI string getPlotName() const;
 
-    UUID getPlotOwner() const;
+    PLAPI UUID getPlotOwner() const;
 
-    int getX() const;
+    PLAPI int getX() const;
 
-    int getZ() const;
+    PLAPI int getZ() const;
 
-    PlotPermission getPlayerInThisPlotPermission(UUID const& uuid) const; // 玩家在此地皮的权限
+    PLAPI PlotPermission getPlayerInThisPlotPermission(UUID const& uuid) const; // 玩家在此地皮的权限
 
-    void save();
+    PLAPI void save();
 
-    string toString() const;
+    PLAPI string toString() const;
 };
 
 
