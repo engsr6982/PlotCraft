@@ -100,21 +100,34 @@ const auto LambdaDefault = [](CommandOrigin const& origin, CommandOutput& output
 };
 
 
+const auto LambdaDBSave = [](CommandOrigin const& origin, CommandOutput& output) {
+    CHECK_COMMAND_TYPE(output, origin, CommandOriginType::DedicatedServer);
+    data::PlotBDStorage::getInstance().save();
+    sendText<Level::Success>(output, "操作完成!");
+};
+
+
 bool registerCommand() {
     auto& cmd = ll::command::CommandRegistrar::getInstance().getOrCreateCommand("plo", "PlotCraft");
 
     // plo <op|deop> <name>
     cmd.overload<ParamOp>().required("op").required("name").execute(LambdaOP);
 
+    // plo db save
+    cmd.overload().text("db").text("save").execute(LambdaDBSave);
+
 #ifndef OVERWORLD
     // plo go <overworld|plot>
     cmd.overload<ParamGo>().text("go").required("dim").execute(LambdaGo);
 #endif
 
-    // plo plot 当前地皮菜单
+    // plo plot
     cmd.overload().text("plot").execute(LambdaPlot);
 
-    // plo  全局地皮菜单
+    // plo buy
+    cmd.overload().text("buy").execute(LambdaPlot);
+
+    // plo
     cmd.overload().execute(LambdaDefault);
 
     return true;
