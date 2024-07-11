@@ -97,13 +97,13 @@ using namespace core_utils;
 
 void buildTipMessage(Player& p, PlotPos& pps, PlayerNameDB* ndb, PlotBDStorage* pdb) {
     try {
-        PlotMetadata* plot{};
-        if (pdb->hasPlot(pps.getPlotID())) plot = pdb->getPlot(pps.getPlotID()).get(); // 取原始指针
+        std::shared_ptr<PlotMetadata> plot = pdb->getPlot(pps.getPlotID());
+        if (plot == nullptr) plot = PlotMetadata::make(pps.getPlotID(), pps.x, pps.z);
 
         TextPacket pkt = TextPacket();
         pkt.mType      = TextPacketType::Tip;
         if (pps.isValid()) {
-            auto owner = plot->mPlotOwner;
+            auto owner = plot->getPlotOwner();
             // clang-format off
             pkt.mMessage = fmt::format(
                 "地皮: {0}\n主人: {1}  |  名称: {2}\n出售: {3}  |  价格: {4}{5}",

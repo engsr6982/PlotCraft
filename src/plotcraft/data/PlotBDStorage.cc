@@ -62,10 +62,9 @@ void PlotBDStorage::load() {
         try {
             if (key.starts_with("(") && key.ends_with(")")) {
                 auto j   = nlohmann::json::parse(value);
-                auto ptr = std::make_shared<PlotMetadata>();
+                auto ptr = PlotMetadata::make();
                 JsonHelper::jsonToStruct(j, *ptr);
                 this->mPlots[ptr->getPlotID()] = ptr;
-                logger->info("Loaded PlotMetadata: {}", key);
 
             } else if (key == DB_PlotAdminsKey) {
                 auto j = nlohmann::json::parse(value);
@@ -169,11 +168,7 @@ bool PlotBDStorage::addPlot(std::shared_ptr<PlotMetadata> ptr) {
 }
 
 bool PlotBDStorage::addPlot(PlotID const& id, UUID const& owner, int x, int z) {
-    auto ptr = std::make_shared<PlotMetadata>();
-    ptr->setPlotID(id);
-    ptr->setPlotOwner(owner);
-    ptr->setX(x);
-    ptr->setZ(z);
+    auto ptr = PlotMetadata::make(id, owner, x, z);
     return addPlot(ptr);
 }
 

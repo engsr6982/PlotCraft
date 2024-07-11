@@ -1,5 +1,6 @@
 #pragma once
 #include "mc/deps/core/mce/UUID.h"
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
@@ -54,6 +55,16 @@ public:
     // PlotMetadata& operator=(const PlotMetadata&) = delete;
     // PlotMetadata(PlotMetadata&&)                 = delete;
     // PlotMetadata& operator=(PlotMetadata&&)      = delete;
+
+
+    static std::shared_ptr<PlotMetadata> make(PlotID const& plotID, UUID const& owner, int x, int z);
+
+    static std::shared_ptr<PlotMetadata>
+    make(PlotID const& plotID, UUID const& owner, string const& name, int x, int z);
+
+    static std::shared_ptr<PlotMetadata> make(PlotID const& plotID, int x, int z);
+
+    static std::shared_ptr<PlotMetadata> make();
 
     // APIs:
     bool isOwner(UUID const& uuid) const;

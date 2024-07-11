@@ -3,6 +3,7 @@
 #include "plotcraft/utils/Date.h"
 #include "plotcraft/utils/JsonHelper.h"
 #include <algorithm>
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -10,6 +11,22 @@
 using namespace plo::utils;
 
 namespace plo::data {
+
+std::shared_ptr<PlotMetadata>
+PlotMetadata::make(PlotID const& id, UUID const& owner, string const& name, int x, int z) {
+    auto ptr        = std::make_shared<PlotMetadata>();
+    ptr->mPlotID    = id;
+    ptr->mPlotName  = name;
+    ptr->mPlotX     = x;
+    ptr->mPlotZ     = z;
+    ptr->mPlotOwner = owner;
+    return ptr;
+}
+std::shared_ptr<PlotMetadata> PlotMetadata::make(PlotID const& id, UUID const& owner, int x, int z) {
+    return make(id, owner, "", x, z);
+}
+std::shared_ptr<PlotMetadata> PlotMetadata::make(PlotID const& id, int x, int z) { return make(id, UUID{}, "", x, z); }
+std::shared_ptr<PlotMetadata> PlotMetadata::make() { return make(PlotID{}, UUID{}, "", 0, 0); }
 
 
 bool PlotMetadata::isOwner(UUID const& uuid) const { return mPlotOwner == uuid; }

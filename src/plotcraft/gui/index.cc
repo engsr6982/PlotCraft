@@ -167,15 +167,10 @@ void plot(Player& player, PlotPos plotPos) {
     std::shared_ptr<PlotMetadata> plot = data::PlotBDStorage::getInstance().getPlot(plotPos.getPlotID());
 
     if (plot == nullptr) {
-        plot = std::make_shared<PlotMetadata>(); // default plot
-
-        plot->setPlotID(plotPos.getPlotID());
-        plot->setX(plotPos.x);
-        plot->setZ(plotPos.z);
+        plot = PlotMetadata::make(plotPos.getPlotID(), plotPos.x, plotPos.z);
     }
 
-    auto ptr = plot.get();
-    gui::plot(player, ptr, false);
+    gui::plot(player, plot.get(), false);
 }
 
 
