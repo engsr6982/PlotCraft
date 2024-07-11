@@ -55,17 +55,17 @@ bool MyPlugin::load() {
     logger.info(R"(                                                           )");
     logger.info(R"(                 ---- Author: engsr6982 ----               )");
     logger.info(R"(                                                           )");
-    logger.info("Loading...");
+    logger.info("加载中...");
 
-    logger.info("BuildInfomation: {}", BuildVersionInfo);
+    logger.info("编译版本信息: {}", BuildVersionInfo);
 
-    logger.info("Try creating directories...");
+    logger.info("尝试创建必要的文件夹...");
 
     if (!fs::exists(getSelf().getDataDir())) {
         fs::create_directories(getSelf().getDataDir());
     }
 
-    logger.info("Try loading config、database...");
+    logger.info("尝试加载数据...");
     plo::config::loadConfig();
     ll::i18n::load(getSelf().getLangDir());
     plo::data::PlotBDStorage::getInstance().load();
@@ -78,6 +78,7 @@ bool MyPlugin::load() {
 #ifdef REMOTE_API
     plo::remote::exportPLAPI();   // 导出PLAPI
     plo::remote::exportPLEvent(); // 导出PLEvent
+    logger.info("RemoteCall API 已导出。");
 #endif
 
 
@@ -88,7 +89,7 @@ bool MyPlugin::load() {
 bool MyPlugin::enable() {
     auto& logger = getSelf().getLogger();
     logger.info("Enabling...");
-    logger.info("Try registering command、event listener、dimension...");
+    logger.info("尝试注册 命令、维度、事件...");
 
 #ifdef DEBUG
     plo::mc::executeCommand("gamerule showcoordinates true");
@@ -109,7 +110,6 @@ bool MyPlugin::disable() {
     auto& logger = getSelf().getLogger();
     logger.info("Disabling...");
 
-    logger.warn("Data is being saved, please do not force close the process...");
     logger.warn("正在保存数据，请不要强制关闭进程...");
     plo::data::PlotBDStorage::getInstance().save();
 
