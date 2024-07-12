@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - 命令新增 `/plo buy`、`/plo db save` 重载
+- 支持关闭底部地皮提示
 
 ## [0.4.2] - 2024-07-05
 
