@@ -39,6 +39,8 @@ void plot(Player& player, PlotMetadata* plot, bool ret = false);
 
 void _pluginSetting(Player& player);
 
+void _playerSetting(Player& player);
+
 void _plotShop(Player& player);
 void _plotShopShowPlot(Player& player, PlotMetadata* pt);
 

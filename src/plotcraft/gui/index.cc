@@ -3,10 +3,13 @@
 #include "ll/api/form/FormBase.h"
 #include "ll/api/form/ModalForm.h"
 #include "ll/api/form/SimpleForm.h"
+#include "ll/api/i18n/I18n.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/world/actor/player/Player.h"
 #include "plotcraft/EconomyQueue.h"
 #include "plotcraft/core/CoreUtils.h"
+#include "plotcraft/data/PlotBDStorage.h"
+#include "plotcraft/utils/JsonHelper.h"
 #include "plotcraft/utils/Moneys.h"
 #include <cstdint>
 #include <memory>
@@ -43,11 +46,46 @@ void index(Player& player) {
 
     fm.appendButton("地皮商店", "textures/ui/store_home_icon", "path", [](Player& pl) { _plotShop(pl); });
 
-    fm.appendButton("插件设置", "textures/ui/gear", "path", [](Player& pl) { _pluginSetting(pl); });
+    fm.appendButton("自定义设置", "textures/ui/gear", "path", [](Player& pl) { _playerSetting(pl); });
+    fm.appendButton("插件设置\n(管理员)", "textures/ui/gear", "path", [](Player& pl) { _pluginSetting(pl); });
 
     fm.appendButton("退出", [](Player&) {});
     fm.sendTo(player);
 }
+
+void _playerSetting(Player& player) {
+    CustomForm fm{PLUGIN_TITLE};
+
+    auto setting     = data::PlotBDStorage::getInstance().getPlayerSetting(player.getUuid().asString());
+    auto i18n        = ll::i18n::getInstance().get();
+    auto settingJson = JsonHelper::structToJson(setting);
+
+    for (auto const& [key, value] : settingJson.items()) {
+        fm.appendToggle(key, string(i18n->get(key)), value.get<bool>());
+    }
+
+    fm.sendTo(player, [setting, settingJson](Player& pl, CustomFormResult const& dt, FormCancelReason) {
+        if (!dt) {
+            sendText(pl, "表单已放弃");
+            return;
+        }
+        utils::DebugFormPrint(dt);
+
+        json              setj = settingJson; // copy
+        PlayerSettingItem it   = setting;
+
+        for (auto const& [key, value] : setj.items()) {
+            bool const val = std::get<uint64_t>(dt->at(key));
+            setj[key]      = val;
+        }
+
+        JsonHelper::jsonToStruct(setj, it);
+
+        data::PlotBDStorage::getInstance().setPlayerSetting(pl.getUuid().asString(), it);
+        sendText(pl, "设置成功");
+    });
+}
+
 
 void _plotShop(Player& player) {
     SimpleForm fm{PLUGIN_TITLE};

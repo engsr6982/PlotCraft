@@ -162,7 +162,7 @@ bool registerEventListener() {
                 return true;
             }
 
-            buildTipMessage(p, pps, ndb, pdb);
+            if (pdb->getPlayerSetting(p.getUuid().asString()).showPlotTip) buildTipMessage(p, pps, ndb, pdb);
 
             if (pps.isValid()) {
                 if (pair.first != pps) { // join
@@ -180,14 +180,51 @@ bool registerEventListener() {
         });
     });
 
+    // My events
+    if (config::cfg.plotWorld.inPlotCanFly) {
+        mPlayerEnterPlotEventListener = bus->emplaceListener<PlayerEnterPlot>([pdb](PlayerEnterPlot& e) {
+            auto pl = e.getPlayer();
+            if (pl == nullptr) return;
+
+            auto const gamemode = pl->getPlayerGameType();
+            if (gamemode == GameType::Creative || gamemode == GameType::Spectator) return; // 不处理创造模式和旁观模式
+
+            auto pps   = PlotPos(pl->getPosition());
+            auto level = pdb->getPlayerPermission(pl->getUuid().asString(), pps.toString(), true);
+
+            if (level == PlotPermission::Owner || level == PlotPermission::Shared) {
+                pl->setAbility(::AbilitiesIndex::MayFly, true);
+                debugger("赋予飞行权限");
+            }
+        });
+
+        mPlayerLeavePlotEventListener = bus->emplaceListener<PlayerLeavePlot>([pdb](PlayerLeavePlot& e) {
+            auto pl = e.getPlayer();
+            if (pl == nullptr) return;
+
+            auto const gamemode = pl->getPlayerGameType();
+            if (gamemode == GameType::Creative || gamemode == GameType::Spectator) return; // 不处理创造模式和旁观模式
+
+            auto pps   = PlotPos(pl->getPosition());
+            auto level = pdb->getPlayerPermission(pl->getUuid().asString(), pps.toString(), true);
+
+            if (level == PlotPermission::Owner || level == PlotPermission::Shared) {
+                pl->setAbility(::AbilitiesIndex::MayFly, false);
+                debugger("撤销飞行权限");
+            }
+        });
+    }
+
 
     // Minecraft events
-    mPlayerJoinEventListener = bus->emplaceListener<ll::event::PlayerJoinEvent>([ndb](ll::event::PlayerJoinEvent& e) {
-        if (e.self().isSimulatedPlayer()) return true; // skip simulated player
-        ndb->insertPlayer(e.self());
-        EconomyQueue::getInstance().transfer(e.self());
-        return true;
-    });
+    mPlayerJoinEventListener =
+        bus->emplaceListener<ll::event::PlayerJoinEvent>([ndb, pdb](ll::event::PlayerJoinEvent& e) {
+            if (e.self().isSimulatedPlayer()) return true; // skip simulated player
+            ndb->insertPlayer(e.self());
+            EconomyQueue::getInstance().transfer(e.self());
+            pdb->initPlayerSetting(e.self().getUuid().asString());
+            return true;
+        });
 
     if (!config::cfg.plotWorld.spawnMob) {
         mSpawningMobEventListener =
@@ -335,40 +372,6 @@ bool registerEventListener() {
         });
 
 
-    // 监听自己插件的事件
-    if (config::cfg.plotWorld.inPlotCanFly) {
-        mPlayerEnterPlotEventListener = bus->emplaceListener<PlayerEnterPlot>([pdb](PlayerEnterPlot& e) {
-            auto pl = e.getPlayer();
-            if (pl == nullptr) return;
-
-            auto const gamemode = pl->getPlayerGameType();
-            if (gamemode == GameType::Creative || gamemode == GameType::Spectator) return; // 不处理创造模式和旁观模式
-
-            auto pps   = PlotPos(pl->getPosition());
-            auto level = pdb->getPlayerPermission(pl->getUuid().asString(), pps.toString(), true);
-
-            if (level == PlotPermission::Owner || level == PlotPermission::Shared) {
-                pl->setAbility(::AbilitiesIndex::MayFly, true);
-                debugger("赋予飞行权限");
-            }
-        });
-
-        mPlayerLeavePlotEventListener = bus->emplaceListener<PlayerLeavePlot>([pdb](PlayerLeavePlot& e) {
-            auto pl = e.getPlayer();
-            if (pl == nullptr) return;
-
-            auto const gamemode = pl->getPlayerGameType();
-            if (gamemode == GameType::Creative || gamemode == GameType::Spectator) return; // 不处理创造模式和旁观模式
-
-            auto pps   = PlotPos(pl->getPosition());
-            auto level = pdb->getPlayerPermission(pl->getUuid().asString(), pps.toString(), true);
-
-            if (level == PlotPermission::Owner || level == PlotPermission::Shared) {
-                pl->setAbility(::AbilitiesIndex::MayFly, false);
-                debugger("撤销飞行权限");
-            }
-        });
-    }
     return true;
 }
 

@@ -14,14 +14,18 @@ class PlotPos;
 
 namespace plo::data {
 
+struct PlayerSettingItem {
+    bool showPlotTip; // 是否显示地皮提示
+};
 
 class PlotBDStorage {
 private:
     std::unique_ptr<ll::data::KeyValueDB> mDB;
 
     // Cache:
-    std::vector<UUID>                                         mAdmins; // 管理
-    std::unordered_map<PlotID, std::shared_ptr<PlotMetadata>> mPlots;  // 地皮
+    std::vector<UUID>                                         mAdmins;         // 管理
+    std::unordered_map<PlotID, std::shared_ptr<PlotMetadata>> mPlots;          // 地皮
+    std::unordered_map<UUID, PlayerSettingItem>               mPlayerSettings; // 玩家设置
 
 public:
     PlotBDStorage()                                = default;
@@ -60,6 +64,11 @@ public:
     PLAPI std::vector<std::shared_ptr<PlotMetadata>> getPlots() const;
     PLAPI std::vector<std::shared_ptr<PlotMetadata>> getPlots(UUID const& owner) const;
 
+    // Player settings
+    PLAPI bool              hasPlayerSetting(const UUID& uuid) const;
+    PLAPI bool              initPlayerSetting(const UUID& uuid);
+    PLAPI bool              setPlayerSetting(const UUID& uuid, const PlayerSettingItem& setting);
+    PLAPI PlayerSettingItem getPlayerSetting(const UUID& uuid) const;
 
     // 辅助API
     PLAPI std::vector<std::shared_ptr<PlotMetadata>> getSaleingPlots() const; // 出售中的地皮

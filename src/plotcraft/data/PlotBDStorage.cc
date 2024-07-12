@@ -77,7 +77,12 @@ void PlotBDStorage::load() {
                 }
 
             } else if (key == DB_PlayerSettingsKey) {
-                // TODO
+                auto j = nlohmann::json::parse(value);
+                for (auto const& [uuid, settings] : j.items()) {
+                    PlayerSettingItem it;
+                    JsonHelper::jsonToStruct(settings, it);
+                    mPlayerSettings[UUID(uuid)] = it;
+                }
 
             } else logger->warn("Unknown key in PlotBDStorage: {}", key);
         } catch (std::exception const& e) {
@@ -90,6 +95,7 @@ void PlotBDStorage::load() {
 
     logger->info("已加载 {} 条地皮数据", mPlots.size());
     logger->info("已加载 {} 位管理员数据", mAdmins.size());
+    logger->info("已加载 {} 位玩家设置数据", mPlayerSettings.size());
 }
 
 void PlotBDStorage::save(PlotMetadata const& plot) {
@@ -105,6 +111,15 @@ void PlotBDStorage::save() {
 
     // Save PlotAdmins
     mDB->set(DB_PlotAdminsKey, JsonHelper::structToJson(mAdmins).dump());
+
+    // Save PlayerSettings
+    {
+        nlohmann::json j = nlohmann::json::object();
+        for (auto const& [uuid, settings] : mPlayerSettings) {
+            j[uuid] = JsonHelper::structToJson(settings);
+        }
+        mDB->set(DB_PlayerSettingsKey, j.dump());
+    }
 }
 
 void PlotBDStorage::initKey() {
@@ -287,6 +302,32 @@ std::vector<std::shared_ptr<PlotMetadata>> PlotBDStorage::getPlots(UUID const& o
         }
     }
     return res;
+}
+
+
+bool PlotBDStorage::hasPlayerSetting(UUID const& uuid) const {
+    return mPlayerSettings.find(uuid) != mPlayerSettings.end();
+}
+bool PlotBDStorage::initPlayerSetting(UUID const& uuid) {
+    if (hasPlayerSetting(uuid)) {
+        return false;
+    }
+    mPlayerSettings[uuid] = PlayerSettingItem{};
+    return true;
+}
+bool PlotBDStorage::setPlayerSetting(UUID const& uuid, PlayerSettingItem const& setting) {
+    if (!hasPlayerSetting(uuid)) {
+        return false;
+    }
+    mPlayerSettings[uuid] = PlayerSettingItem{setting}; // copy
+    return true;
+}
+PlayerSettingItem PlotBDStorage::getPlayerSetting(UUID const& uuid) const {
+    auto it = mPlayerSettings.find(uuid);
+    if (it == mPlayerSettings.end()) {
+        return PlayerSettingItem{};
+    }
+    return it->second;
 }
 
 
