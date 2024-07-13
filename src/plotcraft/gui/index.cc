@@ -137,7 +137,7 @@ void _pluginSetting(Player& player) {
     auto* impl = &data::PlotBDStorage::getInstance();
     auto* cfg  = &config::cfg.switchDim;
 
-    if (impl->getPlayerPermission(player.getUuid().asString(), "") != PlotPermission::Admin) {
+    if (!impl->isAdmin(player.getUuid().asString())) {
         sendText<utils::Level::Error>(player, "你没有权限执行此操作");
         return;
     }
