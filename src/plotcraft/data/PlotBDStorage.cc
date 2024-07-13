@@ -353,10 +353,10 @@ bool PlotBDStorage::buyPlotFromSale(PlotID const& id, UUID const& buyer, bool re
 }
 
 PlotPermission PlotBDStorage::getPlayerPermission(UUID const& uuid, PlotID const& id, bool ignoreAdmin) const {
+    if (!ignoreAdmin && isAdmin(uuid)) return PlotPermission::Admin;
+
     auto ptr = getPlot(id);
     if (!ptr) return PlotPermission::None;
-
-    if (!ignoreAdmin && isAdmin(uuid)) return PlotPermission::Admin;
 
     return ptr->getPlayerInThisPlotPermission(uuid);
 }
