@@ -165,22 +165,17 @@ bool registerEventListener() {
             if (pdb->getPlayerSetting(p.getUuid().asString()).showPlotTip) buildTipMessage(p, pps, ndb, pdb);
             bool const valid = pps.isValid();
 
+            // Leave
+            if ((!valid && pair.first != pps) || (valid && pair.first != pps)) {
+                debugger("离开地皮（移动）: " << pair.first.toDebug());
+                bus->publish(PlayerLeavePlot(pair.first, &p)); // use last position
+            }
             // Join
             if (valid && pair.first != pps) {
                 debugger("进入地皮: " << pps.toDebug());
                 bus->publish(PlayerEnterPlot(pps, &p));
-                helper.set(name, pps, playerDimid);
             }
-            // Leave
-            if (!valid && pair.first != pps) {
-                // Bug:
-                // 玩家使用传送切换地皮,如： (0,0) => (0,1)
-                // 因为没有经过道路，所以 valid = true，if 不成立，导致事件未发布
-                // 但实际上玩家已经离开上一个地皮，进入了新地皮
-                debugger("离开地皮（移动）: " << pair.first.toDebug());
-                bus->publish(PlayerLeavePlot(pair.first, &p)); // use last position
-                helper.set(name, pps, playerDimid);
-            }
+            helper.set(name, pps, playerDimid);
             return true;
         });
     });
@@ -203,17 +198,14 @@ bool registerEventListener() {
             }
         });
 
-        mPlayerLeavePlotEventListener = bus->emplaceListener<PlayerLeavePlot>([pdb](PlayerLeavePlot& e) {
+        mPlayerLeavePlotEventListener = bus->emplaceListener<PlayerLeavePlot>([](PlayerLeavePlot& e) {
             auto pl = e.getPlayer();
             if (pl == nullptr) return;
 
             auto const gamemode = pl->getPlayerGameType();
             if (gamemode == GameType::Creative || gamemode == GameType::Spectator) return; // 不处理创造模式和旁观模式
 
-            auto pps   = PlotPos(pl->getPosition());
-            auto level = pdb->getPlayerPermission(pl->getUuid().asString(), pps.toString(), true);
-
-            if (level == PlotPermission::Owner || level == PlotPermission::Shared) {
+            if (pl->canUseAbility(::AbilitiesIndex::MayFly)) {
                 pl->setAbility(::AbilitiesIndex::MayFly, false);
                 debugger("撤销飞行权限");
             }
