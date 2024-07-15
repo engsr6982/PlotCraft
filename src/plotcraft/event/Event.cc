@@ -62,13 +62,13 @@ using PlotPermission = plo::data::PlotPermission;
 class CustomEventHelper {
 public:
     //               player           PlotPos     Dimension
-    std::unordered_map<UUID, std::pair<plo::PlotPos, int>> mPlayerPos; // 玩家位置缓存
+    std::unordered_map<string, std::pair<plo::PlotPos, int>> mPlayerPos; // 玩家位置缓存
 
-    bool has(UUID const& uid) { return mPlayerPos.find(uid) != mPlayerPos.end(); }
+    bool has(string const& uid) { return mPlayerPos.find(uid) != mPlayerPos.end(); }
 
-    void set(UUID uid, plo::PlotPos pps, int dim) { mPlayerPos[uid] = std::make_pair(pps, dim); }
+    void set(string uid, plo::PlotPos pps, int dim) { mPlayerPos[uid] = std::make_pair(pps, dim); }
 
-    std::pair<plo::PlotPos, int> get(UUID const& uid) {
+    std::pair<plo::PlotPos, int> get(string const& uid) {
         auto it = mPlayerPos.find(uid);
         if (it == mPlayerPos.end()) return std::make_pair(plo::PlotPos{}, -1);
         return it->second;
@@ -95,7 +95,7 @@ namespace plo::event {
 
 using namespace core_utils;
 
-void buildTipMessage(Player& p, PlotPos& pps, PlayerNameDB* ndb, PlotBDStorage* pdb) {
+void buildTipMessage(Player& p, PlotPos const& pps, PlayerNameDB* ndb, PlotBDStorage* pdb) {
     try {
         std::shared_ptr<PlotMetadata> plot = pdb->getPlot(pps.getPlotID());
         if (plot == nullptr) plot = PlotMetadata::make(pps.getPlotID(), pps.x, pps.z);
@@ -143,39 +143,44 @@ bool registerEventListener() {
         lv->forEachPlayer([bus, pdb, ndb](Player& p) {
             if (p.isSimulatedPlayer() || p.isLoading()) return true; // skip simulated player
 
-            int     dimid   = p.getDimensionId();
-            int     plotDim = getPlotDimensionId();
-            PlotPos pps{p.getPosition()};
-            auto    uuid = p.getUuid().asString();
-            auto    pair = helper.get(uuid);
+            int const     playerDimid = p.getDimensionId();
+            int const     plotDimid   = getPlotDimensionId();
+            auto const    name        = p.getRealName();
+            auto const    pair        = helper.get(name);
+            PlotPos const pps{p.getPosition()};
 
-            if (dimid != plotDim) {
+            if (playerDimid != plotDimid) {
                 // 玩家通过传送离开地皮维度
                 // 地皮维度 => 其它维度  触发
                 // 其它维度 => 地皮维度  忽略
                 // 其它维度 => 其它维度  忽略
-                if (pair.second != -1 && pair.second != dimid && pair.second == plotDim) {
+                if (pair.second != -1 && pair.second != playerDimid && pair.second == plotDimid) {
                     debugger("离开地皮（维度）: " << pps.toDebug());
                     bus->publish(PlayerLeavePlot(pair.first, &p));
-                    helper.set(uuid, pps, dimid);
+                    helper.set(name, pps, playerDimid);
                 }
                 return true;
             }
 
             if (pdb->getPlayerSetting(p.getUuid().asString()).showPlotTip) buildTipMessage(p, pps, ndb, pdb);
+            bool const valid = pps.isValid();
 
-            if (pps.isValid()) {
-                if (pair.first != pps) { // join
-                    debugger("进入地皮: " << pps.toDebug());
-                    bus->publish(PlayerEnterPlot(pps, &p));
-                }
-            } else {
-                if (pair.first != pps) {
-                    debugger("离开地皮（移动）: " << pair.first.toDebug());
-                    bus->publish(PlayerLeavePlot(pair.first, &p)); // use last position
-                }
+            // Join
+            if (valid && pair.first != pps) {
+                debugger("进入地皮: " << pps.toDebug());
+                bus->publish(PlayerEnterPlot(pps, &p));
+                helper.set(name, pps, playerDimid);
             }
-            helper.set(uuid, pps, dimid);
+            // Leave
+            if (!valid && pair.first != pps) {
+                // Bug:
+                // 玩家使用传送切换地皮,如： (0,0) => (0,1)
+                // 因为没有经过道路，所以 valid = true，if 不成立，导致事件未发布
+                // 但实际上玩家已经离开上一个地皮，进入了新地皮
+                debugger("离开地皮（移动）: " << pair.first.toDebug());
+                bus->publish(PlayerLeavePlot(pair.first, &p)); // use last position
+                helper.set(name, pps, playerDimid);
+            }
             return true;
         });
     });

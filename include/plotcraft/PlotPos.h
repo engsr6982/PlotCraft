@@ -16,37 +16,33 @@ public:
     bool mIsValid{true}; // 地皮是否有效
 
     PLAPI PlotPos();
-
     PLAPI PlotPos(int x, int z);
-
     PLAPI PlotPos(const Vec3& vec3);
 
-    // 地皮是否有效(无效则代表该坐标没有对应的地皮)
-    PLAPI bool isValid();
+    PLAPI bool isValid() const;
 
-    PLAPI Vec3 getMin();
+    PLAPI Vec3 getMin() const;
 
-    PLAPI Vec3 getMax();
+    PLAPI Vec3 getMax() const;
 
-    PLAPI string toString();
+    PLAPI string toString() const;
 
-    PLAPI string getPlotID();
+    PLAPI string getPlotID() const;
 
-    PLAPI string toDebug();
+    PLAPI string toDebug() const;
 
-    PLAPI bool isPosInPlot(const Vec3& vec3);
+    PLAPI bool isPosInPlot(const Vec3& vec3) const;
 
-    PLAPI Vec3 getSafestPos();
+    PLAPI Vec3 getSafestPos() const;
 
     PLAPI void tryFixMinAndMaxPos();
 
     PLAPI bool isPosOnBorder(const Vec3& vec3);
 
-    PLAPI std::vector<PlotPos> getAdjacentPlots();
+    PLAPI std::vector<PlotPos> getAdjacentPlots() const;
 
-    // 重载比较运算符
-    PLAPI bool operator==(const PlotPos& other) const;
-    PLAPI bool operator!=(const PlotPos& other) const;
+    PLAPI bool operator==(PlotPos const& other) const;
+    PLAPI bool operator!=(PlotPos const& other) const;
 };
 
 

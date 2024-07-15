@@ -107,28 +107,30 @@ PlotPos::PlotPos(const Vec3& vec3) {
 }
 
 
-Vec3 PlotPos::getSafestPos() {
+Vec3 PlotPos::getSafestPos() const {
     auto& cfg = config::cfg.generator;
     int   y   = -64 + (cfg.subChunkNum * 16) + 2;
     return Vec3{minPos.x, y, minPos.z};
 }
 
-bool PlotPos::isValid() { return mIsValid; }
+bool PlotPos::isValid() const { return mIsValid; }
 
-Vec3 PlotPos::getMin() { return minPos; }
+Vec3 PlotPos::getMin() const { return minPos; }
 
-Vec3 PlotPos::getMax() { return maxPos; }
+Vec3 PlotPos::getMax() const { return maxPos; }
 
-string PlotPos::toString() { return fmt::format("({0},{1})", x, z); }
-string PlotPos::getPlotID() { return toString(); }
+string PlotPos::toString() const { return fmt::format("({0},{1})", x, z); }
+string PlotPos::getPlotID() const { return toString(); }
 
-string PlotPos::toDebug() { return fmt::format("{0} | {1} => {2}", toString(), minPos.toString(), maxPos.toString()); }
+string PlotPos::toDebug() const {
+    return fmt::format("{0} | {1} => {2}", toString(), minPos.toString(), maxPos.toString());
+}
 
-bool PlotPos::isPosInPlot(const Vec3& vec3) {
+bool PlotPos::isPosInPlot(const Vec3& vec3) const {
     return vec3.x >= minPos.x && vec3.x <= maxPos.x && vec3.z >= minPos.z && vec3.z <= maxPos.z;
 }
 
-std::vector<PlotPos> PlotPos::getAdjacentPlots() {
+std::vector<PlotPos> PlotPos::getAdjacentPlots() const {
     return {PlotPos(x - 1, z), PlotPos(x + 1, z), PlotPos(x, z - 1), PlotPos(x, z + 1)};
 }
 
@@ -160,9 +162,10 @@ void PlotPos::tryFixMinAndMaxPos() {
 }
 
 
-bool PlotPos::operator!=(const PlotPos& other) const { return !(*this == other); }
-bool PlotPos::operator==(const PlotPos& other) const {
-    return x == other.x && z == other.z && minPos == other.minPos && maxPos == other.maxPos;
+bool PlotPos::operator!=(PlotPos const& other) const { return !(*this == other); }
+bool PlotPos::operator==(PlotPos const& other) const {
+    return other.x == x && other.z == z && other.mIsValid == mIsValid && other.minPos == minPos
+        && other.maxPos == maxPos;
 }
 
 } // namespace plo
