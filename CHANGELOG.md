@@ -10,7 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - 修复地皮管理员权限异常
-- 修复 `_buyPlot` 函数运行时概率性崩溃
+- 修复 `PlotMetadata` 潜在的生命周期问题
+- 修复 `PlayerLeavePlot` 事件异常
+- 修复地皮飞行功能异常
 
 ## [0.5.0] - 2024-07-11
 
