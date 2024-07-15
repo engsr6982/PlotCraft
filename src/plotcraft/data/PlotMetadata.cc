@@ -15,11 +15,11 @@ namespace plo::data {
 std::shared_ptr<PlotMetadata>
 PlotMetadata::make(PlotID const& id, UUID const& owner, string const& name, int x, int z) {
     auto ptr        = std::make_shared<PlotMetadata>();
-    ptr->mPlotID    = id;
-    ptr->mPlotName  = name;
-    ptr->mPlotX     = x;
-    ptr->mPlotZ     = z;
-    ptr->mPlotOwner = owner;
+    ptr->mPlotID    = string(id); // 拷贝
+    ptr->mPlotName  = string(name);
+    ptr->mPlotX     = int(x);
+    ptr->mPlotZ     = int(z);
+    ptr->mPlotOwner = UUID(owner);
     return ptr;
 }
 std::shared_ptr<PlotMetadata> PlotMetadata::make(PlotID const& id, UUID const& owner, int x, int z) {

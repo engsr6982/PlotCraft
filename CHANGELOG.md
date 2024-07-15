@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2024-07-15
+
+### Fixed
+
+- 修复地皮管理员权限异常
+- 修复 `_buyPlot` 函数运行时概率性崩溃
+
 ## [0.5.0] - 2024-07-11
 
 ### Changed

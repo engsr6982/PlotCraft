@@ -41,137 +41,142 @@ public:
 // 玩家评论地皮前(可拦截)
 class PlayerCommentPlotBefore final : public ll::event::Cancellable<ll::event::Event> {
 private:
-    Player*             mPlayer;
-    const PlotMetadata* mPlot;
+    Player*                             mPlayer;
+    const std::shared_ptr<PlotMetadata> mPlot;
 
 public:
-    PLAPI PlayerCommentPlotBefore(Player* player, const PlotMetadata* plot);
+    PLAPI PlayerCommentPlotBefore(Player* player, const std::shared_ptr<PlotMetadata> plot);
 
-    PLAPI Player*             getPlayer() const;
-    PLAPI const PlotMetadata* getPlot() const;
+    PLAPI Player* getPlayer() const;
+    PLAPI const std::shared_ptr<PlotMetadata> getPlot() const;
 };
 
 
 // 玩家评论地皮后
 class PlayerCommentPlotAfter final : public ll::event::Event {
 private:
-    Player*             mPlayer;
-    const PlotMetadata* mPlot;
-    string              mContent; // 评论内容
+    Player*                             mPlayer;
+    const std::shared_ptr<PlotMetadata> mPlot;
+    string                              mContent; // 评论内容
 
 public:
-    PLAPI PlayerCommentPlotAfter(Player* player, const PlotMetadata* plot, string content);
+    PLAPI PlayerCommentPlotAfter(Player* player, const std::shared_ptr<PlotMetadata> plot, string content);
 
-    PLAPI Player*             getPlayer() const;
-    PLAPI const PlotMetadata* getPlot() const;
-    PLAPI string              getContent() const;
+    PLAPI Player* getPlayer() const;
+    PLAPI const std::shared_ptr<PlotMetadata> getPlot() const;
+    PLAPI string                              getContent() const;
 };
 
 // 玩家编辑评论前(可拦截)
 class PlayerEditCommentBefore final : public ll::event::Cancellable<ll::event::Event> {
 private:
-    Player*             mPlayer;
-    const PlotMetadata* mPlot;
-    CommentID           mCommentID;
+    Player*                             mPlayer;
+    const std::shared_ptr<PlotMetadata> mPlot;
+    CommentID                           mCommentID;
 
 public:
-    PLAPI PlayerEditCommentBefore(Player* player, const PlotMetadata* plot, CommentID comment);
+    PLAPI PlayerEditCommentBefore(Player* player, const std::shared_ptr<PlotMetadata> plot, CommentID comment);
 
-    PLAPI Player*             getPlayer() const;
-    PLAPI const PlotMetadata* getPlot() const;
-    PLAPI CommentID           getCommentID() const;
+    PLAPI Player* getPlayer() const;
+    PLAPI const std::shared_ptr<PlotMetadata> getPlot() const;
+    PLAPI CommentID                           getCommentID() const;
 };
 
 // 玩家编辑评论后
 class PlayerEditCommentAfter final : public ll::event::Event {
 private:
-    Player*             mPlayer;
-    const PlotMetadata* mPlot;
-    CommentID           mCommentID;
-    string              mNewContent; // 评论内容
+    Player*                             mPlayer;
+    const std::shared_ptr<PlotMetadata> mPlot;
+    CommentID                           mCommentID;
+    string                              mNewContent; // 评论内容
 
 public:
     PLAPI
-    PlayerEditCommentAfter(Player* player, const PlotMetadata* plot, CommentID comment, string newContent);
+    PlayerEditCommentAfter(
+        Player*                             player,
+        const std::shared_ptr<PlotMetadata> plot,
+        CommentID                           comment,
+        string                              newContent
+    );
 
-    PLAPI Player*             getPlayer() const;
-    PLAPI const PlotMetadata* getPlot() const;
-    PLAPI CommentID           getCommentID() const;
-    PLAPI string              getNewContent() const;
+    PLAPI Player* getPlayer() const;
+    PLAPI const std::shared_ptr<PlotMetadata> getPlot() const;
+    PLAPI CommentID                           getCommentID() const;
+    PLAPI string                              getNewContent() const;
 };
 
 // 玩家删除地皮评论(可拦截)
 class PlayerDeletePlotComment final : public ll::event::Cancellable<ll::event::Event> {
 private:
-    Player*             mPlayer;
-    const PlotMetadata* mPlot;
-    CommentID           mCommentID;
+    Player*                             mPlayer;
+    const std::shared_ptr<PlotMetadata> mPlot;
+    CommentID                           mCommentID;
 
 public:
-    PLAPI PlayerDeletePlotComment(Player* player, const PlotMetadata* plot, CommentID comment);
+    PLAPI PlayerDeletePlotComment(Player* player, const std::shared_ptr<PlotMetadata> plot, CommentID comment);
 
-    PLAPI Player*             getPlayer() const;
-    PLAPI const PlotMetadata* getPlot() const;
-    PLAPI CommentID           getCommentID() const;
+    PLAPI Player* getPlayer() const;
+    PLAPI const std::shared_ptr<PlotMetadata> getPlot() const;
+    PLAPI CommentID                           getCommentID() const;
 };
 
 
 // 玩家购买地皮前(可拦截)
 class PlayerBuyPlotBefore final : public ll::event::Cancellable<ll::event::Event> {
 private:
-    Player*             mPlayer;
-    const PlotMetadata* mPlot;
-    int                 mPrice;
+    Player*                             mPlayer;
+    const std::shared_ptr<PlotMetadata> mPlot;
+    int                                 mPrice;
 
 public:
-    PLAPI PlayerBuyPlotBefore(Player* player, const PlotMetadata* plot, int price);
+    PLAPI PlayerBuyPlotBefore(Player* player, const std::shared_ptr<PlotMetadata> plot, int price);
 
-    PLAPI Player*             getPlayer() const;
-    PLAPI const PlotMetadata* getPlot() const;
-    PLAPI int                 getPrice() const;
+    PLAPI Player* getPlayer() const;
+    PLAPI const std::shared_ptr<PlotMetadata> getPlot() const;
+    PLAPI int                                 getPrice() const;
 };
 
 // 玩家购买地皮后
 class PlayerBuyPlotAfter final : public ll::event::Event {
 private:
-    Player*             mPlayer;
-    const PlotMetadata* mPlot;
-    int                 mPrice;
+    Player*                             mPlayer;
+    const std::shared_ptr<PlotMetadata> mPlot;
+    int                                 mPrice;
 
 public:
-    PLAPI PlayerBuyPlotAfter(Player* player, const PlotMetadata* plot, int price);
+    PLAPI PlayerBuyPlotAfter(Player* player, const std::shared_ptr<PlotMetadata> plot, int price);
 
-    PLAPI Player*             getPlayer() const;
-    PLAPI const PlotMetadata* getPlot() const;
-    PLAPI int                 getPrice() const;
+    PLAPI Player* getPlayer() const;
+    PLAPI const std::shared_ptr<PlotMetadata> getPlot() const;
+    PLAPI int                                 getPrice() const;
 };
 
 // 玩家修改地皮名称前(可拦截)
 class PlayerChangePlotNameBefore final : public ll::event::Cancellable<ll::event::Event> {
 private:
-    Player*             mPlayer;
-    const PlotMetadata* mPlot;
+    Player*                             mPlayer;
+    const std::shared_ptr<PlotMetadata> mPlot;
 
 public:
-    PLAPI PlayerChangePlotNameBefore(Player* player, const PlotMetadata* plot);
+    PLAPI PlayerChangePlotNameBefore(Player* player, const std::shared_ptr<PlotMetadata> plot);
 
-    PLAPI Player*             getPlayer() const;
-    PLAPI const PlotMetadata* getPlot() const;
+    PLAPI Player* getPlayer() const;
+    PLAPI const std::shared_ptr<PlotMetadata> getPlot() const;
 };
 
 // 玩家修改地皮名称后
 class PlayerChangePlotNameAfter final : public ll::event::Event {
 private:
-    Player*             mPlayer;
-    const PlotMetadata* mPlot;
-    string              mNewName;
+    Player*                             mPlayer;
+    const std::shared_ptr<PlotMetadata> mPlot;
+    string                              mNewName;
 
 public:
-    PLAPI PlayerChangePlotNameAfter(Player* player, const PlotMetadata* plot, string newName);
+    PLAPI PlayerChangePlotNameAfter(Player* player, const std::shared_ptr<PlotMetadata> plot, string newName);
 
-    PLAPI Player*             getPlayer() const;
-    PLAPI const PlotMetadata* getPlot() const;
-    PLAPI string              getNewName() const;
+    PLAPI Player* getPlayer() const;
+    PLAPI const std::shared_ptr<PlotMetadata> getPlot() const;
+    PLAPI string                              getNewName() const;
 };
 
 } // namespace plo::event

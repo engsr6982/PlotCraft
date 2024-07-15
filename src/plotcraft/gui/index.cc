@@ -101,14 +101,14 @@ void _plotShop(Player& player) {
         if (pt->isOwner(player.getUuid().asString())) continue; // 跳过自己的地皮
         fm.appendButton(
             fmt::format("{}\nID: {} | 价格: {}", pt->getPlotName(), sl->getPlotID(), sl->getSalePrice()),
-            [pt, sl](Player& pl) { _plotShopShowPlot(pl, pt.get()); }
+            [pt, sl](Player& pl) { _plotShopShowPlot(pl, pt); }
         );
     }
 
     fm.sendTo(player);
 }
 
-void _plotShopShowPlot(Player& player, PlotMetadata* pt) {
+void _plotShopShowPlot(Player& player, std::shared_ptr<PlotMetadata> pt) {
     SimpleForm fm{PLUGIN_TITLE};
 
     auto* ndb = &PlayerNameDB::getInstance();
@@ -187,7 +187,7 @@ void _selectPlot(Player& player) {
     for (auto const& plt : plots) {
         if (!plt->isOwner(player.getUuid().asString())) continue; // 不是自己的地皮
         fm.appendButton(fmt::format("{}\n{}", plt->getPlotName(), plt->getPlotID()), [plt](Player& pl) {
-            plot(pl, plt.get(), true);
+            plot(pl, plt, true);
         });
     }
 
@@ -208,11 +208,11 @@ void plot(Player& player, PlotPos plotPos) {
         plot = PlotMetadata::make(plotPos.getPlotID(), plotPos.x, plotPos.z);
     }
 
-    gui::plot(player, plot.get(), false);
+    gui::plot(player, plot, false);
 }
 
 
-void plot(Player& player, PlotMetadata* pt, bool ret) {
+void plot(Player& player, std::shared_ptr<PlotMetadata> pt, bool ret) {
     SimpleForm fm{PLUGIN_TITLE};
 
     auto& ndb = PlayerNameDB::getInstance();
@@ -265,7 +265,7 @@ void plot(Player& player, PlotMetadata* pt, bool ret) {
 }
 
 
-void _sellMyPlot(Player& player, PlotMetadata* pt) {
+void _sellMyPlot(Player& player, std::shared_ptr<PlotMetadata> pt) {
     bool const isSaleing = pt->isSale();
 
     SimpleForm fm{PLUGIN_TITLE};
@@ -295,7 +295,7 @@ void _sellMyPlot(Player& player, PlotMetadata* pt) {
 }
 
 
-void _sellPlotAndEditPrice(Player& player, PlotMetadata* pt, bool edit) {
+void _sellPlotAndEditPrice(Player& player, std::shared_ptr<PlotMetadata> pt, bool edit) {
     CustomForm fm{PLUGIN_TITLE};
 
     fm.appendLabel("地皮确认出售后，其它玩家可以查看到你的出售信息。当玩家购买后，你的地皮将被转移到购买者的名下("
@@ -336,7 +336,7 @@ void _sellPlotAndEditPrice(Player& player, PlotMetadata* pt, bool edit) {
 }
 
 
-void _plotShareManage(Player& player, PlotMetadata* pt) {
+void _plotShareManage(Player& player, std::shared_ptr<PlotMetadata> pt) {
     auto* ndb = &PlayerNameDB::getInstance();
 
     SimpleForm fm{PLUGIN_TITLE};
@@ -391,7 +391,7 @@ void _plotShareManage(Player& player, PlotMetadata* pt) {
     fm.sendTo(player);
 }
 
-void _addSharePlayer(Player& player, PlotMetadata* pt) {
+void _addSharePlayer(Player& player, std::shared_ptr<PlotMetadata> pt) {
     auto* ndb = &PlayerNameDB::getInstance();
 
     CustomForm fm{PLUGIN_TITLE};
@@ -446,7 +446,7 @@ void _addSharePlayer(Player& player, PlotMetadata* pt) {
 }
 
 
-void _changePlotName(Player& player, PlotMetadata* pt) {
+void _changePlotName(Player& player, std::shared_ptr<PlotMetadata> pt) {
     auto* bus = &ll::event::EventBus::getInstance();
 
     pev::PlayerChangePlotNameBefore ev{&player, pt};
@@ -483,7 +483,7 @@ void _changePlotName(Player& player, PlotMetadata* pt) {
 }
 
 
-void _buyPlot(Player& player, PlotMetadata* pt) {
+void _buyPlot(Player& player, std::shared_ptr<PlotMetadata> pt) {
 
     auto* impl = &data::PlotBDStorage::getInstance();
     auto& cfg  = config::cfg.plotWorld;
@@ -569,7 +569,7 @@ void _buyPlot(Player& player, PlotMetadata* pt) {
 }
 
 
-void _plotcomment(Player& player, PlotMetadata* pt) {
+void _plotcomment(Player& player, std::shared_ptr<PlotMetadata> pt) {
 
     bool const hasOwner = !pt->getPlotOwner().empty(); // 是否有主人
 
@@ -605,7 +605,7 @@ void _plotcomment(Player& player, PlotMetadata* pt) {
 }
 
 
-void _publishComment(Player& player, PlotMetadata* pt) {
+void _publishComment(Player& player, std::shared_ptr<PlotMetadata> pt) {
     pev::PlayerCommentPlotBefore ev{&player, pt};
     ll::event::EventBus::getInstance().publish(ev);
     if (ev.isCancelled()) return; // 事件被取消
@@ -641,7 +641,7 @@ void _publishComment(Player& player, PlotMetadata* pt) {
 }
 
 
-void _showCommentOperation(Player& player, PlotMetadata* pt, CommentID id) {
+void _showCommentOperation(Player& player, std::shared_ptr<PlotMetadata> pt, CommentID id) {
     auto const ct             = *pt->getComment(id);
     bool const isOwner        = player.getUuid().asString() == pt->getPlotOwner();
     bool const isCommentOwner = player.getUuid().asString() == ct.mCommentPlayer;
@@ -686,7 +686,7 @@ void _showCommentOperation(Player& player, PlotMetadata* pt, CommentID id) {
 }
 
 
-void _editComment(Player& player, PlotMetadata* pt, CommentID id) {
+void _editComment(Player& player, std::shared_ptr<PlotMetadata> pt, CommentID id) {
     pev::PlayerEditCommentBefore ev{&player, pt, id};
     ll::event::EventBus::getInstance().publish(ev);
     if (ev.isCancelled()) return; // 事件被取消

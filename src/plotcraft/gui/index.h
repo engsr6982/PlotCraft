@@ -35,33 +35,33 @@ void _selectPlot(Player& player);
 
 
 void plot(Player& player, PlotPos plotPos);
-void plot(Player& player, PlotMetadata* plot, bool ret = false);
+void plot(Player& player, std::shared_ptr<PlotMetadata> plot, bool ret = false);
 
 void _pluginSetting(Player& player);
 
 void _playerSetting(Player& player);
 
 void _plotShop(Player& player);
-void _plotShopShowPlot(Player& player, PlotMetadata* pt);
+void _plotShopShowPlot(Player& player, std::shared_ptr<PlotMetadata> pt);
 
-void _addSharePlayer(Player& player, PlotMetadata* pt);
+void _addSharePlayer(Player& player, std::shared_ptr<PlotMetadata> pt);
 
-void _sellMyPlot(Player& player, PlotMetadata* pt);
-void _sellPlotAndEditPrice(Player& player, PlotMetadata* pt, bool edit);
+void _sellMyPlot(Player& player, std::shared_ptr<PlotMetadata> pt);
+void _sellPlotAndEditPrice(Player& player, std::shared_ptr<PlotMetadata> pt, bool edit);
 
-void _plotShareManage(Player& player, PlotMetadata* pt);
+void _plotShareManage(Player& player, std::shared_ptr<PlotMetadata> pt);
 
-void _changePlotName(Player& player, PlotMetadata* pt);
+void _changePlotName(Player& player, std::shared_ptr<PlotMetadata> pt);
 
-void _buyPlot(Player& player, PlotMetadata* pt);
+void _buyPlot(Player& player, std::shared_ptr<PlotMetadata> pt);
 
-void _plotcomment(Player& player, PlotMetadata* pt);
+void _plotcomment(Player& player, std::shared_ptr<PlotMetadata> pt);
 
-void _publishComment(Player& player, PlotMetadata* pt);
+void _publishComment(Player& player, std::shared_ptr<PlotMetadata> pt);
 
-void _showCommentOperation(Player& player, PlotMetadata* pt, CommentID id);
+void _showCommentOperation(Player& player, std::shared_ptr<PlotMetadata> pt, CommentID id);
 
-void _editComment(Player& player, PlotMetadata* pt, CommentID id);
+void _editComment(Player& player, std::shared_ptr<PlotMetadata> pt, CommentID id);
 
 
 } // namespace plo::gui
