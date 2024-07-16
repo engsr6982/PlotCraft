@@ -1,7 +1,7 @@
 {
     "format_version": 2,
     "tooth": "github.com/engsr6982/PlotCraft",
-    "version": "0.5.1",
+    "version": "0.5.2",
     "info": {
         "name": "PlotCraft - 地皮插件",
         "description": "地皮世界|地皮购买|地皮出售|地皮共享|地皮评论",
@@ -13,7 +13,7 @@
             "plotcraft"
         ]
     },
-    "asset_url": "https://github.com/engsr6982/PlotCraft/releases/download/v0.5.1/PlotCraft-windows-x64.zip",
+    "asset_url": "https://github.com/engsr6982/PlotCraft/releases/download/v0.5.2/PlotCraft-windows-x64.zip",
     "prerequisites": {
         "github.com/LiteLDev/LeviLamina": "0.13.x",
         "github.com/LiteLDev/MoreDimensions": "0.4.x",
