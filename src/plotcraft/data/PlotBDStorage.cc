@@ -72,8 +72,8 @@ void PlotBDStorage::load() {
 
             } else if (key == DB_PlotAdminsKey) {
                 auto j = nlohmann::json::parse(value);
-                for (auto const& [uuid, name] : j.items()) {
-                    this->mAdmins.push_back(UUID(uuid));
+                for (auto const& uuid : j) {
+                    this->mAdmins.push_back(UUID(uuid.get<std::string>()));
                 }
 
             } else if (key == DB_PlayerSettingsKey) {
