@@ -180,6 +180,10 @@ PlotPermission PlotMetadata::getPlayerInThisPlotPermission(UUID const& uuid) con
 }
 
 
+PlotPermissionTable&       PlotMetadata::getPermissionTable() { return mPermissionTable; }
+PlotPermissionTable const& PlotMetadata::getPermissionTable() const { return mPermissionTable; }
+
+
 void PlotMetadata::save() { PlotBDStorage::getInstance().save(*this); }
 
 string PlotMetadata::toString() const { return JsonHelper::structToJson(*this).dump(); }

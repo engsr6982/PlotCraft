@@ -21,7 +21,6 @@ typedef int       CommentID;
 
 enum class PlotPermission : int { None = 0, Shared = 1, Owner = 2, Admin = 3 };
 
-
 struct PlotCommentItem {
     CommentID mCommentID;
     UUID      mCommentPlayer;
@@ -32,41 +31,37 @@ struct PlotShareItem {
     UUID   mSharedPlayer;
     string mSharedTime;
 };
+struct PlotPermissionTable {};
 
 
 class PlotMetadata {
-public: // private:
+public:
+    int version = 1; // Metadata版本(用于反射合并冲突)
+
+    // private:
     PlotID mPlotID;
     string mPlotName  = "";
     UUID   mPlotOwner = "";
     int    mPlotX;
     int    mPlotZ;
 
-    bool mIsSale = false; // 是否是出售的
+    bool mIsSale = false; // 是否出售
     int  mPrice  = 0;     // 出售价格
+
+    PlotPermissionTable mPermissionTable; // 权限表
 
     std::vector<PlotShareItem> mSharedPlayers; // 共享者列表
 
     std::vector<PlotCommentItem> mComments; // 评论列表
 
 public:
-    // PlotMetadata();
-    // PlotMetadata(PlotID const& plotID, UUID const& owner, int x, int z);
-
-    // PlotMetadata(const PlotMetadata&)            = delete;
-    // PlotMetadata& operator=(const PlotMetadata&) = delete;
-    // PlotMetadata(PlotMetadata&&)                 = delete;
-    // PlotMetadata& operator=(PlotMetadata&&)      = delete;
-
-
+    // Constructors:
+    PLAPI static std::shared_ptr<PlotMetadata> make();
+    PLAPI static std::shared_ptr<PlotMetadata> make(PlotID const& plotID, int x, int z);
     PLAPI static std::shared_ptr<PlotMetadata> make(PlotID const& plotID, UUID const& owner, int x, int z);
-
     PLAPI static std::shared_ptr<PlotMetadata>
     make(PlotID const& plotID, UUID const& owner, string const& name, int x, int z);
 
-    PLAPI static std::shared_ptr<PlotMetadata> make(PlotID const& plotID, int x, int z);
-
-    PLAPI static std::shared_ptr<PlotMetadata> make();
 
     // APIs:
     PLAPI bool isOwner(UUID const& uuid) const;
@@ -128,6 +123,9 @@ public:
     PLAPI int getZ() const;
 
     PLAPI PlotPermission getPlayerInThisPlotPermission(UUID const& uuid) const; // 玩家在此地皮的权限
+
+    PLAPI PlotPermissionTable&       getPermissionTable();
+    PLAPI PlotPermissionTable const& getPermissionTable() const;
 
     PLAPI void save();
 

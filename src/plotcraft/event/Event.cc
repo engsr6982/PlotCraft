@@ -369,8 +369,9 @@ bool registerEventListener() {
         });
 
     mSculkVeinCanSpreadEventListener =
-        bus->emplaceListener<hook::SculkVeinCanSpreadEvent>([](hook::SculkVeinCanSpreadEvent& ) {
-            return false; // TODO: 添加逻辑处理蔓延事件
+        bus->emplaceListener<hook::SculkVeinCanSpreadEvent>([](hook::SculkVeinCanSpreadEvent& ev) {
+            ev.cancel();
+            return true; // TODO: 添加逻辑处理蔓延事件
         });
 
     return true;

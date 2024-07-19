@@ -15,8 +15,11 @@ class PlotPos;
 namespace plo::data {
 
 struct PlayerSettingItem {
+    int version = 1;
+
     bool showPlotTip; // 是否显示地皮提示
 };
+
 
 class PlotBDStorage {
 private:
