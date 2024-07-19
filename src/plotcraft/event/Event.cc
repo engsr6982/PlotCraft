@@ -44,14 +44,13 @@
 #include <unordered_map>
 
 
+#include "plotcraft/event/hook/SculkVeinCanSpreadEvent.h"
+
+
 #ifdef DEBUG
-
 #define debugger(...) std::cout << "[Debug] " << __VA_ARGS__ << std::endl;
-
 #else
-
 #define debugger(...) ((void)0)
-
 #endif
 
 
@@ -87,6 +86,7 @@ ll::event::ListenerPtr          mFireSpreadEventListener;          // 火焰蔓�
 ll::event::ListenerPtr          mPlayerAttackEventListener;        // 玩家攻击实体
 ll::event::ListenerPtr          mPlayerPickUpItemEventListener;    // 玩家捡起物品
 ll::event::ListenerPtr          mPlayerInteractBlockEventListener; // 方块接受玩家互动
+ll::event::ListenerPtr          mSculkVeinCanSpreadEventListener;  // 幽匿脉络蔓延
 
 ll::event::ListenerPtr mPlayerLeavePlotEventListener; // 玩家离开地皮
 ll::event::ListenerPtr mPlayerEnterPlotEventListener; // 玩家进入地皮
@@ -368,6 +368,10 @@ bool registerEventListener() {
             return true;
         });
 
+    mSculkVeinCanSpreadEventListener =
+        bus->emplaceListener<hook::SculkVeinCanSpreadEvent>([](hook::SculkVeinCanSpreadEvent& ) {
+            return false; // TODO: 添加逻辑处理蔓延事件
+        });
 
     return true;
 }

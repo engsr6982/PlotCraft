@@ -117,4 +117,30 @@ PLAPI inline std::pair<bool, string> executeCommandEx(const string& cmd) {
     return result;
 }
 
+PLAPI inline BlockPos face2Pos(BlockPos const& sour, uchar face) {
+    BlockPos dest = sour;
+    switch (face) {
+    case 0:
+        --dest.y; // 下
+        break;
+    case 1:
+        ++dest.y; // 上
+        break;
+    case 2:
+        --dest.z; // 北
+        break;
+    case 3:
+        ++dest.z; // 南
+        break;
+    case 4:
+        --dest.x; // 西
+        break;
+    case 5:
+        ++dest.x; // 东
+        break;
+    }
+    return dest;
+}
+
+
 } // namespace plo::mc
