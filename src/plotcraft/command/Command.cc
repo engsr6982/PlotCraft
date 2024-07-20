@@ -15,9 +15,11 @@
 #include "plotcraft/Config.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotBDStorage.h"
-#include "plotcraft/gui/index.h"
+#include "plotcraft/data/PlotMetadata.h"
+#include "plotcraft/gui/Global.h"
 #include "plotcraft/utils/Area.h"
 #include "plotcraft/utils/Text.h"
+
 
 #include "plotcraft/core/CoreUtils.h"
 
@@ -84,9 +86,19 @@ const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, Par
 const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
-    PlotPos pos    = PlotPos{player.getPosition()};
+    if (player.getDimensionId() != core_utils::getPlotDimensionId()) {
+        sendText<utils::Level::Error>(player, "此命令只能在地皮世界使用!");
+        return;
+    }
+
+    PlotPos pos = PlotPos{player.getPosition()};
     if (pos.isValid()) {
-        gui::plot(player, pos);
+        std::shared_ptr<data::PlotMetadata> plot = data::PlotBDStorage::getInstance().getPlot(pos.getPlotID());
+        if (plot == nullptr) {
+            plot = data::PlotMetadata::make(pos.getPlotID(), pos.x, pos.z);
+        }
+
+        gui::PlotGUI(player, plot, false);
     } else {
         sendText<Level::Error>(output, "无效的地皮坐标!");
     }
@@ -96,7 +108,7 @@ const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output) {
 const auto LambdaDefault = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
-    gui::index(player);
+    gui::MainGUI(player);
 };
 
 
@@ -121,8 +133,8 @@ bool registerCommand() {
     cmd.overload<ParamGo>().text("go").required("dim").execute(LambdaGo);
 #endif
 
-    // plo plot
-    cmd.overload().text("plot").execute(LambdaPlot);
+    // plo this
+    cmd.overload().text("this").execute(LambdaPlot);
 
     // plo buy
     cmd.overload().text("buy").execute(LambdaPlot);

@@ -164,4 +164,9 @@ jobs:
           minebbs_token: ${{ secrets.MINEBBS_TOKEN }}
           resource_id: "8609"
           upload_file: ${{ github.event.repository.name }}-windows-x64.zip
-          update_description: ${{ needs.update-release-notes.outputs.release_notes }}
+          update_description: |
+            [MD]
+            > Tip: 此更新由 Github Actions 自动发布
+
+            ${{ needs.update-release-notes.outputs.release_notes }}
+            [/MD]

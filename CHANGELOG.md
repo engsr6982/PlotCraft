@@ -15,10 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `PlotMetadata` 新增 `PlotPermissionTable`、`version` 字段
+- `/plo plot` 更改为 `/plo this`
 
 ### Fixed
 
-- 修复 地皮边框含水Bug [#5](https://github.com/engsr6982/PlotCraft/issues/5)
+- 修复 地皮边框含水 Bug [#5](https://github.com/engsr6982/PlotCraft/issues/5)
 
 ## [0.5.2] - 2024-07-16
 
