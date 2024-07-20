@@ -4,7 +4,7 @@
 namespace plo::gui {
 
 
-void PlotShareGUI(Player& player, std::shared_ptr<PlotMetadata> pt) {
+void PlotShareGUI(Player& player, PlotMetadataPtr pt) {
     auto* ndb = &PlayerNameDB::getInstance();
 
     SimpleForm fm{PLUGIN_TITLE};
@@ -59,7 +59,7 @@ void PlotShareGUI(Player& player, std::shared_ptr<PlotMetadata> pt) {
     fm.sendTo(player);
 }
 
-void _addSharePlayer(Player& player, std::shared_ptr<PlotMetadata> pt) {
+void _addSharePlayer(Player& player, PlotMetadataPtr pt) {
     auto* ndb = &PlayerNameDB::getInstance();
 
     CustomForm fm{PLUGIN_TITLE};

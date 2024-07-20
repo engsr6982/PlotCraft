@@ -25,7 +25,7 @@ void PlotShopGUI(Player& player) {
     fm.sendTo(player);
 }
 
-void _plotShopShowPlot(Player& player, std::shared_ptr<PlotMetadata> pt) {
+void _plotShopShowPlot(Player& player, PlotMetadataPtr pt) {
     SimpleForm fm{PLUGIN_TITLE};
 
     auto* ndb = &PlayerNameDB::getInstance();
@@ -51,7 +51,7 @@ void _plotShopShowPlot(Player& player, std::shared_ptr<PlotMetadata> pt) {
 }
 
 
-void _buyPlot(Player& player, std::shared_ptr<PlotMetadata> pt) {
+void _buyPlot(Player& player, PlotMetadataPtr pt) {
 
     auto* impl = &data::PlotBDStorage::getInstance();
     auto& cfg  = config::cfg.plotWorld;

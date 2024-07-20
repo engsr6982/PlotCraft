@@ -13,7 +13,7 @@ using string = std::string;
 
 namespace plo::data {
 
-typedef string    PlotID; // PlotPos::toString()
+typedef string    PlotID; // PlotPos::getPlotID()
 typedef mce::UUID UUID_;
 typedef string    UUID;
 typedef int       CommentID;
@@ -34,6 +34,7 @@ struct PlotShareItem {
 struct PlotPermissionTable {};
 
 
+using PlotMetadataPtr = std::shared_ptr<class PlotMetadata>;
 class PlotMetadata {
 public:
     int version = 1; // Metadata版本(用于反射合并冲突)
@@ -56,11 +57,10 @@ public:
 
 public:
     // Constructors:
-    PLAPI static std::shared_ptr<PlotMetadata> make();
-    PLAPI static std::shared_ptr<PlotMetadata> make(PlotID const& plotID, int x, int z);
-    PLAPI static std::shared_ptr<PlotMetadata> make(PlotID const& plotID, UUID const& owner, int x, int z);
-    PLAPI static std::shared_ptr<PlotMetadata>
-    make(PlotID const& plotID, UUID const& owner, string const& name, int x, int z);
+    PLAPI static PlotMetadataPtr make();
+    PLAPI static PlotMetadataPtr make(PlotID const& plotID, int x, int z);
+    PLAPI static PlotMetadataPtr make(PlotID const& plotID, UUID const& owner, int x, int z);
+    PLAPI static PlotMetadataPtr make(PlotID const& plotID, UUID const& owner, string const& name, int x, int z);
 
 
     // APIs:

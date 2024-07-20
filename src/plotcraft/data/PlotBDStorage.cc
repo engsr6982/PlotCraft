@@ -260,7 +260,7 @@ bool PlotBDStorage::delPlot(PlotID const& id) {
     return true;
 }
 
-bool PlotBDStorage::addPlot(std::shared_ptr<PlotMetadata> ptr) {
+bool PlotBDStorage::addPlot(PlotMetadataPtr ptr) {
     if (hasPlot(ptr->getPlotID())) {
         return false;
     }
@@ -278,7 +278,7 @@ bool PlotBDStorage::addPlot(PlotID const& id, UUID const& owner, int x, int z) {
     return addPlot(ptr);
 }
 
-std::shared_ptr<PlotMetadata> PlotBDStorage::getPlot(PlotID const& id) const {
+PlotMetadataPtr PlotBDStorage::getPlot(PlotID const& id) const {
     auto it = mPlots.find(id);
     if (it == mPlots.end()) {
         return nullptr;
@@ -286,16 +286,16 @@ std::shared_ptr<PlotMetadata> PlotBDStorage::getPlot(PlotID const& id) const {
     return it->second;
 }
 
-std::vector<std::shared_ptr<PlotMetadata>> PlotBDStorage::getPlots() const {
-    std::vector<std::shared_ptr<PlotMetadata>> res;
+std::vector<PlotMetadataPtr> PlotBDStorage::getPlots() const {
+    std::vector<PlotMetadataPtr> res;
     for (auto const& [id, ptr] : mPlots) {
         res.push_back(ptr);
     }
     return res;
 }
 
-std::vector<std::shared_ptr<PlotMetadata>> PlotBDStorage::getPlots(UUID const& owner) const {
-    std::vector<std::shared_ptr<PlotMetadata>> res;
+std::vector<PlotMetadataPtr> PlotBDStorage::getPlots(UUID const& owner) const {
+    std::vector<PlotMetadataPtr> res;
     for (auto const& [id, ptr] : mPlots) {
         if (ptr->getPlotOwner() == owner) {
             res.push_back(ptr);
@@ -331,8 +331,8 @@ PlayerSettingItem PlotBDStorage::getPlayerSetting(UUID const& uuid) const {
 }
 
 
-std::vector<std::shared_ptr<PlotMetadata>> PlotBDStorage::getSaleingPlots() const {
-    std::vector<std::shared_ptr<PlotMetadata>> res;
+std::vector<PlotMetadataPtr> PlotBDStorage::getSaleingPlots() const {
+    std::vector<PlotMetadataPtr> res;
     for (auto const& [id, ptr] : mPlots) {
         if (ptr->isSale()) {
             res.push_back(ptr);

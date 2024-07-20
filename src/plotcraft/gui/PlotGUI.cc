@@ -23,7 +23,7 @@ void _selectPlot(Player& player) {
 }
 
 
-void PlotGUI(Player& player, std::shared_ptr<PlotMetadata> pt, bool ret) {
+void PlotGUI(Player& player, PlotMetadataPtr pt, bool ret) {
     SimpleForm fm{PLUGIN_TITLE};
 
     auto& ndb = PlayerNameDB::getInstance();
@@ -74,7 +74,7 @@ void PlotGUI(Player& player, std::shared_ptr<PlotMetadata> pt, bool ret) {
 }
 
 
-void _changePlotName(Player& player, std::shared_ptr<PlotMetadata> pt) {
+void _changePlotName(Player& player, PlotMetadataPtr pt) {
     auto* bus = &ll::event::EventBus::getInstance();
 
     pev::PlayerChangePlotNameBefore ev{&player, pt};

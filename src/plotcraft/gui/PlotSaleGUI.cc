@@ -4,7 +4,7 @@
 namespace plo::gui {
 
 
-void PlotSaleGUI(Player& player, std::shared_ptr<PlotMetadata> pt) {
+void PlotSaleGUI(Player& player, PlotMetadataPtr pt) {
     bool const isSaleing = pt->isSale();
 
     SimpleForm fm{PLUGIN_TITLE};
@@ -34,7 +34,7 @@ void PlotSaleGUI(Player& player, std::shared_ptr<PlotMetadata> pt) {
 }
 
 
-void _sellPlotAndEditPrice(Player& player, std::shared_ptr<PlotMetadata> pt, bool edit) {
+void _sellPlotAndEditPrice(Player& player, PlotMetadataPtr pt, bool edit) {
     CustomForm fm{PLUGIN_TITLE};
 
     fm.appendLabel("地皮确认出售后，其它玩家可以查看到你的出售信息。当玩家购买后，你的地皮将被转移到购买者的名下("

@@ -106,7 +106,7 @@ using namespace core_utils;
 
 void buildTipMessage(Player& p, PlotPos const& pps, PlayerNameDB* ndb, PlotBDStorage* pdb) {
     try {
-        std::shared_ptr<PlotMetadata> plot = pdb->getPlot(pps.getPlotID());
+        PlotMetadataPtr plot = pdb->getPlot(pps.getPlotID());
         if (plot == nullptr) plot = PlotMetadata::make(pps.getPlotID(), pps.x, pps.z);
 
         TextPacket pkt = TextPacket();

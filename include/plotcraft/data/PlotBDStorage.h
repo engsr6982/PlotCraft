@@ -26,9 +26,9 @@ private:
     std::unique_ptr<ll::data::KeyValueDB> mDB;
 
     // Cache:
-    std::vector<UUID>                                         mAdmins;         // 管理
-    std::unordered_map<PlotID, std::shared_ptr<PlotMetadata>> mPlots;          // 地皮
-    std::unordered_map<UUID, PlayerSettingItem>               mPlayerSettings; // 玩家设置
+    std::vector<UUID>                           mAdmins;         // 管理
+    std::unordered_map<PlotID, PlotMetadataPtr> mPlots;          // 地皮
+    std::unordered_map<UUID, PlayerSettingItem> mPlayerSettings; // 玩家设置
 
 public:
     PlotBDStorage()                                = default;
@@ -61,11 +61,11 @@ public:
     PLAPI bool delPlot(const PlotID& id);
 
     PLAPI bool addPlot(PlotID const& id, UUID const& owner, int x, int z);
-    PLAPI bool addPlot(std::shared_ptr<PlotMetadata> plot);
+    PLAPI bool addPlot(PlotMetadataPtr plot);
 
-    PLAPI std::shared_ptr<PlotMetadata> getPlot(PlotID const& id) const;
-    PLAPI std::vector<std::shared_ptr<PlotMetadata>> getPlots() const;
-    PLAPI std::vector<std::shared_ptr<PlotMetadata>> getPlots(UUID const& owner) const;
+    PLAPI PlotMetadataPtr getPlot(PlotID const& id) const;
+    PLAPI std::vector<PlotMetadataPtr> getPlots() const;
+    PLAPI std::vector<PlotMetadataPtr> getPlots(UUID const& owner) const;
 
     // Player settings
     PLAPI bool              hasPlayerSetting(const UUID& uuid) const;
@@ -74,7 +74,7 @@ public:
     PLAPI PlayerSettingItem getPlayerSetting(const UUID& uuid) const;
 
     // 辅助API
-    PLAPI std::vector<std::shared_ptr<PlotMetadata>> getSaleingPlots() const; // 出售中的地皮
+    PLAPI std::vector<PlotMetadataPtr> getSaleingPlots() const; // 出售中的地皮
 
     PLAPI bool buyPlotFromSale(PlotID const& pid, UUID const& buyer, bool resetShares = true); // 购买出售中的地皮
 
