@@ -26,6 +26,7 @@ void PlayerSettingGUI(Player& player) {
         PlayerSettingItem it   = setting;
 
         for (auto const& [key, value] : setj.items()) {
+            if (key == "version") continue;
             bool const val = std::get<uint64_t>(dt->at(key));
             setj[key]      = val;
         }

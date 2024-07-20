@@ -31,6 +31,10 @@ public:
         return structToJson(obj).dump(indent);
     }
 
+    template <class T, class J = nlohmann::ordered_json>
+    static void jsonToStructNoMerge(J& j, T& obj) {
+        ll::reflection::deserialize(obj, j).value();
+    }
 
     template <TData T, class J = nlohmann::ordered_json, class F = bool(T&, J&)>
     static void jsonToStruct(J& j, T& obj, F&& fixer = tryMergePatch<T, J>) {

@@ -19,7 +19,7 @@ void MainGUI(Player& player) {
     }
 
     fm.appendButton("管理脚下地皮", "textures/ui/icon_recipe_item", "path", [](Player& pl) {
-        mc::executeCommand("plo plot", &pl);
+        mc::executeCommand("plo this", &pl);
     });
 
     fm.appendButton("管理地皮", "textures/ui/icon_recipe_nature", "path", [](Player& pl) { _selectPlot(pl); });

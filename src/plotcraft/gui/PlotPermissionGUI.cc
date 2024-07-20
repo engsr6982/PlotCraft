@@ -14,8 +14,7 @@ void PlotPermissionGUI(Player& player, PlotMetadataPtr pt) {
     CustomForm fm{PLUGIN_TITLE};
 
     for (auto& [key, value] : permissionTableJson.items()) {
-        if (key == "version") continue;
-        fm.appendToggle(key, string(i18n->get(key)), value.get<bool>());
+        fm.appendToggle(string(key), string(i18n->get(key)), value.get<bool>());
     }
 
     fm.sendTo(player, [pt, permissionTableJson](Player& pl, CustomFormResult const& dt, FormCancelReason) {
@@ -31,7 +30,7 @@ void PlotPermissionGUI(Player& player, PlotMetadataPtr pt) {
             setj[key]      = val;
         }
 
-        JsonHelper::jsonToStruct(setj, pt->mPermissionTable); // 反射回成员
+        JsonHelper::jsonToStructNoMerge(setj, pt->mPermissionTable); // 反射回成员
         sendText(pl, "权限表已更新");
     });
 }

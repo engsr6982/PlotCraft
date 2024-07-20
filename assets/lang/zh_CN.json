@@ -1,3 +1,4 @@
 {
-    "showPlotTip": "是否显示底部地皮提示"
+    "showPlotTip": "是否显示底部地皮提示",
+    "canDestroyBlock": "是否允许破坏方块"
 }

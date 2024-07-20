@@ -13,7 +13,6 @@ using string = std::string;
 
 namespace plo::data {
 
-#define METADATA_VERSION 1
 
 typedef string    PlotID; // PlotPos::getPlotID()
 typedef mce::UUID UUID_;
@@ -33,8 +32,10 @@ struct PlotShareItem {
     UUID   mSharedPlayer;
     string mSharedTime;
 };
+
+#define METADATA_VERSION 2
 struct PlotPermissionTable {
-    int version = METADATA_VERSION;
+    bool canDestroyBlock{false};
 };
 
 
