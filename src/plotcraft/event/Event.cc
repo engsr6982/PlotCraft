@@ -11,6 +11,7 @@
 #include "ll/api/event/player/PlayerJoinEvent.h"
 #include "ll/api/event/player/PlayerPickUpItemEvent.h"
 #include "ll/api/event/player/PlayerPlaceBlockEvent.h"
+#include "ll/api/event/player/PlayerUseItemEvent.h"
 #include "ll/api/event/world/FireSpreadEvent.h"
 #include "ll/api/event/world/SpawnMobEvent.h"
 #include "ll/api/schedule/Scheduler.h"
@@ -18,15 +19,20 @@
 #include "ll/api/service/Bedrock.h"
 #include "mc/_HeaderOutputPredefine.h"
 #include "mc/common/wrapper/optional_ref.h"
+#include "mc/enums/BlockUpdateFlag.h"
 #include "mc/enums/GameType.h"
 #include "mc/enums/TextPacketType.h"
 #include "mc/network/packet/TextPacket.h"
+#include "mc/network/packet/UpdateBlockPacket.h"
 #include "mc/server/ServerPlayer.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/gamemode/GameMode.h"
 #include "mc/world/level/Level.h"
+#include "mc/world/level/block/Block.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
+#include "mc/world/level/material/Material.h"
+#include "mc/world/phys/HitResult.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/EconomyQueue.h"
 #include "plotcraft/PlotPos.h"
@@ -44,6 +50,7 @@
 #include <unordered_map>
 
 
+#include "plotcraft/event/hook/SculkBlockGrowthEvent.h"
 #include "plotcraft/event/hook/SculkVeinCanSpreadEvent.h"
 
 
@@ -87,6 +94,8 @@ ll::event::ListenerPtr          mPlayerAttackEventListener;        // 玩家攻�
 ll::event::ListenerPtr          mPlayerPickUpItemEventListener;    // 玩家捡起物品
 ll::event::ListenerPtr          mPlayerInteractBlockEventListener; // 方块接受玩家互动
 ll::event::ListenerPtr          mSculkVeinCanSpreadEventListener;  // 幽匿脉络蔓延
+ll::event::ListenerPtr          mSculkBlockGrowthEventListener;    // 幽匿方块生长(幽匿[尖啸/感测]体)
+ll::event::ListenerPtr          mPlayerUseItemEventListener;       // 玩家使用物品
 
 ll::event::ListenerPtr mPlayerLeavePlotEventListener; // 玩家离开地皮
 ll::event::ListenerPtr mPlayerEnterPlotEventListener; // 玩家进入地皮
@@ -374,6 +383,50 @@ bool registerEventListener() {
             return true; // TODO: 添加逻辑处理蔓延事件
         });
 
+    mSculkBlockGrowthEventListener =
+        bus->emplaceListener<hook::SculkBlockGrowthEvent>([](hook::SculkBlockGrowthEvent& ev) {
+            ev.cancel();
+            return true; // TODO: 添加逻辑处理生长事件
+        });
+
+    mPlayerUseItemEventListener =
+        bus->emplaceListener<ll::event::PlayerUseItemEvent>([pdb](ll::event::PlayerUseItemEvent& ev) {
+            if (ev.self().getDimensionId() != getPlotDimensionId()) return true;
+            auto& player = ev.self();
+
+            auto val = player.traceRay(5.5f, false, true, [&](BlockSource const&, Block const& bl, bool) {
+                // if (!bl.isSolid()) return false;               // 非固体方块
+                if (bl.getMaterial().isLiquid()) return false; // 液体方块
+                return true;
+            });
+
+            auto&        item = ev.item();
+            BlockPos&    pos  = val.mBlockPos;
+            Block const& bl   = player.getDimensionBlockSource().getBlock(pos);
+
+            debugger(
+                "玩家使用物品: " << item.getTypeName() << ", 位置: " << pos.toString() << ", 方块: " << bl.getTypeName()
+            );
+
+            auto pps = PlotPos(pos);
+            // auto lv  = pdb->getPlayerPermission(player.getUuid().asString(), pps.toString());
+
+            if (pps.isPosOnBorder(pos)) {
+                ev.cancel();
+                auto pkt = UpdateBlockPacket(
+                    pos,
+                    (uint)UpdateBlockPacket::BlockLayer::Extra,
+                    bl.getBlockItemId(),
+                    (uchar)BlockUpdateFlag::All
+                );
+                pkt.sendTo(player); // 防刁民在边框放水，然后客户端不更新
+            };
+
+            // TODO: 添加更多权限处理
+
+            return true;
+        });
+
     return true;
 }
 
@@ -391,6 +444,10 @@ bool unRegisterEventListener() {
     bus.removeListener(mPlayerAttackEventListener);
     bus.removeListener(mPlayerPickUpItemEventListener);
     bus.removeListener(mPlayerInteractBlockEventListener);
+    bus.removeListener(mSculkVeinCanSpreadEventListener);
+    bus.removeListener(mSculkBlockGrowthEventListener);
+    bus.removeListener(mPlayerUseItemEventListener);
+
     return true;
 }
 

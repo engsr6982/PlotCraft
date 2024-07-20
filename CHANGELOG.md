@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2024-07-20
+
+### Added:
+
+- 处理 `幽匿感测体`、`幽匿尖啸体` 生成事件
+- 处理 `幽匿脉络` 蔓延事件
+
+### Changed
+
+- `PlotMetadata` 新增 `PlotPermissionTable`、`version` 字段
+
+### Fixed
+
+- 修复 地皮边框含水Bug [#5](https://github.com/engsr6982/PlotCraft/issues/5)
+
 ## [0.5.2] - 2024-07-16
 
 ### Fixed
