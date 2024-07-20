@@ -102,6 +102,8 @@ function pack_plugin(target,plugin_define)
             os.cp(oripdbfile, pdbfile)
         end
 
+        local langdir = path.join(os.projectdir(), "assets", "lang")
+        os.cp(langdir, outputdir)
 
         local srcDir = path.join(os.projectdir(), "src")
         local remoteDir = path.join(srcDir, "remote")
