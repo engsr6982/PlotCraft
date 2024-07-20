@@ -180,7 +180,7 @@ PlotPermission PlotMetadata::getPlayerInThisPlotPermission(UUID const& uuid) con
 
 
 PlotPermissionTable&       PlotMetadata::getPermissionTable() { return mPermissionTable; }
-PlotPermissionTable const& PlotMetadata::getPermissionTable() const { return mPermissionTable; }
+PlotPermissionTable const& PlotMetadata::getPermissionTableConst() const { return mPermissionTable; }
 
 
 void PlotMetadata::save() { PlotBDStorage::getInstance().save(*this); }

@@ -56,6 +56,8 @@ void PlotGUI(Player& player, PlotMetadataPtr pt, bool ret) {
         });
 
     if (isOwner) {
+        fm.appendButton("权限管理", "textures/ui/gear", "path", [pt](Player& pl) { PlotPermissionGUI(pl, pt); });
+
         fm.appendButton("修改地皮名称", "textures/ui/book_edit_default", "path", [pt](Player& pl) {
             _changePlotName(pl, pt);
         });

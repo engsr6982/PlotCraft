@@ -62,6 +62,10 @@ void PlotGUI(Player& player, PlotMetadataPtr plot, bool ret = false);
 void _changePlotName(Player& player, PlotMetadataPtr pt);
 
 
+// PlotPermissionGUI.cc
+void PlotPermissionGUI(Player& player, PlotMetadataPtr pt);
+
+
 // PlotSaleGUI.cc
 void PlotSaleGUI(Player& player, PlotMetadataPtr pt);
 void _sellPlotAndEditPrice(Player& player, PlotMetadataPtr pt, bool edit);

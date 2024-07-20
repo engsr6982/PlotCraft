@@ -13,6 +13,8 @@ using string = std::string;
 
 namespace plo::data {
 
+#define METADATA_VERSION 1
+
 typedef string    PlotID; // PlotPos::getPlotID()
 typedef mce::UUID UUID_;
 typedef string    UUID;
@@ -31,13 +33,15 @@ struct PlotShareItem {
     UUID   mSharedPlayer;
     string mSharedTime;
 };
-struct PlotPermissionTable {};
+struct PlotPermissionTable {
+    int version = METADATA_VERSION;
+};
 
 
 using PlotMetadataPtr = std::shared_ptr<class PlotMetadata>;
 class PlotMetadata {
 public:
-    int version = 1; // Metadata版本(用于反射合并冲突)
+    int version = METADATA_VERSION;
 
     // private:
     PlotID mPlotID;
@@ -125,7 +129,7 @@ public:
     PLAPI PlotPermission getPlayerInThisPlotPermission(UUID const& uuid) const; // 玩家在此地皮的权限
 
     PLAPI PlotPermissionTable&       getPermissionTable();
-    PLAPI PlotPermissionTable const& getPermissionTable() const;
+    PLAPI PlotPermissionTable const& getPermissionTableConst() const;
 
     PLAPI void save();
 

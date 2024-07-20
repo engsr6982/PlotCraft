@@ -4,7 +4,7 @@
 namespace plo::gui {
 
 
-void PlotCommentGUI(Player& player, std::shared_ptr<PlotMetadata> pt) {
+void PlotCommentGUI(Player& player, PlotMetadataPtr pt) {
 
     bool const hasOwner = !pt->getPlotOwner().empty(); // 是否有主人
 
@@ -40,7 +40,7 @@ void PlotCommentGUI(Player& player, std::shared_ptr<PlotMetadata> pt) {
 }
 
 
-void _publishComment(Player& player, std::shared_ptr<PlotMetadata> pt) {
+void _publishComment(Player& player, PlotMetadataPtr pt) {
     pev::PlayerCommentPlotBefore ev{&player, pt};
     ll::event::EventBus::getInstance().publish(ev);
     if (ev.isCancelled()) return; // 事件被取消
@@ -76,7 +76,7 @@ void _publishComment(Player& player, std::shared_ptr<PlotMetadata> pt) {
 }
 
 
-void _showCommentOperation(Player& player, std::shared_ptr<PlotMetadata> pt, CommentID id) {
+void _showCommentOperation(Player& player, PlotMetadataPtr pt, CommentID id) {
     auto const ct             = *pt->getComment(id);
     bool const isOwner        = player.getUuid().asString() == pt->getPlotOwner();
     bool const isCommentOwner = player.getUuid().asString() == ct.mCommentPlayer;
@@ -121,7 +121,7 @@ void _showCommentOperation(Player& player, std::shared_ptr<PlotMetadata> pt, Com
 }
 
 
-void _editComment(Player& player, std::shared_ptr<PlotMetadata> pt, CommentID id) {
+void _editComment(Player& player, PlotMetadataPtr pt, CommentID id) {
     pev::PlayerEditCommentBefore ev{&player, pt, id};
     ll::event::EventBus::getInstance().publish(ev);
     if (ev.isCancelled()) return; // 事件被取消

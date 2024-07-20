@@ -11,6 +11,7 @@ void PlayerSettingGUI(Player& player) {
     auto settingJson = JsonHelper::structToJson(setting);
 
     for (auto const& [key, value] : settingJson.items()) {
+        if (key == "version") continue;
         fm.appendToggle(key, string(i18n->get(key)), value.get<bool>());
     }
 
