@@ -15,6 +15,7 @@
 ### 命令安装
 
 推荐使用 Lip 一键安装（自动处理依赖）
+
 ```bash
 lip install github.com/engsr6982/PlotCraft
 ```
@@ -23,13 +24,14 @@ lip install github.com/engsr6982/PlotCraft
 
 我们不推荐这么做，因为处理不好依赖版本可能导致未知的问题  
 如果您需要手动安装 PlotCraft，您需要安装以下前置组件（插件）
+
 - MoreDimension
 - LegacyMoney
 - LegacyRemoteCall
 
 > Tip  
 > 编译目标为 Overwload 时 MoreDimension 无需安装  
-> 未编译RemoteCall相关代码时，LegacyRemoteCall 为可选  
+> 未编译 RemoteCall 相关代码时，LegacyRemoteCall 为可选  
 > 插件默认版本是依赖上述组件，特殊版本需自行从源编译
 
 ### 使用
@@ -44,14 +46,16 @@ PlotCraft 注册了以下命令：
 /plo go overworld   返回主世界
 /plo op <name>      添加地皮管理员
 /plo deop <name>    移除地皮管理员
-/plo plot           打开脚下地皮的管理 GUI
+/plo this           打开脚下地皮的管理 GUI
+/plo mgr            打开插件设置GUI
+/plo setting        打开玩家设置GUI
 /plo                打开地皮系统主菜单
 /plo db save        立即保存数据到数据库
 /plo buy            购买脚下地皮（出售状态）
 ```
 
 > [warning]  
-> 插件压缩包内 lse 文件夹中，附带了一个Js文件 `PlotCraft-Fixer.js`  
+> 插件压缩包内 lse 文件夹中，附带了一个 Js 文件 `PlotCraft-Fixer.js`  
 > 此文件用于修复插件本体未处理的事件，如果需要使用请将其放入`plugins/`目录下, 由 LSE（LegacyScriptEngine） 引擎加载。
 
 ### 开发 & 扩展 & 贡献
@@ -60,23 +64,21 @@ PlotCraft 提供 SDK 和 RemoteCall API。
 
 #### SDK 开发
 
-使用 SDK 的优势在于，您能访问 PlotCraft 几乎全部的 API，使用C++开发
+使用 SDK 的优势在于，您能访问 PlotCraft 几乎全部的 API，使用 C++开发
 
 SDK 可在 Release 页面下载
-
 
 #### RemoteCall 开发
 
 RemoteCall 为 LSE 引擎提供的远程调用 API，提供基础的交互能力。  
 但受限于 RemoteCall，仅能访问 PlotCraft 部分已导出的 API
 
-API声明、封装文件，可在每个 Release 版本压缩包里找到  
+API 声明、封装文件，可在每个 Release 版本压缩包里找到  
 开发可参考 PlotCraft-Fixer.js
-
 
 #### 贡献
 
-我们欢迎您 Pr 本插件，为本插件增加更多功能！(＾ω＾)ﾉ🎉
+我们欢迎您 Pr 本插件，为本插件增加更多功能！(＾ ω ＾)ﾉ 🎉
 
 ## 配置文件
 
@@ -108,7 +110,14 @@ API声明、封装文件，可在每个 Release 版本压缩包里找到
     "maxBuyPlotCount": 10, // 最大可购买地皮数量
     "buyPlotPrice": 10000, // 购买地皮价格
     "inPlotCanFly": true, // 地皮内可飞行
-    "spawnMob": false // 是否生成生物
-  }
+    "spawnMob": false, // 是否生成生物
+    "playerSellPlotTax": 0.1, // 玩家出售地皮税率
+    "eventListener": {
+      "onSculkSpreadListener": true, // 是否启用SculkSpread事件监听器
+      "onSculkBlockGrowthListener": true, // 是否启用 SculkBlockGrowth事件监听器
+      "onUseItemOnWhiteList": ["minecraft:clock"] // 玩家右键使用物品白名单
+    }
+  },
+  "allowedPlotTeleportDim": [0, 1, 2, 3] // 允许传送的地皮的维度
 }
 ```
