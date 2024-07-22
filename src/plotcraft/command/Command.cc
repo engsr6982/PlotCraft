@@ -118,29 +118,33 @@ const auto LambdaDBSave = [](CommandOrigin const& origin, CommandOutput& output)
     sendText<Level::Success>(output, "操作完成!");
 };
 
+const auto LambdaMgr = [](CommandOrigin const& origin, CommandOutput& output) {
+    CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
+    Player& player = *static_cast<Player*>(origin.getEntity());
+    gui::PluginSettingGUI(player);
+};
+const auto LambdaSetting = [](CommandOrigin const& origin, CommandOutput& output) {
+    CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
+    Player& player = *static_cast<Player*>(origin.getEntity());
+    gui::PlayerSettingGUI(player);
+};
+
 
 bool registerCommand() {
     auto& cmd = ll::command::CommandRegistrar::getInstance().getOrCreateCommand("plo", "PlotCraft");
 
-    // plo <op|deop> <name>
-    cmd.overload<ParamOp>().required("op").required("name").execute(LambdaOP);
 
-    // plo db save
-    cmd.overload().text("db").text("save").execute(LambdaDBSave);
+    cmd.overload<ParamOp>().required("op").required("name").execute(LambdaOP); // plo <op|deop> <name>
+    cmd.overload().text("db").text("save").execute(LambdaDBSave);              // plo db save
+    cmd.overload().text("this").execute(LambdaPlot);                           // plo this
+    cmd.overload().text("buy").execute(LambdaPlot);                            // plo buy
+    cmd.overload().text("mgr").execute(LambdaMgr);                             // plo mgr
+    cmd.overload().text("setting").execute(LambdaSetting);                     // plo setting
+    cmd.overload().execute(LambdaDefault);                                     // plo
 
 #ifndef OVERWORLD
-    // plo go <overworld|plot>
-    cmd.overload<ParamGo>().text("go").required("dim").execute(LambdaGo);
+    cmd.overload<ParamGo>().text("go").required("dim").execute(LambdaGo); // plo go <overworld|plot>
 #endif
-
-    // plo this
-    cmd.overload().text("this").execute(LambdaPlot);
-
-    // plo buy
-    cmd.overload().text("buy").execute(LambdaPlot);
-
-    // plo
-    cmd.overload().execute(LambdaDefault);
 
     return true;
 }
