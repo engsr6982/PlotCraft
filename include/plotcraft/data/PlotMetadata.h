@@ -33,9 +33,15 @@ struct PlotShareItem {
     string mSharedTime;
 };
 
-#define METADATA_VERSION 2
+#define METADATA_VERSION 3
 struct PlotPermissionTable {
-    bool canDestroyBlock{false};
+    bool canDestroyBlock{false};  // 破坏方块
+    bool canPlaceBlock{false};    // 放置方块
+    bool canUseItemOn{true};      // 使用物品(右键)
+    bool canFireSpread{false};    // 火焰蔓延
+    bool canAttack{true};         // 攻击
+    bool canPickupItem{true};     // 拾取物品
+    bool canInteractBlock{false}; // 与方块交互
 };
 
 

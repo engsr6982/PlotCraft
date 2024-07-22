@@ -9,17 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added:
 
-- 处理 `幽匿感测体`、`幽匿尖啸体` 生成事件
-- 处理 `幽匿脉络` 蔓延事件
+- 配置文件 `plotWorld` 新增 `eventListener` 配置
+- 配置文件 `eventListener` 新增 `onSculkSpreadListener` 事件开关
+- 配置文件 `eventListener` 新增 `onSculkBlockGrowthListener` 事件开关
+- 配置文件 `eventListener` 新增 `onUseItemOnWhiteList` 配置
+- 事件系统 新增 `SculkBlockGrowthEvent`、`SculkSpreadEvent` 事件
 
 ### Changed
 
-- `PlotMetadata` 新增 `PlotPermissionTable`、`version` 字段
-- `/plo plot` 更改为 `/plo this`
+- 命令 `/plo plot` 更改为 `/plo this`
 
 ### Fixed
 
 - 修复 地皮边框含水 Bug [#5](https://github.com/engsr6982/PlotCraft/issues/5)
+- 修复 在地皮边框放置方块 坐标计算错误
 
 ## [0.5.2] - 2024-07-16
 

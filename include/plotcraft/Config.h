@@ -10,7 +10,7 @@ using string = std::string;
 
 namespace plo::config {
 
-#define mConfigVersion 5
+#define mConfigVersion 6
 
 struct _Config {
     int version = mConfigVersion;
@@ -52,6 +52,13 @@ struct _Config {
         double playerSellPlotTax = 0.1;  // 玩家出售地皮扣除税率
 
         bool spawnMob = false; // 地皮世界是否生成生物
+
+        struct EventListener {
+            bool onSculkSpreadListener{true};
+            bool onSculkBlockGrowthListener{true};
+
+            std::vector<string> onUseItemOnWhiteList = {"minecraft:clock"};
+        } eventListener;
     } plotWorld;
 
     std::vector<int> allowedPlotTeleportDim = {0, 1, 2, 3}; // 允许传送到地皮维度的维度列表

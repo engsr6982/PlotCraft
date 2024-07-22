@@ -1,4 +1,10 @@
 {
     "showPlotTip": "是否显示底部地皮提示",
-    "canDestroyBlock": "是否允许破坏方块"
+    "canDestroyBlock": "是否允许破坏方块",
+    "canPlaceBlock": "是否允许放置方块",
+    "canUseItemOn": "是否允许使用物品(右键)",
+    "canFireSpread": "是否允许火焰蔓延",
+    "canAttack": "是否允许攻击",
+    "canPickupItem": "是否允许拾取物品",
+    "canInteractBlock": "是否允许与方块交互"
 }
