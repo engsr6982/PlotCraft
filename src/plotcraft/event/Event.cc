@@ -17,7 +17,6 @@
 #include "ll/api/schedule/Scheduler.h"
 #include "ll/api/schedule/Task.h"
 #include "ll/api/service/Bedrock.h"
-#include "mc/_HeaderOutputPredefine.h"
 #include "mc/common/wrapper/optional_ref.h"
 #include "mc/enums/BlockUpdateFlag.h"
 #include "mc/enums/GameType.h"
@@ -51,7 +50,7 @@
 
 
 #include "plotcraft/event/hook/SculkBlockGrowthEvent.h"
-#include "plotcraft/event/hook/SculkVeinCanSpreadEvent.h"
+#include "plotcraft/event/hook/SculkVeinSpreadEvent.h"
 
 
 #ifdef DEBUG
@@ -93,7 +92,7 @@ ll::event::ListenerPtr          mFireSpreadEventListener;          // 火焰蔓�
 ll::event::ListenerPtr          mPlayerAttackEventListener;        // 玩家攻击实体
 ll::event::ListenerPtr          mPlayerPickUpItemEventListener;    // 玩家捡起物品
 ll::event::ListenerPtr          mPlayerInteractBlockEventListener; // 方块接受玩家互动
-ll::event::ListenerPtr          mSculkVeinCanSpreadEventListener;  // 幽匿脉络蔓延
+ll::event::ListenerPtr          mSculkVeinSpreadEventListener;     // 幽匿脉络蔓延
 ll::event::ListenerPtr          mSculkBlockGrowthEventListener;    // 幽匿方块生长(幽匿[尖啸/感测]体)
 ll::event::ListenerPtr          mPlayerUseItemEventListener;       // 玩家使用物品
 
@@ -377,8 +376,12 @@ bool registerEventListener() {
             return true;
         });
 
-    mSculkVeinCanSpreadEventListener =
-        bus->emplaceListener<hook::SculkVeinCanSpreadEvent>([](hook::SculkVeinCanSpreadEvent& ev) {
+    mSculkVeinSpreadEventListener =
+        bus->emplaceListener<hook::SculkVeinSpreadEvent>([](hook::SculkVeinSpreadEvent& ev) {
+            auto bs = ev.getBlockSource();
+            if (!bs.has_value()) return true;
+            if (bs->getDimensionId() != getPlotDimensionId()) return true;
+
             ev.cancel();
             return true; // TODO: 添加逻辑处理蔓延事件
         });
@@ -444,7 +447,7 @@ bool unRegisterEventListener() {
     bus.removeListener(mPlayerAttackEventListener);
     bus.removeListener(mPlayerPickUpItemEventListener);
     bus.removeListener(mPlayerInteractBlockEventListener);
-    bus.removeListener(mSculkVeinCanSpreadEventListener);
+    bus.removeListener(mSculkVeinSpreadEventListener);
     bus.removeListener(mSculkBlockGrowthEventListener);
     bus.removeListener(mPlayerUseItemEventListener);
 
