@@ -50,7 +50,7 @@
 
 
 #include "plotcraft/event/hook/SculkBlockGrowthEvent.h"
-#include "plotcraft/event/hook/SculkVeinSpreadEvent.h"
+#include "plotcraft/event/hook/SculkSpreadEvent.h"
 
 
 #ifdef DEBUG
@@ -376,15 +376,14 @@ bool registerEventListener() {
             return true;
         });
 
-    mSculkVeinSpreadEventListener =
-        bus->emplaceListener<hook::SculkVeinSpreadEvent>([](hook::SculkVeinSpreadEvent& ev) {
-            auto bs = ev.getBlockSource();
-            if (!bs.has_value()) return true;
-            if (bs->getDimensionId() != getPlotDimensionId()) return true;
+    mSculkVeinSpreadEventListener = bus->emplaceListener<hook::SculkSpreadEvent>([](hook::SculkSpreadEvent& ev) {
+        auto bs = ev.getBlockSource();
+        if (!bs.has_value()) return true;
+        if (bs->getDimensionId() != getPlotDimensionId()) return true;
 
-            ev.cancel();
-            return true; // TODO: 添加逻辑处理蔓延事件
-        });
+        ev.cancel();
+        return true; // TODO: 添加逻辑处理蔓延事件
+    });
 
     mSculkBlockGrowthEventListener =
         bus->emplaceListener<hook::SculkBlockGrowthEvent>([](hook::SculkBlockGrowthEvent& ev) {

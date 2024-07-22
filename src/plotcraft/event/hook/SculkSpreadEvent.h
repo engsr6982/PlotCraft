@@ -8,13 +8,13 @@
 namespace plo::event::hook {
 
 
-class SculkVeinSpreadEvent final : public ll::event::Cancellable<ll::event::Event> {
+class SculkSpreadEvent final : public ll::event::Cancellable<ll::event::Event> {
 protected:
     BlockPos const&           mPos;
     optional_ref<BlockSource> mBlockSource;
 
 public:
-    constexpr explicit SculkVeinSpreadEvent(BlockPos const& pos, optional_ref<BlockSource> blockSource)
+    constexpr explicit SculkSpreadEvent(BlockPos const& pos, optional_ref<BlockSource> blockSource)
     : Cancellable(),
       mPos(pos),
       mBlockSource(blockSource) {}

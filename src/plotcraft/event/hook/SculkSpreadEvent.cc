@@ -1,4 +1,4 @@
-#include "SculkVeinSpreadEvent.h"
+#include "SculkSpreadEvent.h"
 #include "ll/api/event/Emitter.h"
 #include "ll/api/event/EmitterBase.h"
 #include "ll/api/event/EventBus.h"
@@ -10,8 +10,8 @@
 namespace plo::event::hook {
 
 
-BlockPos const&           SculkVeinSpreadEvent::getPos() const { return mPos; }
-optional_ref<BlockSource> SculkVeinSpreadEvent::getBlockSource() const { return mBlockSource; }
+BlockPos const&           SculkSpreadEvent::getPos() const { return mPos; }
+optional_ref<BlockSource> SculkSpreadEvent::getBlockSource() const { return mBlockSource; }
 
 
 LL_STATIC_HOOK(
@@ -26,7 +26,7 @@ LL_STATIC_HOOK(
     SculkSpreader&     idk,
     Random&            random
 ) {
-    auto ev = SculkVeinSpreadEvent(pos, region);
+    auto ev = SculkSpreadEvent(pos, region);
     ll::event::EventBus::getInstance().publish(ev);
     if (ev.isCancelled()) {
         return false;
@@ -37,12 +37,12 @@ LL_STATIC_HOOK(
 
 
 static std::unique_ptr<ll::event::EmitterBase> emitterFactory(ll::event::ListenerBase&);
-class SculkVeinSpreadEventEmitter : public ll::event::Emitter<emitterFactory, SculkVeinSpreadEvent> {
+class SculkSpreadEventEmitter : public ll::event::Emitter<emitterFactory, SculkSpreadEvent> {
     ll::memory::HookRegistrar<SculkVeinSpreadEventHook> hook;
 };
 
 static std::unique_ptr<ll::event::EmitterBase> emitterFactory(ll::event::ListenerBase&) {
-    return std::make_unique<SculkVeinSpreadEventEmitter>();
+    return std::make_unique<SculkSpreadEventEmitter>();
 }
 
 
