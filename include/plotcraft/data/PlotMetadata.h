@@ -42,6 +42,18 @@ struct PlotPermissionTable {
     bool canAttack{true};         // 攻击
     bool canPickupItem{true};     // 拾取物品
     bool canInteractBlock{false}; // 与方块交互
+
+    // LSE
+    bool canFarmLandDecay{true};        // 耕地退化
+    bool canOperateFrame{false};        // 操作展示框
+    bool canMobHurt{false};             // 生物受伤
+    bool canAttackBlock{false};         // 攻击方块
+    bool canOperateArmorStand{false};   // 操作盔甲架
+    bool canDropItem{true};             // 丢弃物品
+    bool canStepOnPressurePlate{false}; // 踩压压力板
+    bool canRide{false};                // 骑乘
+    bool canWitherDestroyBlock{false};  // 凋零破坏方块
+    bool canRedStoneUpdate{true};       // 红石更新
 };
 
 

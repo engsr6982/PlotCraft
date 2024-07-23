@@ -44,7 +44,7 @@ declare class PLAPI {
   static getPlotPosByXZ(x: number, z: number): PlotPos;
 }
 
-enum PlotPermission {
+declare enum PlotPermission {
   None = 0,
   Shared = 1,
   Owner = 2,
@@ -71,4 +71,44 @@ declare class PlotPos {
   getSafestPos(): FloatPos;
 
   isPosOnBorder(pos: FloatPos): boolean;
+}
+
+declare type PlotPermissionTable = {
+  /**[LL] 破坏方块*/ canDestroyBlock: boolean;
+  /**[LL] 放置方块*/ canPlaceBlock: boolean;
+  /**[LL] 使用物品(右键)*/ canUseItemOn: boolean;
+  /**[LL] 火焰蔓延*/ canFireSpread: boolean;
+  /**[LL] 攻击*/ canAttack: boolean;
+  /**[LL] 拾取物品*/ canPickupItem: boolean;
+  /**[LL] 与方块交互*/ canInteractBlock: boolean;
+
+  /**[LSE] 耕地退化*/ canFarmLandDecay: boolean;
+  /**[LSE] 操作展示框*/ canOperateFrame: boolean;
+  /**[LSE] 生物受伤*/ canMobHurt: boolean;
+  /**[LSE] 攻击方块*/ canAttackBlock: boolean;
+  /**[LSE] 操作盔甲架*/ canOperateArmorStand: boolean;
+  /**[LSE] 丢弃物品*/ canDropItem: boolean;
+  /**[LSE] 踩压压力板*/ canStepOnPressurePlate: boolean;
+  /**[LSE] 骑乘*/ canRide: boolean;
+  /**[LSE] 凋零破坏方块*/ canWitherDestroyBlock: boolean;
+  /**[LSE] 红石更新*/ canRedStoneUpdate: boolean;
+};
+
+/**
+ * 地皮元信息类
+ */
+declare class PlotMetadata {
+  mPlotID: string;
+
+  /**
+   * 获取地皮元信息
+   * @param plotID
+   */
+  constructor(plotID: string): PlotMetadata;
+
+  /**
+   * 获取地皮权限表
+   * @returns PlotPermissionTable | null
+   */
+  getPermissionTableConst(): PlotPermissionTable | null;
 }

@@ -6,5 +6,15 @@
     "canFireSpread": "是否允许火焰蔓延",
     "canAttack": "是否允许攻击",
     "canPickupItem": "是否允许拾取物品",
-    "canInteractBlock": "是否允许与方块交互"
+    "canInteractBlock": "是否允许与方块交互",
+    "canFarmLandDecay": "耕地退化",
+    "canOperateFrame": "操作展示框",
+    "canMobHurt": "生物受伤",
+    "canAttackBlock": "攻击方块",
+    "canOperateArmorStand": "操作盔甲架",
+    "canDropItem": "丢弃物品",
+    "canStepOnPressurePlate": "踩压压力板",
+    "canRide": "骑乘",
+    "canWitherDestroyBlock": "凋零破坏方块",
+    "canRedStoneUpdate": "红石更新"
 }

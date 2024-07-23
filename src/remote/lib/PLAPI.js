@@ -1,4 +1,5 @@
 /// <reference path="D:/HelperLib/src/index.d.ts" />
+/// <reference path="./Type.d.ts" />
 
 // 使用:
 // let { PLAPI } = require("./PlotCraft/lib/PLAPI.js");
@@ -22,9 +23,12 @@ const _Remote_ = {
   PlotPos_getMax: ll.imports("PLAPI", "PlotPos_getMax"),
   getPlotPosByPos: ll.imports("PLAPI", "getPlotPosByPos"),
   getPlotPosByXZ: ll.imports("PLAPI", "getPlotPosByXZ"),
+  PlotMetadata_getPermissionTableConst: ll.imports(
+    "PLAPI",
+    "PlotMetadata_getPermissionTableConst"
+  ),
 };
 
-// PLAPI 类
 class PLAPI {
   /**
    * 获取地皮世界维度 ID
@@ -59,11 +63,7 @@ class PLAPI {
    * @param {boolean} ignoreAdmin 忽略管理员
    * @returns {0|1|2|3} 无权限 | 共享者 | 所有者 | 管理员
    */
-  static getPlayerPermission(
-    uuid,
-    plotID,
-    ignoreAdmin = false
-  ) {
+  static getPlayerPermission(uuid, plotID, ignoreAdmin = false) {
     return _Remote_.getPlayerPermission(uuid, plotID, ignoreAdmin);
   }
 
@@ -94,6 +94,11 @@ class PlotPos {
    * @param {Array<number>} constructorArgs 构造参数
    */
   constructor(constructorArgs) {
+    if (constructorArgs.length !== 3) {
+      throw new Error(
+        "PlotPos constructor args length error, Please from PLAPI.getPlotPosByPos or PLAPI.getPlotPosByXZ"
+      );
+    }
     this.x = constructorArgs[0]; // x
     this.z = constructorArgs[1]; // z
     this.mIsVaild = constructorArgs[2]; // 是否有效
@@ -165,7 +170,20 @@ class PlotPos {
   }
 }
 
+class PlotMetadata {
+  constructor(plotID) {
+    this.mPlotID = plotID;
+  }
+
+  getPermissionTableConst() {
+    let dt = _Remote_.PlotMetadata_getPermissionTableConst(this.mPlotID);
+    if (dt == "") return null;
+    return JSON.parse(dt);
+  }
+}
+
 module.exports = {
   PLAPI,
   PlotPos,
+  PlotMetadata,
 };

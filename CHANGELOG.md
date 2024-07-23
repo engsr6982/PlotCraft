@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.6.0] - 2024-07-20
+## [0.6.0] - 2024-07-23
 
 ### Added:
 
@@ -14,11 +14,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 配置文件 `eventListener` 新增 `onSculkBlockGrowthListener` 事件开关
 - 配置文件 `eventListener` 新增 `onUseItemOnWhiteList` 配置
 - 事件系统 新增 `SculkBlockGrowthEvent`、`SculkSpreadEvent` 事件
+- RemoteCall 新增 `PlotMetadata.getPermissionTableConst` API
 
 ### Changed
 
 - 命令 `/plo plot` 更改为 `/plo this`
 - 命令新增 `setting`、`mgr` 重载
+- 支持自定义地皮权限（对访客）
 
 ### Fixed
 

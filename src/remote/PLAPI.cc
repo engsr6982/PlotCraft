@@ -2,6 +2,7 @@
 #include "Remote.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "plotcraft/data/PlotBDStorage.h"
+#include "plotcraft/utils/JsonHelper.h"
 
 namespace plo::remote {
 
@@ -65,6 +66,17 @@ void exportPLAPI() {
         auto&          db   = data::PlotBDStorage::getInstance();
         PlotPermission perm = db.getPlayerPermission(uuid, pid, ignoreAdmin);
         return static_cast<int>(perm);
+    });
+
+    exportAs(sp, "PlotMetadata_getPermissionTableConst", [](PlotID const& pid) -> string {
+        auto& db = data::PlotBDStorage::getInstance();
+        if (db.hasPlot(pid)) {
+            auto meta = db.getPlot(pid);
+            if (meta) {
+                return utils::JsonHelper::structToJsonString(meta->getPermissionTableConst());
+            }
+        }
+        return "";
     });
 }
 
