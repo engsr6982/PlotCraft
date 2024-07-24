@@ -7,8 +7,7 @@
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/server/ServerStartedEvent.h"
 #include "ll/api/i18n/I18n.h"
-#include "ll/api/plugin/NativePlugin.h"
-#include "ll/api/plugin/RegisterHelper.h"
+#include "ll/api/mod/RegisterHelper.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/server/ServerLevel.h"
 #include "mc/server/commands/CommandContext.h"
@@ -120,4 +119,4 @@ bool MyPlugin::disable() {
 
 } // namespace my_plugin
 
-LL_REGISTER_PLUGIN(my_plugin::MyPlugin, my_plugin::instance);
+LL_REGISTER_MOD(my_plugin::MyPlugin, my_plugin::instance);

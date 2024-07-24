@@ -6,9 +6,9 @@ add_repositories("liteldev-repo https://github.com/LiteLDev/xmake-repo.git")
 -- add_requires("levilamina develop") to use develop version
 -- please note that you should add bdslibrary yourself if using dev version
 add_requires(
-    "levilamina 0.13.3",
+    "levilamina 0.13.4",
     "sqlitecpp 3.2.1",
-    "legacymoney 0.8.1"
+    "legacymoney 0.8.2"
 )
 
 if not has_config("vs_runtime") then
@@ -16,11 +16,11 @@ if not has_config("vs_runtime") then
 end
 
 if get_config("overworld") == false then 
-    add_requires("more-dimensions 0.4.0")
+    add_requires("more-dimensions 0.4.1")
 end 
 
 if get_config("remote") == true then
-    add_requires("legacyremotecall 0.8.1")
+    add_requires("legacyremotecall 0.8.2")
 end 
 
 option("gen") -- Generator
