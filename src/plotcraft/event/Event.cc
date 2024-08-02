@@ -344,7 +344,7 @@ bool registerEventListener() {
             if (lv == PlotPermission::Admin || !valid) return true; // 管理员或地皮外
 
             auto const meta = pdb->getPlot(pps.getPlotID());
-            if (lv == PlotPermission::None && !meta->getPermissionTableConst().canAttack) e.cancel();
+            if (meta && lv == PlotPermission::None && !meta->getPermissionTableConst().canAttack) e.cancel();
             return true;
         });
 
