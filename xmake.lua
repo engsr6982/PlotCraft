@@ -31,7 +31,7 @@ option("overworld") -- Overworld
     set_default(false)
 
 option("remote") -- RemoteCall
-    set_default(true)
+    set_default(false)
 
 
 target("PlotCraft")
