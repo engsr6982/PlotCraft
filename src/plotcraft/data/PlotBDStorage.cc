@@ -147,6 +147,10 @@ bool PlotBDStorage::delAdmin(UUID const& uuid) {
 std::vector<UUID> PlotBDStorage::getAdmins() const { return mAdmins; }
 
 
+// Plots
+bool PlotBDStorage::isMergedPlot(PlotID const& id) const { return mMergedPlotMap.find(id) != mMergedPlotMap.end(); }
+
+
 bool PlotBDStorage::hasPlot(PlotID const& id) const { return mPlots.find(id) != mPlots.end(); }
 
 bool PlotBDStorage::delPlot(PlotID const& id) {

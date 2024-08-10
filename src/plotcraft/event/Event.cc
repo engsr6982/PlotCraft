@@ -121,7 +121,7 @@ void buildTipMessage(Player& p, PlotPos const& pps, PlayerNameDB* ndb, PlotBDSto
                 plot->getPlotName(),
                 owner.empty() ? "§a✔§r" : plot->isSale() ? "§a✔§r" : "§c✘§r",
                 owner.empty() ? config::cfg.plotWorld.buyPlotPrice : plot->isSale() ? plot->getSalePrice() : 0,
-                owner.empty() ? "\n输入：/plo plot 打开购买菜单" : ""
+                owner.empty() ? "\n输入：/plo buy 打开购买菜单" : ""
             );
             // clang-format on
         } else pkt.mMessage = fmt::format("{0} | 地皮世界\n输入: /plo 打开地皮菜单", PLUGIN_TITLE); // Tip3

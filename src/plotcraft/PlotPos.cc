@@ -106,25 +106,14 @@ PlotPos::PlotPos(const Vec3& vec3) {
 #endif
 }
 
-
-Vec3 PlotPos::getSafestPos() const {
-    auto& cfg = config::cfg.generator;
-    int   y   = -64 + (cfg.subChunkNum * 16) + 2;
-    return Vec3{minPos.x, y, minPos.z};
-}
-
-bool PlotPos::isValid() const { return mIsValid; }
-
-Vec3 PlotPos::getMin() const { return minPos; }
-
-Vec3 PlotPos::getMax() const { return maxPos; }
-
+int    PlotPos::getSurfaceY() const { return -64 + (config::cfg.generator.subChunkNum * 16); }
+Vec3   PlotPos::getSafestPos() const { return Vec3{minPos.x, getSurfaceY() + 1, minPos.z}; }
+bool   PlotPos::isValid() const { return mIsValid; }
+Vec3   PlotPos::getMin() const { return minPos; } // deprecated
+Vec3   PlotPos::getMax() const { return maxPos; } // deprecated
 string PlotPos::toString() const { return fmt::format("({0},{1})", x, z); }
 string PlotPos::getPlotID() const { return toString(); }
 
-string PlotPos::toDebug() const {
-    return fmt::format("{0} | {1} => {2}", toString(), minPos.toString(), maxPos.toString());
-}
 
 bool PlotPos::isPosInPlot(const Vec3& vec3) const {
     return vec3.x >= minPos.x && vec3.x <= maxPos.x && vec3.z >= minPos.z && vec3.z <= maxPos.z;
@@ -161,11 +150,132 @@ void PlotPos::tryFixMinAndMaxPos() {
     if (minPos.z > maxPos.z) std::swap(minPos.z, maxPos.z);
 }
 
-
+string PlotPos::toDebug() const {
+#if !defined(DEBUG)
+    return fmt::format("{0} | {1} => {2}", toString(), minPos.toString(), maxPos.toString());
+#else
+    PlotPos ps(1, 0); // (1,0)
+    auto    r = PlotPos::getAdjacentPlotRoad(*this, ps);
+    return fmt::format(
+        "{0} | {1} => {2}\n相邻: {3}  |  {4} => {5}\n道路: {6} => {7}",
+        toString(),
+        minPos.toString(),
+        maxPos.toString(),
+        PlotPos::isAdjacent(*this, ps),
+        toString(),
+        ps.toString(),
+        r.first.toString(),
+        r.second.toString()
+    );
+#endif
+}
 bool PlotPos::operator!=(PlotPos const& other) const { return !(*this == other); }
 bool PlotPos::operator==(PlotPos const& other) const {
     return other.x == x && other.z == z && other.mIsValid == mIsValid && other.minPos == minPos
         && other.maxPos == maxPos;
+}
+
+
+DiagonPos PlotPos::getDiagonPos() const { return DiagonPos{minPos, maxPos}; }
+DiagonPos PlotPos::getBorderDiagonPos(Direction direction) const {
+    int y = getSurfaceY();
+    switch (direction) {
+    case Direction::North:
+        return DiagonPos{
+            Vec3{minPos.x, y, minPos.z}, // 0,0,0
+            Vec3{maxPos.x, y, minPos.z}  // 127,0,0
+        };
+    case Direction::East:
+        return DiagonPos{
+            Vec3{maxPos.x, y, minPos.z}, // 127,0,0
+            Vec3{maxPos.x, y, maxPos.z}  // 127,0,127
+        };
+    case Direction::South:
+        return DiagonPos{
+            Vec3{minPos.x, y, maxPos.z}, // 0,0,127
+            Vec3{maxPos.z, y, maxPos.z}  // 127,0,127
+        };
+    case Direction::West:
+        return DiagonPos{
+            Vec3{minPos.x, y, minPos.z}, // 0,0,0
+            Vec3{minPos.x, y, maxPos.z}  // 0,0,127
+        };
+    }
+}
+
+
+// static
+bool PlotPos::isAdjacent(const PlotPos& plot1, const PlotPos& plot2) {
+    int dx = std::abs(plot1.x - plot2.x);
+    int dz = std::abs(plot1.z - plot2.z);
+
+    // 两个地皮相邻的条件:
+    // 1. x坐标相同,z坐标相差1,或者
+    // 2. z坐标相同,x坐标相差1
+    // 3. 两个地皮都是有效的
+    return ((dx == 0 && dz == 1) || (dx == 1 && dz == 0)) && (plot1.mIsValid && plot2.mIsValid);
+}
+DiagonPos PlotPos::getAdjacentPlotRoad(const PlotPos& plot1, const PlotPos& plot2) {
+    if (!isAdjacent(plot1, plot2)) {
+        // 如果两个地皮不相邻,返回无效的对角坐标
+        return DiagonPos{
+            Vec3{0, 0, 0},
+            Vec3{0, 0, 0}
+        };
+    }
+
+    auto& cfg = config::cfg.generator;
+    int   y   = plot1.getSurfaceY();
+
+#ifdef GEN_1
+    int totalSize = cfg.plotWidth + cfg.roadWidth;
+
+    if (plot1.x == plot2.x) {
+        // 地皮在同一列,道路是水平的
+        int minZ = std::min(plot1.z, plot2.z) * totalSize + cfg.plotWidth;
+        int maxZ = minZ + cfg.roadWidth;
+        int x    = plot1.x * totalSize;
+        return DiagonPos{
+            Vec3{x,                     y, minZ - 1},
+            Vec3{x + cfg.plotWidth - 1, y, maxZ    }
+        };
+    } else {
+        // 地皮在同一行,道路是垂直的
+        int minX = std::min(plot1.x, plot2.x) * totalSize + cfg.plotWidth;
+        int maxX = minX + cfg.roadWidth;
+        int z    = plot1.z * totalSize;
+        return DiagonPos{
+            Vec3{minX - 1, y, z                    },
+            Vec3{maxX,     y, z + cfg.plotWidth - 1}
+        };
+    }
+#endif
+
+#ifdef GEN_2
+    // TODO: 验证此方法是否正确
+    int totalSize = cfg.plotChunkSize * 16;
+    int roadWidth = 2; // 固定道路宽度为2
+
+    if (plot1.x == plot2.x) {
+        // 地皮在同一列,道路是水平的
+        int minZ = std::min(plot1.z, plot2.z) * totalSize + totalSize - 1;
+        int maxZ = minZ + roadWidth;
+        int x    = plot1.x * totalSize + 1;
+        return DiagonPos{
+            Vec3{x,                 y, minZ    },
+            Vec3{x + totalSize - 3, y, maxZ - 1}
+        };
+    } else {
+        // 地皮在同一行,道路是垂直的
+        int minX = std::min(plot1.x, plot2.x) * totalSize + totalSize - 1;
+        int maxX = minX + roadWidth;
+        int z    = plot1.z * totalSize + 1;
+        return DiagonPos{
+            Vec3{minX,     y, z                },
+            Vec3{maxX - 1, y, z + totalSize - 3}
+        };
+    }
+#endif
 }
 
 } // namespace plo

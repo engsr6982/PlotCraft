@@ -2,11 +2,21 @@
 #include "mc/math/Vec3.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/Macro.h"
+#include <utility>
 
 namespace plo {
 
 // Disable C4244
 #pragma warning(disable : 4244)
+
+enum class Direction : int {
+    North = 0, // 北
+    East  = 1, // 东
+    South = 2, // 南
+    West  = 3  // 西
+};
+
+using DiagonPos = std::pair<Vec3, Vec3>;
 
 class PlotPos {
 public:
@@ -21,9 +31,8 @@ public:
 
     PLAPI bool isValid() const;
 
-    PLAPI Vec3 getMin() const;
-
-    PLAPI Vec3 getMax() const;
+    [[deprecated]] PLAPI Vec3 getMin() const;
+    [[deprecated]] PLAPI Vec3 getMax() const;
 
     PLAPI string toString() const;
 
@@ -43,6 +52,20 @@ public:
 
     PLAPI bool operator==(PlotPos const& other) const;
     PLAPI bool operator!=(PlotPos const& other) const;
+
+    PLAPI int getSurfaceY() const; // 获取地皮地表Y坐标
+
+    PLAPI DiagonPos getDiagonPos() const;
+
+    PLAPI DiagonPos getBorderDiagonPos(Direction direction) const; // 获取地皮边框对角坐标
+
+
+    // static
+    // 是否是相邻地皮
+    PLAPI static bool isAdjacent(PlotPos const& plot1, PlotPos const& plot2);
+
+    // 获取相邻地皮的道路对角坐标
+    PLAPI static DiagonPos getAdjacentPlotRoad(PlotPos const& plot1, PlotPos const& plot2);
 };
 
 

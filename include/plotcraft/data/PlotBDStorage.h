@@ -30,6 +30,8 @@ private:
     std::unordered_map<PlotID, PlotMetadataPtr> mPlots;          // 地皮
     std::unordered_map<UUID, PlayerSettingItem> mPlayerSettings; // 玩家设置
 
+    std::unordered_map<PlotID, PlotID> mMergedPlotMap; // 合并的地皮
+
 public:
     PlotBDStorage()                                = default;
     PlotBDStorage(const PlotBDStorage&)            = delete;
@@ -54,6 +56,8 @@ public:
     PLAPI std::vector<UUID> getAdmins() const;
 
     // Plots
+    PLAPI bool isMergedPlot(PlotID const& id) const;
+
     PLAPI bool hasPlot(const PlotID& id) const;
 
     PLAPI bool delPlot(const PlotID& id);
