@@ -1,5 +1,4 @@
 #include "plotcraft/data/PlotBDStorage.h"
-#include "SQLiteCpp/Database.h"
 #include "ll/api/data/KeyValueDB.h"
 #include "nlohmann/json_fwd.hpp"
 #include "plotcraft/utils/Date.h"
@@ -11,8 +10,6 @@
 #include <thread>
 #include <vector>
 
-
-#include "SQLiteCpp/SQLiteCpp.h"
 
 #ifdef DEBUG
 #define debugger(...) std::cout << "[Debug] " << __VA_ARGS__ << std::endl;
@@ -58,7 +55,6 @@ void PlotBDStorage::load() {
     mAdmins.clear();
     mPlots.clear();
     initKey();
-    tryConvertOldDB();
 
     // Load data from database
     auto* logger = &my_plugin::MyPlugin::getInstance().getSelf().getLogger();
@@ -128,97 +124,6 @@ void PlotBDStorage::initKey() {
     }
     if (!mDB->has(DB_PlotAdminsKey)) {
         mDB->set(DB_PlotAdminsKey, "[]");
-    }
-}
-
-namespace fs = std::filesystem;
-
-void PlotBDStorage::tryConvertOldDB() {
-    auto& mSelf  = my_plugin::MyPlugin::getInstance().getSelf();
-    auto& logger = mSelf.getLogger();
-
-    fs::path oldSQLitePath     = mSelf.getDataDir() / "PlotCraft.db";
-    fs::path reNamedSQLitePath = mSelf.getDataDir() / "PlotCraft.db.bak";
-    if (!fs::exists(oldSQLitePath)) return;
-    fs::rename(oldSQLitePath, reNamedSQLitePath);
-
-    logger.warn("[Convert] 检测到旧数据库文件，尝试转换到LevelDB...");
-
-    try {
-        SQLite::Database sptr(reNamedSQLitePath, SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE);
-
-        // PlotAdmins
-        SQLite::Statement query(sptr, "SELECT * FROM PlotAdmins");
-        while (query.executeStep()) {
-            auto uuid = query.getColumn(0).getText();
-            mAdmins.push_back(UUID(uuid));
-        }
-        logger.info("[Convert] [PlotAdmins] 转换完成，共计 {} 条数据。", mAdmins.size());
-
-        // Plots
-        SQLite::Statement query2(sptr, "SELECT * FROM Plots");
-        while (query2.executeStep()) {
-            auto id    = query2.getColumn(0).getText();
-            auto name  = query2.getColumn(1).getText();
-            auto owner = query2.getColumn(2).getText();
-            auto x     = query2.getColumn(3).getInt();
-            auto z     = query2.getColumn(4).getInt();
-            auto ptr   = PlotMetadata::make(id, owner, name, x, z);
-            mPlots[id] = ptr;
-        }
-        logger.info("[Convert] [Plots] 转换完成，共计 {} 条数据。", mPlots.size());
-
-        // PlotShares
-        SQLite::Statement query3(sptr, "SELECT * FROM PlotShares");
-        while (query3.executeStep()) {
-            auto plotID       = query3.getColumn(0).getText();
-            auto sharedPlayer = query3.getColumn(1).getText();
-            auto sharedTime   = query3.getColumn(2).getText();
-
-            auto ptr = getPlot(plotID);
-            if (ptr) {
-                ptr->mSharedPlayers.push_back({sharedPlayer, sharedTime});
-            } else logger.warn("[Convert] [PlotShares] 未找到 {} 对应的地皮实例。", plotID);
-        }
-        logger.info("[Convert] [PlotShares] 转换完成，共计 {} 条数据。", mPlots.size());
-
-        // PlotCommenets
-        SQLite::Statement query4(sptr, "SELECT * FROM PlotCommenets");
-        while (query4.executeStep()) {
-            auto id      = query4.getColumn(0).getInt();
-            auto plotID  = query4.getColumn(1).getText();
-            auto player  = query4.getColumn(2).getText();
-            auto time    = query4.getColumn(3).getText();
-            auto content = query4.getColumn(4).getText();
-
-            auto ptr = getPlot(plotID);
-            if (ptr) {
-                ptr->mComments.push_back({id, player, time, content});
-            } else logger.warn("[Convert] [PlotCommenets] 未找到 {} 对应的地皮实例。", plotID);
-        }
-        logger.info("[Convert] [PlotCommenets] 转换完成，共计 {} 条数据。", mPlots.size());
-
-        // PlotSales
-        SQLite::Statement query5(sptr, "SELECT * FROM PlotSales");
-        while (query5.executeStep()) {
-            auto plotID = query5.getColumn(0).getText();
-            auto price  = query5.getColumn(1).getInt();
-            // auto time   = query5.getColumn(2); // 废弃
-
-            auto ptr = getPlot(plotID);
-            if (ptr) {
-                ptr->setSaleStatus(true, price);
-            } else logger.warn("[Convert] [PlotSales] 未找到 {} 对应的地皮实例。", plotID);
-        }
-        logger.info("[Convert] [PlotSales] 转换完成，共计 {} 条数据。", mPlots.size());
-
-        logger.info("[Convert] 转换完成，旧数据库文件已备份至 {}", reNamedSQLitePath);
-    } catch (SQLite::Exception const& e) {
-        logger.error("[Convert] 转换旧数据库失败，SQLite::Exception: {}", e.what());
-    } catch (std::exception const& e) {
-        logger.error("[Convert] 转换旧数据库失败，std::exception: {}", e.what());
-    } catch (...) {
-        logger.error("[Convert] 转换旧数据库失败，未知错误");
     }
 }
 

@@ -46,8 +46,6 @@ public:
 
     PLAPI void initKey();
 
-    PLAPI void tryConvertOldDB();
-
     // Admins
     PLAPI bool hasAdmin(const UUID& uuid) const;
     PLAPI bool isAdmin(const UUID& uuid) const;
