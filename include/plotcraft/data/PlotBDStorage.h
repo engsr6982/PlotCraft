@@ -56,7 +56,11 @@ public:
     PLAPI std::vector<UUID> getAdmins() const;
 
     // Plots
-    PLAPI bool isMergedPlot(PlotID const& id) const;
+    PLAPI bool   isMergedPlot(PlotID const& id) const;
+    PLAPI PlotID getOwnerPlotFromMergeMap(PlotID const& id) const;
+
+    PLAPI bool archiveAndReleasePlot(PlotID const& id);             // TODO: 归档并释放地皮
+    PLAPI bool mergePlot(PlotID const& sour, PlotID const& target); // TODO: 合并地皮(sour => target)
 
     PLAPI bool hasPlot(const PlotID& id) const;
 

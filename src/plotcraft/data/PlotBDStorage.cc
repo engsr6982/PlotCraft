@@ -43,12 +43,17 @@ PlotBDStorage&        PlotBDStorage::getInstance() {
 
 #define DB_PlayerSettingsKey "PlayerSettings"
 #define DB_PlotAdminsKey     "PlotAdmins"
+#define DB_MergedMapKey      "MergedMap"
+#define DB_ArchivedPrefix    "Archived_" // Archived_(0,1)
 void PlotBDStorage::_initKey() {
     if (!mDB->has(DB_PlayerSettingsKey)) {
         mDB->set(DB_PlayerSettingsKey, "{}");
     }
     if (!mDB->has(DB_PlotAdminsKey)) {
         mDB->set(DB_PlotAdminsKey, "[]");
+    }
+    if (!mDB->has(DB_MergedMapKey)) {
+        mDB->set(DB_MergedMapKey, "{}");
     }
 }
 
@@ -85,7 +90,10 @@ void PlotBDStorage::load() {
                     mPlayerSettings[UUID(uuid)] = it;
                 }
 
-            } else logger->warn("Unknown key in PlotBDStorage: {}", key);
+            } else if (key == DB_MergedMapKey) {
+                auto j = nlohmann::json::parse(value);
+                JsonHelper::jsonToStructNoMerge(j, mMergedPlotMap);
+            }
         } catch (std::exception const& e) {
             logger->error("Fail in {}, error key: {}\n{}", __func__, key, e.what());
         } catch (...) {
@@ -119,6 +127,9 @@ void PlotBDStorage::save() {
         }
         mDB->set(DB_PlayerSettingsKey, j.dump());
     }
+
+    // MergedMap
+    mDB->set(DB_MergedMapKey, JsonHelper::structToJson(mMergedPlotMap).dump());
 }
 
 
@@ -148,8 +159,14 @@ std::vector<UUID> PlotBDStorage::getAdmins() const { return mAdmins; }
 
 
 // Plots
-bool PlotBDStorage::isMergedPlot(PlotID const& id) const { return mMergedPlotMap.find(id) != mMergedPlotMap.end(); }
-
+bool   PlotBDStorage::isMergedPlot(PlotID const& id) const { return mMergedPlotMap.find(id) != mMergedPlotMap.end(); }
+PlotID PlotBDStorage::getOwnerPlotFromMergeMap(PlotID const& id) const {
+    auto it = mMergedPlotMap.find(id);
+    if (it == mMergedPlotMap.end()) {
+        return "";
+    }
+    return it->second;
+}
 
 bool PlotBDStorage::hasPlot(PlotID const& id) const { return mPlots.find(id) != mPlots.end(); }
 
