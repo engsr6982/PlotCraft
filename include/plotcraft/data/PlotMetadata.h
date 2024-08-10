@@ -64,13 +64,15 @@ public:
 
     // private:
     PlotID mPlotID;
-    string mPlotName  = "";
-    UUID   mPlotOwner = "";
+    string mPlotName{""};
+    UUID   mPlotOwner{""};
     int    mPlotX;
     int    mPlotZ;
 
-    bool mIsSale = false; // 是否出售
-    int  mPrice  = 0;     // 出售价格
+    bool mIsSale{false}; // 是否出售
+    int  mPrice{0};      // 出售价格
+
+    int  mMergedCount{0};      // 合并计数
 
     PlotPermissionTable mPermissionTable; // 权限表
 
@@ -87,6 +89,11 @@ public:
 
 
     // APIs:
+    PLAPI bool isMergedPlot() const;
+    PLAPI bool setMergedCount(int mergedCount);
+    PLAPI int  getMergedCount() const;
+
+
     PLAPI bool isOwner(UUID const& uuid) const;
 
     PLAPI bool setPlotName(string const& name);
