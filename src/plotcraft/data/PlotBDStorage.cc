@@ -4,7 +4,6 @@
 #include "plotcraft/utils/Date.h"
 #include "plotcraft/utils/JsonHelper.h"
 #include "plugin/MyPlugin.h"
-#include <filesystem>
 #include <memory>
 #include <stdexcept>
 #include <thread>
@@ -27,24 +26,32 @@ void PlotBDStorage::tryStartSaveThread() {
     isStarted = true;
     std::thread([this]() {
         while (true) {
-            debugger(" [" << Date{}.toString() << "] Saveing...");
+            debugger("[" << Date{}.toString() << "] Saveing...");
             this->save();
-            debugger(" [" << Date{}.toString() << "] Save done.");
+            debugger("[" << Date{}.toString() << "] Save done.");
             std::this_thread::sleep_for(std::chrono::minutes(2));
         }
     }).detach();
 }
 
-PlotBDStorage& PlotBDStorage::getInstance() {
+ll::data::KeyValueDB& PlotBDStorage::getDB() { return *mDB; }
+PlotBDStorage&        PlotBDStorage::getInstance() {
     static PlotBDStorage instance;
     return instance;
 }
 
-ll::data::KeyValueDB& PlotBDStorage::getDB() { return *mDB; }
-
 
 #define DB_PlayerSettingsKey "PlayerSettings"
 #define DB_PlotAdminsKey     "PlotAdmins"
+void PlotBDStorage::_initKey() {
+    if (!mDB->has(DB_PlayerSettingsKey)) {
+        mDB->set(DB_PlayerSettingsKey, "{}");
+    }
+    if (!mDB->has(DB_PlotAdminsKey)) {
+        mDB->set(DB_PlotAdminsKey, "[]");
+    }
+}
+
 
 void PlotBDStorage::load() {
     if (!mDB) {
@@ -54,7 +61,7 @@ void PlotBDStorage::load() {
     }
     mAdmins.clear();
     mPlots.clear();
-    initKey();
+    _initKey();
 
     // Load data from database
     auto* logger = &my_plugin::MyPlugin::getInstance().getSelf().getLogger();
@@ -68,9 +75,7 @@ void PlotBDStorage::load() {
 
             } else if (key == DB_PlotAdminsKey) {
                 auto j = nlohmann::json::parse(value);
-                for (auto const& uuid : j) {
-                    this->mAdmins.push_back(UUID(uuid.get<std::string>()));
-                }
+                JsonHelper::jsonToStructNoMerge(j, mAdmins);
 
             } else if (key == DB_PlayerSettingsKey) {
                 auto j = nlohmann::json::parse(value);
@@ -95,20 +100,18 @@ void PlotBDStorage::load() {
 }
 
 void PlotBDStorage::save(PlotMetadata const& plot) {
-    auto j = JsonHelper::structToJson(plot);
-    mDB->set(plot.getPlotID(), j.dump());
+    mDB->set(plot.getPlotID(), JsonHelper::structToJson(plot).dump());
 }
-
 void PlotBDStorage::save() {
-    // Save PlotMetadata
+    // PlotMetadata
     for (auto const& [id, ptr] : mPlots) {
         save(*ptr);
     }
 
-    // Save PlotAdmins
+    // PlotAdmins
     mDB->set(DB_PlotAdminsKey, JsonHelper::structToJson(mAdmins).dump());
 
-    // Save PlayerSettings
+    // PlayerSettings
     {
         nlohmann::json j = nlohmann::json::object();
         for (auto const& [uuid, settings] : mPlayerSettings) {
@@ -118,20 +121,10 @@ void PlotBDStorage::save() {
     }
 }
 
-void PlotBDStorage::initKey() {
-    if (!mDB->has(DB_PlayerSettingsKey)) {
-        mDB->set(DB_PlayerSettingsKey, "{}");
-    }
-    if (!mDB->has(DB_PlotAdminsKey)) {
-        mDB->set(DB_PlotAdminsKey, "[]");
-    }
-}
-
 
 bool PlotBDStorage::hasAdmin(UUID const& uuid) const {
     return std::find(mAdmins.begin(), mAdmins.end(), uuid) != mAdmins.end();
 }
-
 bool PlotBDStorage::isAdmin(UUID const& uuid) const { return hasAdmin(uuid); }
 
 bool PlotBDStorage::addAdmin(UUID const& uuid) {

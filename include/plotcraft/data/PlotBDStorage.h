@@ -44,7 +44,7 @@ public:
 
     PLAPI void tryStartSaveThread(); // 启动自动保存线程
 
-    PLAPI void initKey();
+    PLAPI void _initKey();
 
     // Admins
     PLAPI bool hasAdmin(const UUID& uuid) const;
