@@ -28,7 +28,7 @@ PlotPos::PlotPos() : x(0), z(0), mIsValid(false) {
     minPos = Vec3{0, 0, 0};
     maxPos = Vec3{0, 0, 0};
 }
-
+ 
 PlotPos::PlotPos(int x, int z) : x(x), z(z) {
 #ifdef GEN_1
     // Generator 1

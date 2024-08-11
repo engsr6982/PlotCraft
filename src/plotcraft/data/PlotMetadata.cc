@@ -31,13 +31,6 @@ PlotMetadataPtr PlotMetadata::make() { return make(PlotID{}, UUID{}, "", 0, 0); 
 
 
 // API
-bool PlotMetadata::isMergedPlot() const { return mMergedCount != 0; }
-int  PlotMetadata::getMergedCount() const { return mMergedCount; }
-bool PlotMetadata::setMergedCount(int count) {
-    mMergedCount = count;
-    return true;
-}
-
 bool PlotMetadata::isOwner(UUID const& uuid) const { return mPlotOwner == uuid; }
 
 bool PlotMetadata::setPlotName(string const& name) {
