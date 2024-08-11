@@ -85,5 +85,8 @@ void _buyPlot(Player& player, PlotMetadataPtr pt);
 // PluginSettingGUI.cc
 void PluginSettingGUI(Player& player);
 
+// PlotMergeGUI.cc
+void PlotMergeGUI(Player& player);
+
 
 } // namespace plo::gui

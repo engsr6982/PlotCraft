@@ -49,5 +49,14 @@ void updateConfig() {
     }
 }
 
+double calculateMergePlotPrice(int mergeCount) {
+    if (mergeCount <= 0) {
+        return cfg.plotWorld.baseMergePlotPrice;
+    }
+
+    double multiplier = std::max(1.0, cfg.plotWorld.mergePriceMultiplier);
+    return cfg.plotWorld.baseMergePlotPrice * std::pow(multiplier, mergeCount);
+}
+
 
 } // namespace plo::config

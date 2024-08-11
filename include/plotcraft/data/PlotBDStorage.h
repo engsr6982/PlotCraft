@@ -1,6 +1,7 @@
 #pragma once
 #include "ll/api/data/KeyValueDB.h"
 #include "plotcraft/Macro.h"
+#include "plotcraft/PlotPos.h"
 #include "plotcraft/Version.h"
 #include "plotcraft/data/PlotMetadata.h"
 #include <cstddef>
@@ -11,7 +12,6 @@
 
 
 using string = std::string;
-class PlotPos;
 
 namespace plo::data {
 
@@ -74,7 +74,7 @@ public:
     PLAPI PlotMergedInfo&       getMergedPlotInfo(PlotID const& id);
     PLAPI PlotMergedInfo const& getMergedPlotInfoConst(PlotID const& id) const;
 
-    PLAPI bool tryMergePlot(PlotID const& sour, PlotID const& target);
+    PLAPI bool tryMergePlot(PlotPos& sour, PlotPos& target);
 
     PLAPI bool archivePlot(PlotID const& id);
 

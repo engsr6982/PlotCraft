@@ -54,6 +54,10 @@ struct _Config {
 
         bool spawnMob = false; // 地皮世界是否生成生物
 
+        int    maxMergePlotCount    = 4;    // 最大合并地皮数量
+        int    baseMergePlotPrice   = 1000; // 基础合并地皮价格
+        double mergePriceMultiplier = 1.1;  // 合并价格倍率，默认为1.0（保持基础价格不变）
+
         struct EventListener {
             bool onSculkSpreadListener{true};
             bool onSculkBlockGrowthListener{true};
@@ -70,5 +74,7 @@ PLAPI extern _Config cfg;
 PLAPI void loadConfig();
 
 PLAPI void updateConfig();
+
+PLAPI double calculateMergePlotPrice(int mergeCount);
 
 } // namespace plo::config

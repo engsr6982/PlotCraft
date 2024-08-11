@@ -4,6 +4,7 @@
 #include "plotcraft/Config.h"
 #include <cmath>
 
+#include "plotcraft/data/PlotBDStorage.h"
 
 namespace plo {
 
@@ -28,17 +29,27 @@ PlotPos::PlotPos() : x(0), z(0), mIsValid(false) {
     minPos = Vec3{0, 0, 0};
     maxPos = Vec3{0, 0, 0};
 }
- 
+
 PlotPos::PlotPos(int x, int z) : x(x), z(z) {
-#ifdef GEN_1
+    // 兼容地皮合并
+    auto const& db = data::PlotBDStorage::getInstance();
+    auto        id = getPlotID();
+
+    if (db.isMergedPlot(id)) id = db.getOwnerPlotID(id);
+    if (db.hasMergedPlotInfo(id)) {
+        auto const& info = db.getMergedPlotInfoConst(id);
+        minPos           = Vec3{info.mMinX, -64, info.mMinZ};
+        maxPos           = Vec3{info.mMaxX, 320, info.mMaxZ};
+        return;
+    }
+
+#if defined(GEN_1)
     // Generator 1
     auto& cfg       = config::cfg.generator;
     int   totalSize = cfg.plotWidth + cfg.roadWidth;
     minPos          = Vec3{x * totalSize, -64, z * totalSize};
     maxPos          = Vec3{minPos.x + cfg.plotWidth - 1, 320, minPos.z + cfg.plotWidth - 1};
-#endif
-
-#ifdef GEN_2
+#elif defined(GEN_2)
     // Generator 2
     auto& cfg       = config::cfg.generator;
     int   totalSize = cfg.plotChunkSize * 16; // 地皮大小，含道路宽度 (3*16=48)
@@ -52,24 +63,34 @@ PlotPos::PlotPos(const Vec3& vec3) {
     // Generator 1
     auto& cfg       = config::cfg.generator;
     int   totalSize = cfg.plotWidth + cfg.roadWidth;
-    int   gridX     = std::floor(vec3.x / totalSize);
-    int   gridZ     = std::floor(vec3.z / totalSize);
-    int   localX    = static_cast<int>(std::floor(vec3.x)) % totalSize;
-    int   localZ    = static_cast<int>(std::floor(vec3.z)) % totalSize;
+
+    x = std::floor(vec3.x / totalSize);
+    z = std::floor(vec3.z / totalSize);
+
+    // 兼容地皮合并
+    auto const& db = data::PlotBDStorage::getInstance();
+    auto        id = getPlotID();
+    if (db.isMergedPlot(id)) id = db.getOwnerPlotID(id);
+    if (db.hasMergedPlotInfo(id)) {
+        auto const& info = db.getMergedPlotInfoConst(id);
+        minPos           = Vec3{info.mMinX, -64, info.mMinZ};
+        maxPos           = Vec3{info.mMaxX, 320, info.mMaxZ};
+        return;
+    }
+
+    int localX = static_cast<int>(std::floor(vec3.x)) % totalSize;
+    int localZ = static_cast<int>(std::floor(vec3.z)) % totalSize;
 
     if (localX < 0) localX += totalSize;
     if (localZ < 0) localZ += totalSize;
 
     if (localX >= cfg.plotWidth || localZ >= cfg.plotWidth) {
-        // Point is on the road
         minPos   = Vec3{0, 0, 0};
         maxPos   = Vec3{0, 0, 0};
         x        = 0;
         z        = 0;
         mIsValid = false; // 无效的地皮点
     } else {
-        x      = gridX;
-        z      = gridZ;
         minPos = Vec3{x * totalSize, -64, z * totalSize};
         maxPos = Vec3{minPos.x + cfg.plotWidth - 1, 320, minPos.z + cfg.plotWidth - 1};
     }

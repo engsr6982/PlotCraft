@@ -196,13 +196,15 @@ bool PlotBDStorage::archivePlot(PlotID const& id) {
     mDB->set(DB_ArchivedPrefix + ptr->getPlotID(), JsonHelper::structToJson(*ptr).dump());
     return true;
 }
-bool PlotBDStorage::tryMergePlot(PlotID const& sour, PlotID const& target) {
+bool PlotBDStorage::tryMergePlot(PlotPos& sour, PlotPos& target) {
     // TODO:
     //
     // 预检查：
-    // 1. 检查是否相邻
-    // 2. 检查合并计数 && 是否为已合并的地皮
-    // 3. 检查是否为地皮主人 && 地皮有效
+    //  检查是否相邻 x
+    //  地皮有效 x
+    //  检查是否为地皮主人 x
+    //  检查合并计数
+    //  是否为已合并的地皮
     //
     // 处理合并：
     // 1. sour 的 评论、共享玩家 合并到 target
@@ -214,9 +216,6 @@ bool PlotBDStorage::tryMergePlot(PlotID const& sour, PlotID const& target) {
     // 1. fill 道路
     // 2. 修复地皮边框
     // 3. 通知玩家
-
-    
-
 
 
     return true;
