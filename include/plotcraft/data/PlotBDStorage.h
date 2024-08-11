@@ -1,6 +1,7 @@
 #pragma once
 #include "ll/api/data/KeyValueDB.h"
 #include "plotcraft/Macro.h"
+#include "plotcraft/Version.h"
 #include "plotcraft/data/PlotMetadata.h"
 #include <cstddef>
 #include <memory>
@@ -8,16 +9,23 @@
 #include <unordered_map>
 #include <vector>
 
-using string = std::string;
 
+using string = std::string;
 class PlotPos;
 
 namespace plo::data {
 
 struct PlayerSettingItem {
-    int version = 1;
+    int version = SETTING_VERSION;
 
     bool showPlotTip; // 是否显示地皮提示
+};
+
+struct PlotMergedInfo {
+    std::vector<PlotID> mMergedPlotIDs; // 被合并的地皮ID
+
+    int mMergedPlotCount;           // 被合并的地皮数量
+    int mMinX, mMinZ, mMaxX, mMaxZ; // 合并后的地皮范围
 };
 
 
@@ -30,7 +38,9 @@ private:
     std::unordered_map<PlotID, PlotMetadataPtr> mPlots;          // 地皮
     std::unordered_map<UUID, PlayerSettingItem> mPlayerSettings; // 玩家设置
 
-    std::unordered_map<PlotID, PlotID> mMergedPlotMap; // 合并的地皮
+    // Plot Merge:
+    std::unordered_map<PlotID, PlotMergedInfo> mMergedPlotInfo; // 合并地皮信息
+    std::unordered_map<PlotID, PlotID>         mMergePlotIDMap; // 合并地皮映射
 
 public:
     PlotBDStorage()                                = default;
@@ -55,13 +65,21 @@ public:
     PLAPI bool delAdmin(const UUID& uuid);
     PLAPI std::vector<UUID> getAdmins() const;
 
-    // Plots
+
+    // Plot Merge
     PLAPI bool   isMergedPlot(PlotID const& id) const;
-    PLAPI PlotID getOwnerPlotFromMergeMap(PlotID const& id) const;
+    PLAPI PlotID getOwnerPlotID(PlotID const& id) const;
 
-    PLAPI bool archiveAndReleasePlot(PlotID const& id);             // TODO: 归档并释放地皮
-    PLAPI bool mergePlot(PlotID const& sour, PlotID const& target); // TODO: 合并地皮(sour => target)
+    PLAPI bool                  hasMergedPlotInfo(PlotID const& id) const;
+    PLAPI PlotMergedInfo&       getMergedPlotInfo(PlotID const& id);
+    PLAPI PlotMergedInfo const& getMergedPlotInfoConst(PlotID const& id) const;
 
+    PLAPI bool tryMergePlot(PlotID const& sour, PlotID const& target);
+
+    PLAPI bool archivePlot(PlotID const& id);
+
+
+    // Plots
     PLAPI bool hasPlot(const PlotID& id) const;
 
     PLAPI bool delPlot(const PlotID& id);

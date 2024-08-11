@@ -1,4 +1,5 @@
 #pragma once
+#include "Version.h"
 #include "ll/api/Config.h"
 #include "plotcraft/Macro.h"
 #include "plotcraft/utils/Moneys.h"
@@ -10,10 +11,10 @@ using string = std::string;
 
 namespace plo::config {
 
-#define mConfigVersion 6
+#define CONFIG_VERSION 6
 
 struct _Config {
-    int version = mConfigVersion;
+    int version = CONFIG_VERSION;
 
 #ifdef GEN_1
     struct _Generator {

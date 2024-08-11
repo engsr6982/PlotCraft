@@ -43,8 +43,10 @@ PlotBDStorage&        PlotBDStorage::getInstance() {
 
 #define DB_PlayerSettingsKey "PlayerSettings"
 #define DB_PlotAdminsKey     "PlotAdmins"
-#define DB_MergedMapKey      "MergedMap"
 #define DB_ArchivedPrefix    "Archived_" // Archived_(0,1)
+#define DB_MergedIDMapKey    "MergedIDMap"
+#define DB_MergedInfoKey     "MergedInfo"
+
 void PlotBDStorage::_initKey() {
     if (!mDB->has(DB_PlayerSettingsKey)) {
         mDB->set(DB_PlayerSettingsKey, "{}");
@@ -52,8 +54,11 @@ void PlotBDStorage::_initKey() {
     if (!mDB->has(DB_PlotAdminsKey)) {
         mDB->set(DB_PlotAdminsKey, "[]");
     }
-    if (!mDB->has(DB_MergedMapKey)) {
-        mDB->set(DB_MergedMapKey, "{}");
+    if (!mDB->has(DB_MergedIDMapKey)) {
+        mDB->set(DB_MergedIDMapKey, "{}");
+    }
+    if (!mDB->has(DB_MergedInfoKey)) {
+        mDB->set(DB_MergedInfoKey, "{}");
     }
 }
 
@@ -86,13 +91,17 @@ void PlotBDStorage::load() {
                 auto j = nlohmann::json::parse(value);
                 for (auto const& [uuid, settings] : j.items()) {
                     PlayerSettingItem it;
-                    JsonHelper::jsonToStruct(settings, it);
+                    JsonHelper::jsonToStruct(settings, it); // load and merge fix values
                     mPlayerSettings[UUID(uuid)] = it;
                 }
 
-            } else if (key == DB_MergedMapKey) {
+            } else if (key == DB_MergedIDMapKey) {
                 auto j = nlohmann::json::parse(value);
-                JsonHelper::jsonToStructNoMerge(j, mMergedPlotMap);
+                JsonHelper::jsonToStructNoMerge(j, mMergePlotIDMap);
+
+            } else if (key == DB_MergedInfoKey) {
+                auto j = nlohmann::json::parse(value);
+                JsonHelper::jsonToStructNoMerge(j, mMergedPlotInfo);
             }
         } catch (std::exception const& e) {
             logger->error("Fail in {}, error key: {}\n{}", __func__, key, e.what());
@@ -102,9 +111,11 @@ void PlotBDStorage::load() {
         return true;
     });
 
-    logger->info("已加载 {} 条地皮数据", mPlots.size());
-    logger->info("已加载 {} 位管理员数据", mAdmins.size());
-    logger->info("已加载 {} 位玩家设置数据", mPlayerSettings.size());
+    logger->info("已加载 {}条 地皮数据", mPlots.size());
+    logger->info("已加载 {}位 管理员数据", mAdmins.size());
+    logger->info("已加载 {}位 玩家设置数据", mPlayerSettings.size());
+    logger->info("已加载 {}条 地皮合并映射数据", mMergePlotIDMap.size());
+    logger->info("已加载 {}条 地皮合并信息数据", mMergedPlotInfo.size());
 }
 
 void PlotBDStorage::save(PlotMetadata const& plot) {
@@ -112,24 +123,16 @@ void PlotBDStorage::save(PlotMetadata const& plot) {
 }
 void PlotBDStorage::save() {
     // PlotMetadata
-    for (auto const& [id, ptr] : mPlots) {
-        save(*ptr);
-    }
+    for (auto const& [id, ptr] : mPlots) save(*ptr);
 
     // PlotAdmins
     mDB->set(DB_PlotAdminsKey, JsonHelper::structToJson(mAdmins).dump());
 
     // PlayerSettings
-    {
-        nlohmann::json j = nlohmann::json::object();
-        for (auto const& [uuid, settings] : mPlayerSettings) {
-            j[uuid] = JsonHelper::structToJson(settings);
-        }
-        mDB->set(DB_PlayerSettingsKey, j.dump());
-    }
+    mDB->set(DB_PlayerSettingsKey, JsonHelper::structToJson(mPlayerSettings).dump());
 
-    // MergedMap
-    mDB->set(DB_MergedMapKey, JsonHelper::structToJson(mMergedPlotMap).dump());
+    // MergedIDMap
+    mDB->set(DB_MergedIDMapKey, JsonHelper::structToJson(mMergePlotIDMap).dump());
 }
 
 
@@ -158,16 +161,69 @@ bool PlotBDStorage::delAdmin(UUID const& uuid) {
 std::vector<UUID> PlotBDStorage::getAdmins() const { return mAdmins; }
 
 
-// Plots
-bool   PlotBDStorage::isMergedPlot(PlotID const& id) const { return mMergedPlotMap.find(id) != mMergedPlotMap.end(); }
-PlotID PlotBDStorage::getOwnerPlotFromMergeMap(PlotID const& id) const {
-    auto it = mMergedPlotMap.find(id);
-    if (it == mMergedPlotMap.end()) {
+// PlotMerge
+bool PlotBDStorage::isMergedPlot(PlotID const& id) const { return mMergePlotIDMap.find(id) != mMergePlotIDMap.end(); }
+bool PlotBDStorage::hasMergedPlotInfo(PlotID const& id) const {
+    return mMergedPlotInfo.find(id) != mMergedPlotInfo.end();
+}
+
+PlotID PlotBDStorage::getOwnerPlotID(PlotID const& id) const {
+    auto it = mMergePlotIDMap.find(id);
+    if (it == mMergePlotIDMap.end()) {
         return "";
     }
     return it->second;
 }
 
+PlotMergedInfo& PlotBDStorage::getMergedPlotInfo(PlotID const& id) {
+    auto it = mMergedPlotInfo.find(id);
+    if (it == mMergedPlotInfo.end()) {
+        throw std::runtime_error("PlotMergedInfo not found for id: " + id);
+    }
+    return it->second;
+}
+PlotMergedInfo const& PlotBDStorage::getMergedPlotInfoConst(PlotID const& id) const {
+    auto it = mMergedPlotInfo.find(id);
+    if (it == mMergedPlotInfo.end()) {
+        throw std::runtime_error("PlotMergedInfo not found for id: " + id);
+    }
+    return it->second;
+}
+
+bool PlotBDStorage::archivePlot(PlotID const& id) {
+    auto ptr = getPlot(id);
+    if (!ptr) return false;
+    mDB->set(DB_ArchivedPrefix + ptr->getPlotID(), JsonHelper::structToJson(*ptr).dump());
+    return true;
+}
+bool PlotBDStorage::tryMergePlot(PlotID const& sour, PlotID const& target) {
+    // TODO:
+    //
+    // 预检查：
+    // 1. 检查是否相邻
+    // 2. 检查合并计数 && 是否为已合并的地皮
+    // 3. 检查是否为地皮主人 && 地皮有效
+    //
+    // 处理合并：
+    // 1. sour 的 评论、共享玩家 合并到 target
+    // 2. 重新计算 minPos 和 maxPos 到 target
+    // 3. 更新 MergeIDMap 和 MergeInfo
+    // 4. archive sour 并 释放 sour 指针
+    //
+    // 后处理：
+    // 1. fill 道路
+    // 2. 修复地皮边框
+    // 3. 通知玩家
+
+    
+
+
+
+    return true;
+}
+
+
+// Plots
 bool PlotBDStorage::hasPlot(PlotID const& id) const { return mPlots.find(id) != mPlots.end(); }
 
 bool PlotBDStorage::delPlot(PlotID const& id) {

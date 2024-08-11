@@ -1,6 +1,7 @@
 #pragma once
 #include "mc/deps/core/mce/UUID.h"
 #include "plotcraft/Macro.h"
+#include "plotcraft/Version.h"
 #include <memory>
 #include <optional>
 #include <string>
@@ -33,7 +34,6 @@ struct PlotShareItem {
     string mSharedTime;
 };
 
-#define METADATA_VERSION 3
 struct PlotPermissionTable {
     bool canDestroyBlock{false};  // 破坏方块
     bool canPlaceBlock{false};    // 放置方块
