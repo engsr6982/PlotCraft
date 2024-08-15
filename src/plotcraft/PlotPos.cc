@@ -19,47 +19,31 @@ namespace plo {
     -1,-1  0,-1  1,-1
  */
 
-PlotPos::PlotPos() : x(0), z(0), mIsValid(false) {
-    minPos = Vec3{0, 0, 0};
-    maxPos = Vec3{0, 0, 0};
-}
-
-PlotPos::PlotPos(int x, int z) : x(x), z(z) {
-    // 兼容地皮合并
-    auto const& db = data::PlotBDStorage::getInstance();
-    auto        id = getPlotID();
-
-    if (db.isMergedPlot(id)) id = db.getOwnerPlotID(id);
-    if (db.hasMergedPlotInfo(id)) {
-        auto const& info = db.getMergedPlotInfoConst(id);
-        minPos           = Vec3{info.mMinX, -64, info.mMinZ};
-        maxPos           = Vec3{info.mMaxX, 320, info.mMaxZ};
-        return;
-    }
-
+PlotPos::PlotPos() : mX(0), mZ(0) {}
+PlotPos::PlotPos(int x, int z) : mX(x), mZ(z) {
     auto& cfg       = config::cfg.generator;
     int   totalSize = cfg.plotWidth + cfg.roadWidth;
-    minPos          = Vec3{x * totalSize, -64, z * totalSize};
-    maxPos          = Vec3{minPos.x + cfg.plotWidth - 1, 320, minPos.z + cfg.plotWidth - 1};
+
+    // 计算地皮的四个顶点
+    Vec3 minPos = Vec3{x * totalSize, -64, z * totalSize};
+    Vec3 maxPos = Vec3{minPos.x + cfg.plotWidth - 1, 320, minPos.z + cfg.plotWidth - 1};
+
+    // 按顺时针顺序存储顶点
+    mVertexs = {
+        minPos, // 左下角
+        Vec3{maxPos.x, minPos.y, minPos.z}, // 右下角
+        maxPos, // 右上角
+        Vec3{minPos.x, minPos.y, maxPos.z}, // 左上角
+        minPos  // 回到起点，形成闭合多边形
+    };
 }
 
 PlotPos::PlotPos(const Vec3& vec3) {
     auto& cfg       = config::cfg.generator;
     int   totalSize = cfg.plotWidth + cfg.roadWidth;
 
-    x = std::floor(vec3.x / totalSize);
-    z = std::floor(vec3.z / totalSize);
-
-    // 兼容地皮合并
-    auto const& db = data::PlotBDStorage::getInstance();
-    auto        id = getPlotID();
-    if (db.isMergedPlot(id)) id = db.getOwnerPlotID(id);
-    if (db.hasMergedPlotInfo(id)) {
-        auto const& info = db.getMergedPlotInfoConst(id);
-        minPos           = Vec3{info.mMinX, -64, info.mMinZ};
-        maxPos           = Vec3{info.mMaxX, 320, info.mMaxZ};
-        return;
-    }
+    mX = std::floor(vec3.x / totalSize);
+    mZ = std::floor(vec3.z / totalSize);
 
     int localX = static_cast<int>(std::floor(vec3.x)) % totalSize;
     int localZ = static_cast<int>(std::floor(vec3.z)) % totalSize;
@@ -68,159 +52,122 @@ PlotPos::PlotPos(const Vec3& vec3) {
     if (localZ < 0) localZ += totalSize;
 
     if (localX >= cfg.plotWidth || localZ >= cfg.plotWidth) {
-        minPos   = Vec3{0, 0, 0};
-        maxPos   = Vec3{0, 0, 0};
-        x        = 0;
-        z        = 0;
-        mIsValid = false; // 无效的地皮点
+        mVertexs.clear();
     } else {
-        minPos = Vec3{x * totalSize, -64, z * totalSize};
-        maxPos = Vec3{minPos.x + cfg.plotWidth - 1, 320, minPos.z + cfg.plotWidth - 1};
+        Vec3 minPos = Vec3{mX * totalSize, -64, mZ * totalSize};
+        Vec3 maxPos = Vec3{minPos.x + cfg.plotWidth - 1, 320, minPos.z + cfg.plotWidth - 1};
+
+        // 按顺时针顺序存储顶点
+        mVertexs = {
+            minPos, // 左下角
+            Vec3{maxPos.x, minPos.y, minPos.z}, // 右下角
+            maxPos, // 右上角
+            Vec3{minPos.x, minPos.y, maxPos.z}, // 左上角
+            minPos  // 回到起点，形成闭合多边形
+        };
     }
 }
-
 int    PlotPos::getSurfaceY() const { return -64 + (config::cfg.generator.subChunkNum * 16); }
-Vec3   PlotPos::getSafestPos() const { return Vec3{minPos.x, getSurfaceY() + 1, minPos.z}; }
-bool   PlotPos::isValid() const { return mIsValid; }
-Vec3   PlotPos::getMin() const { return minPos; } // deprecated
-Vec3   PlotPos::getMax() const { return maxPos; } // deprecated
-string PlotPos::toString() const { return fmt::format("({0},{1})", x, z); }
-string PlotPos::getPlotID() const { return toString(); }
+bool   PlotPos::isValid() const { return !mVertexs.empty(); }
+string PlotPos::getPlotID() const { return fmt::format("({0},{1})", mX, mZ); }
+Vec3   PlotPos::getSafestPos() const {
+    if (isValid()) {
+        auto& v3 = mVertexs[0];
+        return Vec3{v3.x, getSurfaceY() + 1, v3.z};
+    }
+    return Vec3{};
+}
 
 
 bool PlotPos::isPosInPlot(const Vec3& vec3) const {
-    return vec3.x >= minPos.x && vec3.x <= maxPos.x && vec3.z >= minPos.z && vec3.z <= maxPos.z;
+    if (vec3.y < -64 || vec3.y > 320) {
+        return false;
+    }
+    return isPointInPolygon(vec3, mVertexs);
 }
 
 std::vector<PlotPos> PlotPos::getAdjacentPlots() const {
-    return {PlotPos(x - 1, z), PlotPos(x + 1, z), PlotPos(x, z - 1), PlotPos(x, z + 1)};
+    return {PlotPos(mX - 1, mZ), PlotPos(mX + 1, mZ), PlotPos(mX, mZ - 1), PlotPos(mX, mZ + 1)};
 }
 
 
-bool PlotPos::isPosOnBorder(const Vec3& vec3) {
+bool PlotPos::isPosOnBorder(const Vec3& vec3) const {
     if (vec3.y < -64 || vec3.y > 320) {
         return false;
     }
 
-    tryFixMinAndMaxPos();
+    // 检查点是否在任何边上
+    for (size_t i = 0; i < mVertexs.size() - 1; ++i) {
+        const Vec3& v1 = mVertexs[i];
+        const Vec3& v2 = mVertexs[i + 1];
 
-    //  X 和 Z 坐标是否在边框上
-    bool onXBorder = (vec3.x == minPos.x || vec3.x == maxPos.x);
-    bool onZBorder = (vec3.z == minPos.z || vec3.z == maxPos.z);
+        // 检查点是否在当前边上
+        if ((vec3.x >= std::min(v1.x, v2.x) && vec3.x <= std::max(v1.x, v2.x))
+            && (vec3.z >= std::min(v1.z, v2.z) && vec3.z <= std::max(v1.z, v2.z))) {
+            // 如果边是垂直的
+            if (v1.x == v2.x) {
+                if (vec3.x == v1.x) return true;
+            }
+            // 如果边是水平的
+            else if (v1.z == v2.z) {
+                if (vec3.z == v1.z) return true;
+            }
+            // 如果边是斜的（虽然在这个情况下不太可能）
+            else {
+                double slope     = (v2.z - v1.z) / (v2.x - v1.x);
+                double intercept = v1.z - slope * v1.x;
+                if (std::abs(vec3.z - (slope * vec3.x + intercept)) < 1e-6) return true;
+            }
+        }
+    }
 
-    //  X 和 Z 坐标是否在地皮范围内
-    bool withinXRange = (vec3.x >= minPos.x && vec3.x <= maxPos.x);
-    bool withinZRange = (vec3.z >= minPos.z && vec3.z <= maxPos.z);
-
-    // 判断是否在边框上
-    return (onXBorder && withinXRange) || (onZBorder && withinZRange);
+    return false;
 }
 
 
-void PlotPos::tryFixMinAndMaxPos() {
-    if (minPos.x > maxPos.x) std::swap(minPos.x, maxPos.x);
-    if (minPos.y > maxPos.y) std::swap(minPos.y, maxPos.y);
-    if (minPos.z > maxPos.z) std::swap(minPos.z, maxPos.z);
-}
-
-string PlotPos::toDebug() const {
+string PlotPos::toString() const {
 #if !defined(DEBUG)
-    return fmt::format("{0} | {1} => {2}", toString(), minPos.toString(), maxPos.toString());
+    return fmt::format("{0} | Vertex: {1}", getPlotID(), mVertexs.size());
 #else
-    PlotPos ps(1, 0); // (1,0)
-    auto    r = PlotPos::getAdjacentPlotRoad(*this, ps);
-    return fmt::format(
-        "{0} | {1} => {2}\n相邻: {3}  |  {4} => {5}\n道路: {6} => {7}",
-        toString(),
-        minPos.toString(),
-        maxPos.toString(),
-        PlotPos::isAdjacent(*this, ps),
-        toString(),
-        ps.toString(),
-        r.first.toString(),
-        r.second.toString()
-    );
+    string dbg;
+    size_t i = 0;
+    for (auto& v : mVertexs) {
+        dbg += fmt::format("[{0}] => {1}", i++, v.toString());
+    }
+    return fmt::format("{0} | Vertex: {1}\n{2}", getPlotID(), mVertexs.size(), dbg);
 #endif
 }
+
+
 bool PlotPos::operator!=(PlotPos const& other) const { return !(*this == other); }
-bool PlotPos::operator==(PlotPos const& other) const {
-    return other.x == x && other.z == z && other.mIsValid == mIsValid && other.minPos == minPos
-        && other.maxPos == maxPos;
-}
-
-
-DiagonPos PlotPos::getDiagonPos() const { return DiagonPos{minPos, maxPos}; }
-DiagonPos PlotPos::getBorderDiagonPos(Direction direction) const {
-    int y = getSurfaceY();
-    switch (direction) {
-    case Direction::North:
-        return DiagonPos{
-            Vec3{minPos.x, y, minPos.z}, // 0,0,0
-            Vec3{maxPos.x, y, minPos.z}  // 127,0,0
-        };
-    case Direction::East:
-        return DiagonPos{
-            Vec3{maxPos.x, y, minPos.z}, // 127,0,0
-            Vec3{maxPos.x, y, maxPos.z}  // 127,0,127
-        };
-    case Direction::South:
-        return DiagonPos{
-            Vec3{minPos.x, y, maxPos.z}, // 0,0,127
-            Vec3{maxPos.z, y, maxPos.z}  // 127,0,127
-        };
-    case Direction::West:
-        return DiagonPos{
-            Vec3{minPos.x, y, minPos.z}, // 0,0,0
-            Vec3{minPos.x, y, maxPos.z}  // 0,0,127
-        };
-    }
-}
+bool PlotPos::operator==(PlotPos const& other) const { return other.mVertexs == this->mVertexs; }
 
 
 // static
 bool PlotPos::isAdjacent(const PlotPos& plot1, const PlotPos& plot2) {
-    int dx = std::abs(plot1.x - plot2.x);
-    int dz = std::abs(plot1.z - plot2.z);
+    int dx = std::abs(plot1.mX - plot2.mX);
+    int dz = std::abs(plot1.mZ - plot2.mZ);
 
     // 两个地皮相邻的条件:
     // 1. x坐标相同,z坐标相差1,或者
     // 2. z坐标相同,x坐标相差1
     // 3. 两个地皮都是有效的
-    return ((dx == 0 && dz == 1) || (dx == 1 && dz == 0)) && (plot1.mIsValid && plot2.mIsValid);
+    return ((dx == 0 && dz == 1) || (dx == 1 && dz == 0)) && (plot1.isValid() && plot2.isValid());
 }
-DiagonPos PlotPos::getAdjacentPlotRoad(const PlotPos& plot1, const PlotPos& plot2) {
-    if (!isAdjacent(plot1, plot2)) {
-        // 如果两个地皮不相邻,返回无效的对角坐标
-        return DiagonPos{
-            Vec3{0, 0, 0},
-            Vec3{0, 0, 0}
-        };
+
+// 辅助函数：判断点是否在多边形内部（使用射线法）
+bool PlotPos::isPointInPolygon(const Vec3& point, const std::vector<Vec3>& polygon) {
+    bool inside = false;
+    int  n      = polygon.size();
+    for (int i = 0, j = n - 1; i < n; j = i++) {
+        if (((polygon[i].z <= point.z && point.z < polygon[j].z) || (polygon[j].z <= point.z && point.z < polygon[i].z))
+            && (point.x < (polygon[j].x - polygon[i].x) * (point.z - polygon[i].z) / (polygon[j].z - polygon[i].z)
+                              + polygon[i].x)) {
+            inside = !inside;
+        }
     }
-
-    auto& cfg = config::cfg.generator;
-    int   y   = plot1.getSurfaceY();
-
-    int totalSize = cfg.plotWidth + cfg.roadWidth;
-
-    if (plot1.x == plot2.x) {
-        // 地皮在同一列,道路是水平的
-        int minZ = std::min(plot1.z, plot2.z) * totalSize + cfg.plotWidth;
-        int maxZ = minZ + cfg.roadWidth;
-        int x    = plot1.x * totalSize;
-        return DiagonPos{
-            Vec3{x,                     y, minZ - 1},
-            Vec3{x + cfg.plotWidth - 1, y, maxZ    }
-        };
-    } else {
-        // 地皮在同一行,道路是垂直的
-        int minX = std::min(plot1.x, plot2.x) * totalSize + cfg.plotWidth;
-        int maxX = minX + cfg.roadWidth;
-        int z    = plot1.z * totalSize;
-        return DiagonPos{
-            Vec3{minX - 1, y, z                    },
-            Vec3{maxX,     y, z + cfg.plotWidth - 1}
-        };
-    }
+    return inside;
 }
+
 
 } // namespace plo

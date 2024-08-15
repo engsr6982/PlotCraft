@@ -20,10 +20,8 @@ using DiagonPos = std::pair<Vec3, Vec3>;
 
 class PlotPos {
 public:
-    int  x, z;           // 地皮坐标
-    Vec3 minPos;         // 地皮小端坐标
-    Vec3 maxPos;         // 地皮大端坐标
-    bool mIsValid{true}; // 地皮是否有效
+    int               mX, mZ;   // 地皮坐标
+    std::vector<Vec3> mVertexs; // 地皮顶点
 
     PLAPI PlotPos();
     PLAPI PlotPos(int x, int z);
@@ -31,41 +29,28 @@ public:
 
     PLAPI bool isValid() const;
 
-    [[deprecated]] PLAPI Vec3 getMin() const;
-    [[deprecated]] PLAPI Vec3 getMax() const;
-
     PLAPI string toString() const;
 
     PLAPI string getPlotID() const;
 
-    PLAPI string toDebug() const;
-
-    PLAPI bool isPosInPlot(const Vec3& vec3) const;
+    PLAPI int getSurfaceY() const;
 
     PLAPI Vec3 getSafestPos() const;
 
-    PLAPI void tryFixMinAndMaxPos();
+    PLAPI bool isPosInPlot(const Vec3& vec3) const;
 
-    PLAPI bool isPosOnBorder(const Vec3& vec3);
+    PLAPI bool isPosOnBorder(const Vec3& vec3) const;
 
     PLAPI std::vector<PlotPos> getAdjacentPlots() const;
 
     PLAPI bool operator==(PlotPos const& other) const;
     PLAPI bool operator!=(PlotPos const& other) const;
 
-    PLAPI int getSurfaceY() const; // 获取地皮地表Y坐标
-
-    PLAPI DiagonPos getDiagonPos() const;
-
-    PLAPI DiagonPos getBorderDiagonPos(Direction direction) const; // 获取地皮边框对角坐标
-
 
     // static
-    // 是否是相邻地皮
     PLAPI static bool isAdjacent(PlotPos const& plot1, PlotPos const& plot2);
 
-    // 获取相邻地皮的道路对角坐标
-    PLAPI static DiagonPos getAdjacentPlotRoad(PlotPos const& plot1, PlotPos const& plot2);
+    PLAPI static bool isPointInPolygon(const Vec3& point, const std::vector<Vec3>& polygon);
 };
 
 
