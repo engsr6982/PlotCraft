@@ -62,10 +62,6 @@ namespace plo::mc {
 PLAPI inline Block const& getBlock(BlockPos& bp, int dimid) {
     return ll::service::getLevel()->getDimension(dimid)->getBlockSourceFromMainChunkSource().getBlock(bp);
 }
-PLAPI inline Block const& getBlock(int y, BlockPos bp, int dimid) {
-    bp.y = y;
-    return getBlock(bp, dimid);
-}
 
 PLAPI inline void executeCommand(const string& cmd, Player* player = nullptr) {
     if (player) {
@@ -140,6 +136,58 @@ PLAPI inline BlockPos face2Pos(BlockPos const& sour, uchar face) {
         break;
     }
     return dest;
+}
+
+
+// Template function sendText, usage: sendText() or sendText<LogLevel::Success>().
+enum class LogLevel : int { Normal = -1, Debug = 0, Info = 1, Warn = 2, Error = 3, Fatal = 4, Success = 5 };
+inline static std::unordered_map<LogLevel, string> Color = {
+    {LogLevel::Normal,  "§b"},
+    {LogLevel::Debug,   "§7"},
+    {LogLevel::Info,    "§r"},
+    {LogLevel::Warn,    "§e"},
+    {LogLevel::Error,   "§c"},
+    {LogLevel::Fatal,   "§4"},
+    {LogLevel::Success, "§a"}
+};
+
+template <typename... Args>
+PLAPI inline string format(const string& fmt, Args... args) {
+    try {
+        return fmt::vformat(fmt, fmt::make_format_args(args...));
+    } catch (...) {
+        return fmt;
+    }
+}
+
+template <LogLevel type = LogLevel::Normal, typename... Args>
+PLAPI inline void sendText(Player& player, const string& fmt, Args&&... args) {
+    player.sendMessage(format(PLUGIN_TITLE + Color[type] + fmt, args...));
+}
+template <LogLevel type = LogLevel::Normal, typename... Args>
+PLAPI inline void sendText(CommandOutput& output, const string& fmt, Args&&... args) {
+    if constexpr (type == LogLevel::Error || type == LogLevel::Fatal) {
+        output.error(format(PLUGIN_TITLE + Color[type] + fmt, args...));
+    } else {
+        output.success(format(PLUGIN_TITLE + Color[type] + fmt, args...));
+    }
+}
+template <LogLevel type = LogLevel::Normal, typename... Args>
+PLAPI inline void sendText(Player* player, const string& fmt, Args&&... args) {
+    if (player) {
+        return sendText<type>(*player, fmt, args...);
+    } else {
+        std::runtime_error("Failed in sendText: player is nullptr");
+    }
+}
+template <LogLevel type = LogLevel::Normal, typename... Args>
+PLAPI inline void sendText(const string& realName, const string& fmt, Args&&... args) {
+    auto level = ll::service::getLevel();
+    if (level.has_value()) {
+        return sendText<type>(level->getPlayer(realName), fmt, args...);
+    } else {
+        std::runtime_error("Failed in sendText: level is nullptr");
+    }
 }
 
 
