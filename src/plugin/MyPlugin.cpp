@@ -25,11 +25,6 @@
 #include "plotcraft/utils/Mc.h"
 #include "plotcraft/utils/Moneys.h"
 
-
-#ifdef REMOTE_API
-#include "remote/Remote.h"
-#endif
-
 #if !defined(OVERWORLD)
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 #endif
@@ -72,14 +67,6 @@ bool MyPlugin::load() {
     plo::EconomyQueue::getInstance().load();
 
     plo::utils::Moneys::getInstance().updateConfig(plo::config::cfg.moneys);
-
-
-#ifdef REMOTE_API
-    plo::remote::exportPLAPI();   // 导出PLAPI
-    plo::remote::exportPLEvent(); // 导出PLEvent
-    logger.info("RemoteCall API 已导出。");
-#endif
-
 
     return true;
 }

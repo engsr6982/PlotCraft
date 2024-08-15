@@ -176,7 +176,7 @@ int PlotMetadata::getX() const { return mPlotX; }
 int PlotMetadata::getZ() const { return mPlotZ; }
 
 PlotPermission PlotMetadata::getPlayerInThisPlotPermission(UUID const& uuid) const {
-    if (mPlotOwner == uuid) return PlotPermission::Owner;
+    if (isOwner(uuid)) return PlotPermission::Owner;
     if (isSharedPlayer(uuid)) return PlotPermission::Shared;
     return PlotPermission::None;
 }

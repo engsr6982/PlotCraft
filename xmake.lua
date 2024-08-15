@@ -18,16 +18,8 @@ if get_config("overworld") == false then
     add_requires("more-dimensions 0.4.1")
 end 
 
-if get_config("remote") == true then
-    add_requires("legacyremotecall 0.8.3")
-end 
-
 option("overworld") -- Overworld
     set_default(false)
-
-option("remote") -- RemoteCall
-    set_default(false)
-
 
 target("PlotCraft")
     add_cxflags(
@@ -62,9 +54,6 @@ target("PlotCraft")
     set_languages("c++20")
     set_symbols("debug")
 
-    -- OVERWORLD
-    -- REMOTE_API
-
     if is_mode("debug") then
         add_defines("DEBUG")
     end
@@ -75,12 +64,7 @@ target("PlotCraft")
         add_defines("OVERWORLD")
     end 
 
-    if get_config("remote") == true  then
-        add_packages("legacyremotecall")
-        add_defines("REMOTE_API")
-    end
-
-    add_defines("BuildVersionInfo=\"Overworld: " .. tostring(get_config("overworld")) .. " | RemoteCall: " .. tostring(get_config("remote")) .. "\"")
+    add_defines("BuildVersionInfo=\"Overworld: " .. tostring(get_config("overworld")) .. "\"")
 
     add_defines("PLUGIN_NAME=\"PlotCraft\"")
     add_defines("PLUGIN_TITLE=\"§6[§aPlotCraft§6]§r \"")
@@ -88,7 +72,7 @@ target("PlotCraft")
     after_build(function (target)
         local plugin_packer = import("scripts.after_build")
 
-        cprint("${bright green}[Build Infomation]: ${reset}Overworld: " .. tostring(get_config("overworld")) .. " | RemoteCall: " .. tostring(get_config("remote")))
+        cprint("${bright green}[Build Infomation]: ${reset}Overworld: " .. tostring(get_config("overworld")))
 
         local tag = os.iorun("git describe --tags --abbrev=0 --always")
         local major, minor, patch, suffix = tag:match("v(%d+)%.(%d+)%.(%d+)(.*)")
