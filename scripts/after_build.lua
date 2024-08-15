@@ -105,14 +105,6 @@ function pack_plugin(target,plugin_define)
         local langdir = path.join(os.projectdir(), "assets", "lang")
         os.cp(langdir, outputdir)
 
-        local srcDir = path.join(os.projectdir(), "src")
-        local remoteDir = path.join(srcDir, "remote")
-        local libDir = path.join(remoteDir, "lib")
-        os.cp(libDir, outputdir)
-
-        local lseDir = path.join(remoteDir, "lse")
-        os.cp(lseDir, outputdir)
-
         formattedmanifest = string_formatter(manifest, plugin_define)
         io.writefile(manifestfile,formattedmanifest)
         cprint("${bright green}[Plugin Packer]: ${reset}plugin already generated to " .. outputdir)
