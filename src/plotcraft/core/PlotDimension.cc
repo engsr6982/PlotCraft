@@ -1,7 +1,8 @@
 #ifndef OVERWORLD
 
 #include "PlotDimension.h"
-
+#include "PlotGenerator.h"
+#include "Utils.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/DimensionConversionData.h"
 #include "mc/world/level/Level.h"
@@ -17,8 +18,6 @@
 #include "mc/world/level/levelgen/structure/VillageFeature.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 
-
-#include "CoreUtils.h"
 
 namespace plo::core {
 
@@ -41,7 +40,7 @@ PlotDimension::createGenerator(br::worldgen::StructureSetRegistry const& /* stru
 
     // 实例化 地皮生成器
     auto worldGenerator =
-        std::make_unique<plo::core_utils::Generator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
+        std::make_unique<plo::core::PlotGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
 
     worldGenerator->init(); // 必须调用，初始化生成器
 

@@ -12,7 +12,7 @@
 #include "plotcraft/Config.h"
 #include "plotcraft/EconomyQueue.h"
 #include "plotcraft/PlotPos.h"
-#include "plotcraft/core/CoreUtils.h"
+#include "plotcraft/core/Utils.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotBDStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
@@ -37,7 +37,7 @@ namespace plo::gui {
 using namespace plo::data;
 using namespace ll::form;
 using namespace plo::utils;
-using namespace plo::core_utils;
+using namespace plo::core;
 namespace pev = plo::event;
 
 

@@ -7,8 +7,8 @@
 #include "mc/world/level/levelgen/structure/StructureFeatureRegistry.h"
 #include "mc/world/level/levelgen/structure/StructureSetRegistry.h"
 #include "mc/world/level/levelgen/structure/VillageFeature.h"
-
-#include "CoreUtils.h"
+#include "PlotGenerator.h"
+#include "Utils.h"
 
 LL_AUTO_TYPE_INSTANCE_HOOK(
     OverworldDimensionCreateGeneratorHook,
@@ -25,8 +25,7 @@ LL_AUTO_TYPE_INSTANCE_HOOK(
     auto                            seed      = getLevel().getSeed();
     auto&                           levelData = getLevel().getLevelData();
 
-    worldGenerator =
-        std::make_unique<plo::core_utils::Generator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
+    worldGenerator = std::make_unique<plo::core::PlotGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
 
     worldGenerator->init();
     return std::move(worldGenerator);

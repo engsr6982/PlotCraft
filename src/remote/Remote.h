@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-#include "plotcraft/core/CoreUtils.h"
+#include "plotcraft/core/Utils.h"
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -23,7 +23,7 @@
 #pragma warning(pop)
 #endif
 
-using namespace plo::core_utils;
+using namespace plo::core;
 
 namespace plo::remote {
 

@@ -1,14 +1,7 @@
-#ifdef GEN_1
-#include "PlotGenerator.h"
-#include "plotcraft/Config.h"
-#include <algorithm>
-#include <memory>
-#include <vector>
+#ifndef OVERWORLD
 
-#include "fmt/format.h"
-#include "mc/deps/core/data/DividedPos2d.h"
+#include "PlotGenerator.h"
 #include "mc/deps/core/utility/buffer_span_mut.h"
-#include "mc/network/packet/UpdateSubChunkBlocksPacket.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/ChunkBlockPos.h"
@@ -20,14 +13,13 @@
 #include "mc/world/level/block/BlockVolume.h"
 #include "mc/world/level/block/actor/BlockActor.h"
 #include "mc/world/level/block/registry/BlockTypeRegistry.h"
-#include "mc/world/level/block/utils/BedrockBlockNames.h"
 #include "mc/world/level/block/utils/VanillaBlockTypeIds.h"
-#include "mc/world/level/chunk/ChunkViewSource.h"
 #include "mc/world/level/chunk/LevelChunk.h"
-#include "mc/world/level/chunk/PostprocessingManager.h"
 #include "mc/world/level/levelgen/v1/ChunkLocalNoiseCache.h"
+#include "plotcraft/Config.h"
 #include <cstdio>
-#include <sstream>
+#include <memory>
+#include <vector>
 
 
 namespace plo::core {
@@ -81,6 +73,10 @@ PlotGenerator::PlotGenerator(Dimension& dimension, uint seed, Json::Value const&
     auto end              = mTemplateSubChunks[mSubChunkNum - 1].get();
     end->mBlocks.mEnd     = &*mVector_Dirt15_Grass1.end(); // 指向 mVector_Dirt15_Grass1
     end->mBlocks.mBegin   = &*mVector_Dirt15_Grass1.begin();
+
+    // 设置群系
+    mBiomeSource =
+        std::make_unique<FixedBiomeSource>(*dimension.getBiomeRegistry().lookupByHash(VanillaBiomeNames::Plains));
 }
 
 
@@ -140,13 +136,17 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
                     blockSource,
                     nullptr
                 );
-            } else {
-                // 地皮内部(使用模板地形生成的草方块)
-                // levelchunk
-                //     .setBlock(ChunkBlockPos{BlockPos(x, mGeneratorY, z), -64}, *mBlock_Fill, blockSource, nullptr);
             }
+            // else {
+            //     // 地皮内部(使用模板地形生成的草方块)
+            //     levelchunk
+            //         .setBlock(ChunkBlockPos{BlockPos(x, mGeneratorY, z), -64}, *mBlock_Fill, blockSource, nullptr);
+            // }
         }
     }
+
+    // try fill biomes
+    this->mBiomeSource->fillBiomes(levelchunk, ChunkLocalNoiseCache{});
 
     levelchunk.recomputeHeightMap(0); // 重新计算高度图
     levelchunk.setSaved();
@@ -154,4 +154,5 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
 }
 
 } // namespace plo::core
-#endif // GEN_1
+
+#endif // OVERWORLD

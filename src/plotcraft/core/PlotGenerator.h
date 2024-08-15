@@ -1,15 +1,10 @@
-#ifdef GEN_1
+#ifndef OVERWORLD
+
 #pragma once
 #include "mc/world/level/block/Block.h"
-#include <memory>
-
-#include "mc/deps/core/data/DividedPos2d.h"
-#include "mc/deps/core/utility/buffer_span.h"
-#include "mc/util/Random.h"
 #include "mc/world/level/block/BlockVolume.h"
 #include "mc/world/level/levelgen/flat/FlatWorldGenerator.h"
-
-
+#include <memory>
 #include <vector>
 
 class ChunkViewSource;
@@ -45,4 +40,4 @@ public:
 
 } // namespace plo::core
 
-#endif // GEN_1
+#endif // OVERWORLD

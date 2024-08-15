@@ -35,7 +35,7 @@
 #include "plotcraft/Config.h"
 #include "plotcraft/EconomyQueue.h"
 #include "plotcraft/PlotPos.h"
-#include "plotcraft/core/CoreUtils.h"
+#include "plotcraft/core/Utils.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotBDStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
@@ -102,7 +102,7 @@ ll::event::ListenerPtr mPlayerEnterPlotEventListener; // 玩家进入地皮
 
 namespace plo::event {
 
-using namespace core_utils;
+using namespace core;
 
 void buildTipMessage(Player& p, PlotPos const& pps, PlayerNameDB* ndb, PlotBDStorage* pdb) {
     try {

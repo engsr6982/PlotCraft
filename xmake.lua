@@ -22,10 +22,6 @@ if get_config("remote") == true then
     add_requires("legacyremotecall 0.8.3")
 end 
 
-option("gen") -- Generator
-    set_default(1)
-    set_values(1, 2)
-
 option("overworld") -- Overworld
     set_default(false)
 
@@ -66,8 +62,6 @@ target("PlotCraft")
     set_languages("c++20")
     set_symbols("debug")
 
-    -- GEN_1
-    -- GEN_2
     -- OVERWORLD
     -- REMOTE_API
 
@@ -86,13 +80,7 @@ target("PlotCraft")
         add_defines("REMOTE_API")
     end
 
-    if get_config("gen") == 1 then
-        add_defines("GEN_1")
-    else 
-        add_defines("GEN_2")
-    end
-
-    add_defines("BuildVersionInfo=\"PlotGenerator: " .. tostring(get_config("gen")) .. " | Overworld: " .. tostring(get_config("overworld")) .. " | RemoteCall: " .. tostring(get_config("remote")) .. "\"")
+    add_defines("BuildVersionInfo=\"Overworld: " .. tostring(get_config("overworld")) .. " | RemoteCall: " .. tostring(get_config("remote")) .. "\"")
 
     add_defines("PLUGIN_NAME=\"PlotCraft\"")
     add_defines("PLUGIN_TITLE=\"§6[§aPlotCraft§6]§r \"")
@@ -100,7 +88,7 @@ target("PlotCraft")
     after_build(function (target)
         local plugin_packer = import("scripts.after_build")
 
-        cprint("${bright green}[Build Infomation]: ${reset}PlotGenerator: " .. tostring(get_config("gen")) .. " | Overworld: " .. tostring(get_config("overworld")) .. " | RemoteCall: " .. tostring(get_config("remote")))
+        cprint("${bright green}[Build Infomation]: ${reset}Overworld: " .. tostring(get_config("overworld")) .. " | RemoteCall: " .. tostring(get_config("remote")))
 
         local tag = os.iorun("git describe --tags --abbrev=0 --always")
         local major, minor, patch, suffix = tag:match("v(%d+)%.(%d+)%.(%d+)(.*)")
