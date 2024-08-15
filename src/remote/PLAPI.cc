@@ -20,8 +20,6 @@ void exportPLAPI() {
 
     exportAs(sp, "PlotPos_getPlotID", [](int x, int z) -> string { return PlotPos{x, z}.getPlotID(); });
 
-    exportAs(sp, "PlotPos_toDebug", [](int x, int z) -> string { return PlotPos{x, z}.toDebug(); });
-
     exportAs(sp, "PlotPos_isPosInPlot", [](int px, int pz, FloatPos const& pos) -> bool {
         return PlotPos{px, pz}.isPosInPlot(pos.first);
     });
@@ -34,20 +32,12 @@ void exportPLAPI() {
         return PlotPos{x, z}.isPosOnBorder(pos.first);
     });
 
-    exportAs(sp, "PlotPos_getMin", [](int x, int z) -> FloatPos {
-        return std::make_pair(PlotPos{x, z}.getMin(), getPlotDimensionId());
-    });
-
-    exportAs(sp, "PlotPos_getMax", [](int x, int z) -> FloatPos {
-        return std::make_pair(PlotPos{x, z}.getMax(), getPlotDimensionId());
-    });
-
     using JS_PlotPos_Constructor = std::vector<int>;
     exportAs(sp, "getPlotPosByPos", [](FloatPos const& pos) -> JS_PlotPos_Constructor {
         JS_PlotPos_Constructor ret;
         PlotPos                pps{pos.first};
-        ret.push_back(pps.x);
-        ret.push_back(pps.z);
+        ret.push_back(pps.mX);
+        ret.push_back(pps.mZ);
         ret.push_back(pps.isValid());
         return ret;
     });
@@ -55,8 +45,8 @@ void exportPLAPI() {
     exportAs(sp, "getPlotPosByXZ", [](int x, int z) -> JS_PlotPos_Constructor {
         JS_PlotPos_Constructor ret;
         PlotPos                pps{x, z};
-        ret.push_back(pps.x);
-        ret.push_back(pps.z);
+        ret.push_back(pps.mX);
+        ret.push_back(pps.mZ);
         ret.push_back(pps.isValid());
         return ret;
     });

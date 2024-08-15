@@ -132,7 +132,7 @@ string PlotPos::toString() const {
     string dbg;
     size_t i = 0;
     for (auto& v : mVertexs) {
-        dbg += fmt::format("[{0}] => {1}", i++, v.toString());
+        dbg += fmt::format("[{0}] => {1}\n", i++, v.toString());
     }
     return fmt::format("{0} | Vertex: {1}\n{2}", getPlotID(), mVertexs.size(), dbg);
 #endif

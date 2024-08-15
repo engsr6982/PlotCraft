@@ -56,15 +56,9 @@ declare class PlotPos {
 
   isValid(): boolean;
 
-  getMin(): FloatPos;
-
-  getMax(): FloatPos;
-
   toString(): string;
 
   getPlotID(): string;
-
-  toDebug(): string;
 
   isPosInPlot(pos: FloatPos): boolean;
 

@@ -112,20 +112,6 @@ class PlotPos {
   }
 
   /**
-   * @returns {FloatPos}
-   */
-  getMin() {
-    return _Remote_.PlotPos_getMin(this.x, this.z);
-  }
-
-  /**
-   * @returns {FloatPos}
-   */
-  getMax() {
-    return _Remote_.PlotPos_getMax(this.x, this.z);
-  }
-
-  /**
    * @returns {string}
    */
   toString() {
@@ -137,13 +123,6 @@ class PlotPos {
    */
   getPlotID() {
     return _Remote_.PlotPos_getPlotID(this.x, this.z);
-  }
-
-  /**
-   * @returns {string}
-   */
-  toDebug() {
-    return _Remote_.PlotPos_toDebug(this.x, this.z);
   }
 
   /**

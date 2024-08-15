@@ -96,7 +96,7 @@ const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output) {
     if (pos.isValid()) {
         std::shared_ptr<data::PlotMetadata> plot = data::PlotBDStorage::getInstance().getPlot(pos.getPlotID());
         if (plot == nullptr) {
-            plot = data::PlotMetadata::make(pos.getPlotID(), pos.x, pos.z);
+            plot = data::PlotMetadata::make(pos.getPlotID(), pos.mX, pos.mZ);
         }
 
         gui::PlotGUI(player, plot, false);

@@ -27,7 +27,7 @@ void exportPLEvent() {
                 auto call = importAs<void(Player * player, JS_PlotPos_Constructor constructor)>(eventName, funcName);
                 bus->emplaceListener<event::PlayerEnterPlot>([call](event::PlayerEnterPlot& ev) {
                     auto                   pos  = ev.getPos();
-                    JS_PlotPos_Constructor cons = {pos.x, pos.z, pos.isValid()};
+                    JS_PlotPos_Constructor cons = {pos.mX, pos.mZ, pos.isValid()};
 
                     try {
                         call(ev.getPlayer(), cons);
@@ -39,7 +39,7 @@ void exportPLEvent() {
                 auto call = importAs<void(Player * player, JS_PlotPos_Constructor constructor)>(eventName, funcName);
                 bus->emplaceListener<event::PlayerLeavePlot>([call](event::PlayerLeavePlot& ev) {
                     auto                   pos  = ev.getPos();
-                    JS_PlotPos_Constructor cons = {pos.x, pos.z, pos.isValid()};
+                    JS_PlotPos_Constructor cons = {pos.mX, pos.mZ, pos.isValid()};
 
                     try {
                         call(ev.getPlayer(), cons);

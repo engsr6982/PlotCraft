@@ -107,7 +107,7 @@ using namespace core;
 void buildTipMessage(Player& p, PlotPos const& pps, PlayerNameDB* ndb, PlotBDStorage* pdb) {
     try {
         PlotMetadataPtr plot = pdb->getPlot(pps.getPlotID());
-        if (plot == nullptr) plot = PlotMetadata::make(pps.getPlotID(), pps.x, pps.z);
+        if (plot == nullptr) plot = PlotMetadata::make(pps.getPlotID(), pps.mX, pps.mZ);
 
         TextPacket pkt = TextPacket();
         pkt.mType      = TextPacketType::Tip;
@@ -116,7 +116,7 @@ void buildTipMessage(Player& p, PlotPos const& pps, PlayerNameDB* ndb, PlotBDSto
             // clang-format off
             pkt.mMessage = fmt::format(
                 "地皮: {0}\n主人: {1}  |  名称: {2}\n出售: {3}  |  价格: {4}{5}",
-                pps.toDebug(),
+                pps.toString(),
                 owner.empty() ? "无主" : ndb->getPlayerName(owner),
                 plot->getPlotName(),
                 owner.empty() ? "§a✔§r" : plot->isSale() ? "§a✔§r" : "§c✘§r",
@@ -164,7 +164,7 @@ bool registerEventListener() {
                 // 其它维度 => 地皮维度  忽略
                 // 其它维度 => 其它维度  忽略
                 if (pair.second != -1 && pair.second != playerDimid && pair.second == plotDimid) {
-                    debugger("离开地皮（维度）: " << pps.toDebug());
+                    debugger("离开地皮（维度）: " << pps.toString());
                     bus->publish(PlayerLeavePlot(pair.first, &p));
                     helper.set(name, pps, playerDimid);
                 }
@@ -176,12 +176,12 @@ bool registerEventListener() {
 
             // Leave
             if ((!valid && pair.first != pps) || (valid && pair.first != pps)) {
-                debugger("离开地皮（移动）: " << pair.first.toDebug());
+                debugger("离开地皮（移动）: " << pair.first.toString());
                 bus->publish(PlayerLeavePlot(pair.first, &p)); // use last position
             }
             // Join
             if (valid && pair.first != pps) {
-                debugger("进入地皮: " << pps.toDebug());
+                debugger("进入地皮: " << pps.toString());
                 bus->publish(PlayerEnterPlot(pps, &p));
             }
             helper.set(name, pps, playerDimid);
