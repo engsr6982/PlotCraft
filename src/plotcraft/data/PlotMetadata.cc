@@ -14,24 +14,24 @@ namespace plo::data {
 
 
 // 构造
-PlotMetadataPtr PlotMetadata::make(PlotID const& id, UUID const& owner, string const& name, int x, int z) {
+PlotMetadataPtr PlotMetadata::make(PlotID const& id, UUIDs const& owner, string const& name, int x, int z) {
     auto ptr        = std::make_shared<PlotMetadata>();
     ptr->mPlotID    = string(id); // 拷贝
     ptr->mPlotName  = string(name);
     ptr->mPlotX     = int(x);
     ptr->mPlotZ     = int(z);
-    ptr->mPlotOwner = UUID(owner);
+    ptr->mPlotOwner = UUIDs(owner);
     return ptr;
 }
-PlotMetadataPtr PlotMetadata::make(PlotID const& id, UUID const& owner, int x, int z) {
+PlotMetadataPtr PlotMetadata::make(PlotID const& id, UUIDs const& owner, int x, int z) {
     return make(id, owner, "", x, z);
 }
-PlotMetadataPtr PlotMetadata::make(PlotID const& id, int x, int z) { return make(id, UUID{}, "", x, z); }
-PlotMetadataPtr PlotMetadata::make() { return make(PlotID{}, UUID{}, "", 0, 0); }
+PlotMetadataPtr PlotMetadata::make(PlotID const& id, int x, int z) { return make(id, UUIDs{}, "", x, z); }
+PlotMetadataPtr PlotMetadata::make() { return make(PlotID{}, UUIDs{}, "", 0, 0); }
 
 
 // API
-bool PlotMetadata::isOwner(UUID const& uuid) const { return mPlotOwner == uuid; }
+bool PlotMetadata::isOwner(UUIDs const& uuid) const { return mPlotOwner == uuid; }
 
 bool PlotMetadata::setPlotName(string const& name) {
     mPlotName = string(name);
@@ -54,13 +54,13 @@ bool PlotMetadata::setZ(int z) {
     return true;
 }
 
-bool PlotMetadata::setPlotOwner(UUID const& uuid) {
+bool PlotMetadata::setPlotOwner(UUIDs const& uuid) {
     if (uuid.empty()) return false;
-    mPlotOwner = UUID(uuid);
+    mPlotOwner = UUIDs(uuid);
     return true;
 }
 
-bool PlotMetadata::isSharedPlayer(UUID const& uuid) const {
+bool PlotMetadata::isSharedPlayer(UUIDs const& uuid) const {
     return std::find_if(
                mSharedPlayers.begin(),
                mSharedPlayers.end(),
@@ -69,13 +69,13 @@ bool PlotMetadata::isSharedPlayer(UUID const& uuid) const {
         != mSharedPlayers.end();
 }
 
-bool PlotMetadata::addSharedPlayer(UUID const& uuid) {
+bool PlotMetadata::addSharedPlayer(UUIDs const& uuid) {
     if (isSharedPlayer(uuid)) return false;
     mSharedPlayers.emplace_back(PlotShareItem{uuid, Date{}.toString()});
     return true;
 }
 
-bool PlotMetadata::delSharedPlayer(UUID const& uuid) {
+bool PlotMetadata::delSharedPlayer(UUIDs const& uuid) {
     auto it = std::find_if(mSharedPlayers.begin(), mSharedPlayers.end(), [uuid](auto const& p) {
         return p.mSharedPlayer == uuid;
     });
@@ -97,14 +97,14 @@ bool PlotMetadata::hasComment(CommentID const& id) const {
         != mComments.end();
 }
 
-bool PlotMetadata::isCommentOwner(CommentID const& id, UUID const& uuid) const {
+bool PlotMetadata::isCommentOwner(CommentID const& id, UUIDs const& uuid) const {
     auto opt = getComment(id);
     if (!opt.has_value()) return false;
 
     return opt->mCommentPlayer == uuid;
 }
 
-bool PlotMetadata::addComment(UUID const& uuid, string const& text) {
+bool PlotMetadata::addComment(UUIDs const& uuid, string const& text) {
     if (text.empty()) return false;
     mComments.emplace_back(PlotCommentItem{static_cast<int>(mComments.size()) + 1, uuid, Date{}.toString(), text});
     return true;
@@ -137,7 +137,7 @@ std::optional<PlotCommentItem> PlotMetadata::getComment(CommentID const& id) con
 
 std::vector<PlotCommentItem> PlotMetadata::getComments() const { return mComments; }
 
-std::vector<PlotCommentItem> PlotMetadata::getComments(UUID const& uuid) const {
+std::vector<PlotCommentItem> PlotMetadata::getComments(UUIDs const& uuid) const {
     std::vector<PlotCommentItem> res;
     std::copy_if(mComments.begin(), mComments.end(), std::back_inserter(res), [uuid](auto const& c) {
         return c.mCommentPlayer == uuid;
@@ -169,13 +169,13 @@ PlotID PlotMetadata::getPlotID() const { return mPlotID; }
 
 string PlotMetadata::getPlotName() const { return mPlotName; }
 
-UUID PlotMetadata::getPlotOwner() const { return mPlotOwner; }
+UUIDs PlotMetadata::getPlotOwner() const { return mPlotOwner; }
 
 int PlotMetadata::getX() const { return mPlotX; }
 
 int PlotMetadata::getZ() const { return mPlotZ; }
 
-PlotPermission PlotMetadata::getPlayerInThisPlotPermission(UUID const& uuid) const {
+PlotPermission PlotMetadata::getPlayerInThisPlotPermission(UUIDs const& uuid) const {
     if (isOwner(uuid)) return PlotPermission::Owner;
     if (isSharedPlayer(uuid)) return PlotPermission::Shared;
     return PlotPermission::None;

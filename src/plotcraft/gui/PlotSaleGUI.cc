@@ -18,7 +18,7 @@ void PlotSaleGUI(Player& player, PlotMetadataPtr pt) {
         fm.appendButton("取消出售", "textures/ui/cancel", "path", [pt](Player& pl) {
             bool const ok = pt->setSaleStatus(false, 0);
             if (ok) sendText(pl, "出售已取消");
-            else sendText<utils::Level::Error>(pl, "出售取消失败");
+            else sendText<LogLevel::Error>(pl, "出售取消失败");
         });
     } else {
         fm.setContent("此地皮没有出售，无法查询出售信息。");
@@ -52,24 +52,24 @@ void _sellPlotAndEditPrice(Player& player, PlotMetadataPtr pt, bool edit) {
         string const pr = std::get<string>(dt->at("pr")); // 输入框只能输入字符串
 
         if (!std::regex_match(pr, std::regex("^\\d+$"))) {
-            sendText<utils::Level::Error>(pl, "价格必须为整数");
+            sendText<LogLevel::Error>(pl, "价格必须为整数");
             return;
         }
 
         int const p = std::stoi(pr);
         if (p <= 0) {
-            sendText<utils::Level::Error>(pl, "价格必须大于0");
+            sendText<LogLevel::Error>(pl, "价格必须大于0");
             return;
         }
 
         if (edit) {
             bool const ok = pt->setSalePrice(p);
             if (ok) sendText(pl, "出售价格已修改");
-            else sendText<utils::Level::Error>(pl, "出售价格修改失败");
+            else sendText<LogLevel::Error>(pl, "出售价格修改失败");
         } else {
             bool const ok = pt->setSaleStatus(true, p);
             if (ok) sendText(pl, "出售成功");
-            else sendText<utils::Level::Error>(pl, "出售失败");
+            else sendText<LogLevel::Error>(pl, "出售失败");
         }
     });
 }

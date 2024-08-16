@@ -107,7 +107,7 @@ void _changePlotName(Player& player, PlotMetadataPtr pt) {
 
             sendText(pl, "地皮名称已修改");
         } else {
-            sendText<utils::Level::Error>(pl, "地皮名称修改失败");
+            sendText<LogLevel::Error>(pl, "地皮名称修改失败");
         }
     });
 }

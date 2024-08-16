@@ -288,7 +288,12 @@ PLAPI inline FindResult findSafePos(
     try {
         if (startY <= stopY) return result; // 起始高度大于或等于停止高度，直接返回
 
-        BlockPos bp(findX, startY, findZ);
+        BlockPos          bp(findX, startY, findZ);
+        static const auto getBlock = [&](int y) {
+            auto bp2 = bp;
+            bp2.y    = y;
+            return mc::getBlock(bp2, findDimid);
+        };
 
         int currentTraversalY = startY; // 当前遍历的y值
         while (currentTraversalY > stopY) {
@@ -302,9 +307,9 @@ PLAPI inline FindResult findSafePos(
                 } else if (currentTraversalY <= stopY || utils::some(dangerousBlocks, bl.getTypeName())) {
                     break;
                 } else if (
-                    !bl.isAir() &&                                                      // 落脚方块
-                    mc::getBlock(currentTraversalY + offset1, bp, findDimid).isAir()    // 玩家身体 下半
-                    && mc::getBlock(currentTraversalY + offset2, bp, findDimid).isAir() // 玩家身体 上半
+                    !bl.isAir() &&                                   // 落脚方块
+                    getBlock(currentTraversalY + offset1).isAir()    // 玩家身体 下半
+                    && getBlock(currentTraversalY + offset2).isAir() // 玩家身体 上半
                 ) {
                     // 安全位置   落脚点安全、上两格是空气
                     result.y      = currentTraversalY + 1; // 往上跳一格

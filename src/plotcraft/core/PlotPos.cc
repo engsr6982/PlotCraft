@@ -1,4 +1,4 @@
-#include "plotcraft/PlotPos.h"
+#include "plotcraft/core/PlotPos.h"
 #include "fmt/core.h"
 #include "fmt/format.h"
 #include "plotcraft/Config.h"

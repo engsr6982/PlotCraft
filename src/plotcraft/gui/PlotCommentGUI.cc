@@ -9,7 +9,7 @@ void PlotCommentGUI(Player& player, PlotMetadataPtr pt) {
     bool const hasOwner = !pt->getPlotOwner().empty(); // 是否有主人
 
     if (!hasOwner) {
-        sendText<utils::Level::Warn>(player, "你不能评论这个地皮，因为它没有主人。");
+        sendText<LogLevel::Warn>(player, "你不能评论这个地皮，因为它没有主人。");
         return;
     }
 
@@ -70,7 +70,7 @@ void _publishComment(Player& player, PlotMetadataPtr pt) {
 
             sendText(pl, "评论已发布");
         } else {
-            sendText<utils::Level::Error>(pl, "评论发布失败");
+            sendText<LogLevel::Error>(pl, "评论发布失败");
         }
     });
 }
@@ -110,7 +110,7 @@ void _showCommentOperation(Player& player, PlotMetadataPtr pt, CommentID id) {
             if (ok) {
                 sendText(pl, "评论已删除");
             } else {
-                sendText<utils::Level::Error>(pl, "评论删除失败");
+                sendText<LogLevel::Error>(pl, "评论删除失败");
             }
         });
     }
@@ -153,7 +153,7 @@ void _editComment(Player& player, PlotMetadataPtr pt, CommentID id) {
 
             sendText(pl, "评论已修改");
         } else {
-            sendText<utils::Level::Error>(pl, "评论修改失败");
+            sendText<LogLevel::Error>(pl, "评论修改失败");
         }
     });
 }

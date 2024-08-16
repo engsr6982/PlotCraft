@@ -2,7 +2,6 @@
 
 #include "PlotDimension.h"
 #include "PlotGenerator.h"
-#include "Utils.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/DimensionConversionData.h"
 #include "mc/world/level/Level.h"
@@ -17,6 +16,7 @@
 #include "mc/world/level/levelgen/structure/StructureSetRegistry.h"
 #include "mc/world/level/levelgen/structure/VillageFeature.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
+#include "plotcraft/core/Utils.h"
 
 
 namespace plo::core {

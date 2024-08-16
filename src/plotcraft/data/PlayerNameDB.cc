@@ -8,22 +8,22 @@ PlayerNameDB& PlayerNameDB::getInstance() {
     return instance;
 }
 bool PlayerNameDB::initPlayerNameDB() {
-    if (isInit) return true;
+    if (mPlayerNameDB != nullptr) return true;
     mPlayerNameDB = std::make_unique<ll::data::KeyValueDB>(
         my_plugin::MyPlugin::getInstance().getSelf().getDataDir() / "PlayerNameDB"
     );
-    return isInit = true;
+    return true;
 }
 
 bool PlayerNameDB::hasPlayer(string const& realName) { return mPlayerNameDB->has(realName); }
 bool PlayerNameDB::hasPlayer(mce::UUID const& uuid) { return mPlayerNameDB->has(uuid.asString()); }
 
-string PlayerNameDB::getPlayerName(UUID const& uuid) {
+string PlayerNameDB::getPlayerName(UUIDs const& uuid) {
     auto fn = mPlayerNameDB->get(uuid);
     if (fn) return *fn;
     return "";
 }
-UUID PlayerNameDB::getPlayerUUID(string const& realName) {
+UUIDs PlayerNameDB::getPlayerUUID(string const& realName) {
     if (hasPlayer(realName)) return *mPlayerNameDB->get(realName);
     return "";
 }

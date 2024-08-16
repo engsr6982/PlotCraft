@@ -22,8 +22,9 @@
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotBDStorage.h"
 #include "plotcraft/event/Event.h"
+#include "plotcraft/utils/EconomySystem.h"
 #include "plotcraft/utils/Mc.h"
-#include "plotcraft/utils/Moneys.h"
+
 
 #if !defined(OVERWORLD)
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
@@ -66,7 +67,7 @@ bool MyPlugin::load() {
     plo::data::PlayerNameDB::getInstance().initPlayerNameDB();
     plo::EconomyQueue::getInstance().load();
 
-    plo::utils::Moneys::getInstance().updateConfig(plo::config::cfg.moneys);
+    plo::utils::EconomySystem::getInstance().updateConfig(plo::config::cfg.economy);
 
     return true;
 }

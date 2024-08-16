@@ -3,7 +3,7 @@
 #include "ll/api/event/Event.h"
 #include "mc/world/actor/player/Player.h"
 #include "plotcraft/Macro.h"
-#include "plotcraft/PlotPos.h"
+#include "plotcraft/core/PlotPos.h"
 #include "plotcraft/data/PlotMetadata.h"
 
 namespace plo::event {

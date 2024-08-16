@@ -2,7 +2,7 @@
 #include "Version.h"
 #include "ll/api/Config.h"
 #include "plotcraft/Macro.h"
-#include "plotcraft/utils/Moneys.h"
+#include "plotcraft/utils/EconomySystem.h"
 #include <string>
 #include <vector>
 
@@ -10,8 +10,6 @@
 using string = std::string;
 
 namespace plo::config {
-
-#define CONFIG_VERSION 6
 
 struct _Config {
     int version = CONFIG_VERSION;
@@ -26,8 +24,7 @@ struct _Config {
         string borderBlock = "minecraft:stone_block_slab";
     } generator;
 
-    utils::MoneysConfig moneys; // 经济系统配置
-
+    utils::EconomyConfig economy; // 经济系统配置
     struct SwitchDim {
         std::vector<float> overWorld = {0, 100, 0}; // 切换维度时传送的坐标
 

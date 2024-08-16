@@ -16,8 +16,8 @@ namespace plo::data {
 
 
 typedef string    PlotID; // PlotPos::getPlotID()
-typedef mce::UUID UUID_;
-typedef string    UUID;
+typedef mce::UUID UUIDm;
+typedef string    UUIDs;
 typedef int       CommentID;
 
 
@@ -25,12 +25,12 @@ enum class PlotPermission : int { None = 0, Shared = 1, Owner = 2, Admin = 3 };
 
 struct PlotCommentItem {
     CommentID mCommentID;
-    UUID      mCommentPlayer;
+    UUIDs     mCommentPlayer;
     string    mCommentTime;
     string    mContent;
 };
 struct PlotShareItem {
-    UUID   mSharedPlayer;
+    UUIDs  mSharedPlayer;
     string mSharedTime;
 };
 
@@ -65,7 +65,7 @@ public:
     // private:
     PlotID mPlotID;
     string mPlotName{""};
-    UUID   mPlotOwner{""};
+    UUIDs  mPlotOwner{""};
     int    mPlotX;
     int    mPlotZ;
 
@@ -80,12 +80,12 @@ public:
     // Constructors:
     PLAPI static PlotMetadataPtr make();
     PLAPI static PlotMetadataPtr make(PlotID const& plotID, int x, int z);
-    PLAPI static PlotMetadataPtr make(PlotID const& plotID, UUID const& owner, int x, int z);
-    PLAPI static PlotMetadataPtr make(PlotID const& plotID, UUID const& owner, string const& name, int x, int z);
+    PLAPI static PlotMetadataPtr make(PlotID const& plotID, UUIDs const& owner, int x, int z);
+    PLAPI static PlotMetadataPtr make(PlotID const& plotID, UUIDs const& owner, string const& name, int x, int z);
 
 
     // APIs:
-    PLAPI bool isOwner(UUID const& uuid) const;
+    PLAPI bool isOwner(UUIDs const& uuid) const;
 
     PLAPI bool setPlotName(string const& name);
 
@@ -95,13 +95,13 @@ public:
 
     PLAPI bool setZ(int z);
 
-    PLAPI bool setPlotOwner(UUID const& owner);
+    PLAPI bool setPlotOwner(UUIDs const& owner);
 
-    PLAPI bool isSharedPlayer(UUID const& uuid) const;
+    PLAPI bool isSharedPlayer(UUIDs const& uuid) const;
 
-    PLAPI bool addSharedPlayer(UUID const& uuid);
+    PLAPI bool addSharedPlayer(UUIDs const& uuid);
 
-    PLAPI bool delSharedPlayer(UUID const& uuid);
+    PLAPI bool delSharedPlayer(UUIDs const& uuid);
 
     PLAPI bool resetSharedPlayers();
 
@@ -109,9 +109,9 @@ public:
 
     PLAPI bool hasComment(CommentID const& commentID) const;
 
-    PLAPI bool isCommentOwner(CommentID const& commentID, UUID const& uuid) const;
+    PLAPI bool isCommentOwner(CommentID const& commentID, UUIDs const& uuid) const;
 
-    PLAPI bool addComment(UUID const& uuid, string const& content);
+    PLAPI bool addComment(UUIDs const& uuid, string const& content);
 
     PLAPI bool delComment(CommentID const& commentID);
 
@@ -121,7 +121,7 @@ public:
 
     PLAPI std::optional<PlotCommentItem> getComment(CommentID const& commentID) const;
     PLAPI std::vector<PlotCommentItem> getComments() const;
-    PLAPI std::vector<PlotCommentItem> getComments(UUID const& uuid) const;
+    PLAPI std::vector<PlotCommentItem> getComments(UUIDs const& uuid) const;
 
     PLAPI bool setSaleStatus(bool isSale);
 
@@ -137,13 +137,13 @@ public:
 
     PLAPI string getPlotName() const;
 
-    PLAPI UUID getPlotOwner() const;
+    PLAPI UUIDs getPlotOwner() const;
 
     PLAPI int getX() const;
 
     PLAPI int getZ() const;
 
-    PLAPI PlotPermission getPlayerInThisPlotPermission(UUID const& uuid) const; // 玩家在此地皮的权限
+    PLAPI PlotPermission getPlayerInThisPlotPermission(UUIDs const& uuid) const; // 玩家在此地皮的权限
 
     PLAPI PlotPermissionTable&       getPermissionTable();
     PLAPI PlotPermissionTable const& getPermissionTableConst() const;

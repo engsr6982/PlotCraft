@@ -13,20 +13,17 @@
 #include "mc/world/level/chunk/LevelChunk.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "plotcraft/Config.h"
+#include "plotcraft/core/Utils.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotBDStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
 #include "plotcraft/gui/Global.h"
-#include "plotcraft/utils/Area.h"
-#include "plotcraft/utils/Text.h"
-
-
-#include "plotcraft/core/Utils.h"
 #include <unordered_map>
 
-namespace plo::command {
 
+namespace plo::command {
 using namespace plo::utils;
+using namespace plo::mc;
 
 struct ParamOp {
     enum OperationOP { Op, Deop } op;
@@ -40,27 +37,27 @@ const auto LambdaOP = [](CommandOrigin const& origin, CommandOutput& output, Par
         auto& impl = data::PlotBDStorage::getInstance();
         if (param.op == ParamOp::Op) {
             if (impl.isAdmin(uuid)) {
-                sendText<Level::Error>(output, "玩家 \"{}\" 已经是管理员!", param.name);
+                sendText<LogLevel::Error>(output, "玩家 \"{}\" 已经是管理员!", param.name);
             } else {
                 if (impl.addAdmin(uuid)) {
-                    sendText<Level::Success>(output, "成功将玩家 \"{}\" 设为管理员!", param.name);
+                    sendText<LogLevel::Success>(output, "成功将玩家 \"{}\" 设为管理员!", param.name);
                 } else {
-                    sendText<Level::Error>(output, "设置玩家 \"{}\" 为管理员失败!", param.name);
+                    sendText<LogLevel::Error>(output, "设置玩家 \"{}\" 为管理员失败!", param.name);
                 }
             }
         } else if (param.op == ParamOp::Deop) {
             if (!impl.isAdmin(uuid)) {
-                sendText<Level::Error>(output, "玩家 \"{}\" 不是管理员!", param.name);
+                sendText<LogLevel::Error>(output, "玩家 \"{}\" 不是管理员!", param.name);
             } else {
                 if (impl.delAdmin(uuid)) {
-                    sendText<Level::Success>(output, "成功将玩家 \"{}\" 取消管理员权限!", param.name);
+                    sendText<LogLevel::Success>(output, "成功将玩家 \"{}\" 取消管理员权限!", param.name);
                 } else {
-                    sendText<Level::Error>(output, "取消玩家 \"{}\" 管理员权限失败!", param.name);
+                    sendText<LogLevel::Error>(output, "取消玩家 \"{}\" 管理员权限失败!", param.name);
                 }
             }
         }
     } else {
-        sendText<Level::Error>(output, "获取玩家 \"{}\" UUID失败!", param.name);
+        sendText<LogLevel::Error>(output, "获取玩家 \"{}\" UUID失败!", param.name);
     }
 };
 
@@ -88,7 +85,7 @@ const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
     if (player.getDimensionId() != core::getPlotDimensionId()) {
-        sendText<utils::Level::Error>(player, "此命令只能在地皮世界使用!");
+        sendText<LogLevel::Error>(player, "此命令只能在地皮世界使用!");
         return;
     }
 
@@ -101,7 +98,7 @@ const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output) {
 
         gui::PlotGUI(player, plot, false);
     } else {
-        sendText<Level::Error>(output, "无效的地皮坐标!");
+        sendText<LogLevel::Error>(output, "无效的地皮坐标!");
     }
 };
 
@@ -116,7 +113,7 @@ const auto LambdaDefault = [](CommandOrigin const& origin, CommandOutput& output
 const auto LambdaDBSave = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::DedicatedServer);
     data::PlotBDStorage::getInstance().save();
-    sendText<Level::Success>(output, "操作完成!");
+    sendText<LogLevel::Success>(output, "操作完成!");
 };
 
 const auto LambdaMgr = [](CommandOrigin const& origin, CommandOutput& output) {
@@ -130,7 +127,7 @@ const auto LambdaSetting = [](CommandOrigin const& origin, CommandOutput& output
     gui::PlayerSettingGUI(player);
 };
 
-
+/*
 namespace PlotMergeBindData {
 
 std::unordered_map<string, std::pair<PlotPos, PlotPos>> mBindData; // key: realName
@@ -147,7 +144,7 @@ const auto start = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
     if (isStarted(player)) {
-        sendText<Level::Error>(output, "请先完成当前操作!");
+        sendText<LogLevel::Error>(output, "请先完成当前操作!");
         return;
     }
     auto sou                                = PlotPos(player.getPosition());
@@ -161,7 +158,7 @@ const auto source = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
     if (!isStarted(player)) {
-        sendText<Level::Error>(output, "请先使用 /plo merge start 开启地皮合并功能!");
+        sendText<LogLevel::Error>(output, "请先使用 /plo merge start 开启地皮合并功能!");
         return;
     }
     auto sou = PlotPos(player.getPosition());
@@ -175,7 +172,7 @@ const auto target = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
     if (!isStarted(player)) {
-        sendText<Level::Error>(output, "请先使用 /plo merge start 开启地皮合并功能!");
+        sendText<LogLevel::Error>(output, "请先使用 /plo merge start 开启地皮合并功能!");
         return;
     }
     auto& dt = mBindData[player.getRealName()];
@@ -190,13 +187,13 @@ const auto confirm = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
     if (!isStarted(player)) {
-        sendText<Level::Error>(output, "请先使用 /plo merge start 开启地皮合并功能!");
+        sendText<LogLevel::Error>(output, "请先使用 /plo merge start 开启地皮合并功能!");
         return;
     }
 
     auto& dt = mBindData[player.getRealName()];
     if (!dt.first.isValid() || !dt.second.isValid()) {
-        sendText<Level::Error>(output, "源地皮或目标地皮无效，请重新选择");
+        sendText<LogLevel::Error>(output, "源地皮或目标地皮无效，请重新选择");
         return;
     }
 
@@ -204,7 +201,7 @@ const auto confirm = [](CommandOrigin const& origin, CommandOutput& output) {
     auto secID = dt.second.getPlotID();
 
     if (!PlotPos::isAdjacent(dt.first, dt.second)) {
-        sendText<Level::Error>(output, "{} 和 {} 不是相邻地皮", firID, secID);
+        sendText<LogLevel::Error>(output, "{} 和 {} 不是相邻地皮", firID, secID);
         return;
     }
 
@@ -213,13 +210,13 @@ const auto confirm = [](CommandOrigin const& origin, CommandOutput& output) {
     auto  secMeta = db.getPlot(secID);
 
     if (!firMeta || !secMeta) {
-        sendText<Level::Error>(output, "源地皮或目标地皮无主，请重新选择");
+        sendText<LogLevel::Error>(output, "源地皮或目标地皮无主，请重新选择");
         return;
     }
 
     auto uuid = player.getUuid().asString();
     if (!firMeta->isOwner(uuid) || !secMeta->isOwner(uuid)) {
-        sendText<Level::Error>(output, "您不是源地皮或目标地皮的主人，请重新选择");
+        sendText<LogLevel::Error>(output, "您不是源地皮或目标地皮的主人，请重新选择");
         return;
     }
 
@@ -235,7 +232,7 @@ const auto cancel = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
     if (!isStarted(player)) {
-        sendText<Level::Error>(output, "您未开启地皮合并功能，无需取消");
+        sendText<LogLevel::Error>(output, "您未开启地皮合并功能，无需取消");
         return;
     }
     mBindData.erase(player.getRealName());
@@ -243,7 +240,7 @@ const auto cancel = [](CommandOrigin const& origin, CommandOutput& output) {
 };
 
 }; // namespace PlotMergeBindData
-
+ */
 
 bool registerCommand() {
     auto& cmd = ll::command::CommandRegistrar::getInstance().getOrCreateCommand("plo", "PlotCraft");
@@ -257,12 +254,12 @@ bool registerCommand() {
     cmd.overload().text("setting").execute(LambdaSetting);                     // plo setting
     cmd.overload().execute(LambdaDefault);                                     // plo
 
-    cmd.overload().text("merge").execute(PlotMergeBindData::merge);                   // plo merge
-    cmd.overload().text("merge").text("start").execute(PlotMergeBindData::start);     // plo merge start
-    cmd.overload().text("merge").text("source").execute(PlotMergeBindData::source);   // plo merge source
-    cmd.overload().text("merge").text("target").execute(PlotMergeBindData::target);   // plo merge target
-    cmd.overload().text("merge").text("confirm").execute(PlotMergeBindData::confirm); // plo merge confirm
-    cmd.overload().text("merge").text("cancel").execute(PlotMergeBindData::cancel);   // plo merge cancel
+    // cmd.overload().text("merge").execute(PlotMergeBindData::merge);                   // plo merge
+    // cmd.overload().text("merge").text("start").execute(PlotMergeBindData::start);     // plo merge start
+    // cmd.overload().text("merge").text("source").execute(PlotMergeBindData::source);   // plo merge source
+    // cmd.overload().text("merge").text("target").execute(PlotMergeBindData::target);   // plo merge target
+    // cmd.overload().text("merge").text("confirm").execute(PlotMergeBindData::confirm); // plo merge confirm
+    // cmd.overload().text("merge").text("cancel").execute(PlotMergeBindData::cancel);   // plo merge cancel
 
 #ifndef OVERWORLD
     cmd.overload<ParamGo>().text("go").required("dim").execute(LambdaGo); // plo go <overworld|plot>

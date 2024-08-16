@@ -1,22 +1,64 @@
 #pragma once
 #include "mc/math/Vec3.h"
+#include "mc/world/level/block/Block.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/Macro.h"
 #include <utility>
 
+
 namespace plo {
 
-// Disable C4244
-#pragma warning(disable : 4244)
+using DiagonPos = std::pair<Vec3, Vec3>;
 
-enum class Direction : int {
+enum class PlotDirection : int {
     North = 0, // 北
     East  = 1, // 东
     South = 2, // 南
     West  = 3  // 西
 };
 
-using DiagonPos = std::pair<Vec3, Vec3>;
+
+class PlotRoadPos {
+public:
+    int       mX, mZ;
+    DiagonPos mDiagonPos;
+    bool      mIsMergedPlot; // 是否是合并的地皮
+
+    PLAPI PlotRoadPos();
+    PLAPI PlotRoadPos(int x, int z);
+    PLAPI PlotRoadPos(const Vec3& vec3);
+    PLAPI PlotRoadPos(int x, int z, const DiagonPos& diagonPos, bool isMergedPlot);
+
+    PLAPI string toString() const;
+    PLAPI string getRoadID() const;
+
+    PLAPI bool fillRoad(Block& block, bool includeBorder = false);
+
+    PLAPI std::vector<class PlotPos> getAdjacentPlots() const;
+
+    PLAPI static bool isAdjacent(const PlotRoadPos& road1, const PlotRoadPos& road2);
+};
+
+
+class PlotCrossPos {
+public:
+    int       mX, mZ;
+    DiagonPos mDiagonPos;
+    bool      mIsMergedPlot; // 是否是合并的地皮
+
+    PLAPI PlotCrossPos();
+    PLAPI PlotCrossPos(int x, int z);
+    PLAPI PlotCrossPos(const Vec3& vec3);
+    PLAPI PlotCrossPos(int x, int z, const DiagonPos& diagonPos, bool isMergedPlot);
+
+    PLAPI string toString() const;
+    PLAPI string getCrossID() const;
+
+    PLAPI bool fillCross(Block& block);
+
+    PLAPI std::vector<PlotRoadPos> getAdjacentRoads() const;
+};
+
 
 class PlotPos {
 public:
@@ -26,6 +68,7 @@ public:
     PLAPI PlotPos();
     PLAPI PlotPos(int x, int z);
     PLAPI PlotPos(const Vec3& vec3);
+    PLAPI PlotPos(int x, int z, const std::vector<Vec3>& vertexs);
 
     PLAPI bool isValid() const;
 
@@ -41,7 +84,15 @@ public:
 
     PLAPI bool isPosOnBorder(const Vec3& vec3) const;
 
-    PLAPI std::vector<PlotPos> getAdjacentPlots() const;
+    PLAPI bool canMerge(PlotPos& other) const;
+    PLAPI bool checkAndFixVertexs();
+    PLAPI bool tryMergeAndFixVertexs(PlotPos& other);
+
+    PLAPI std::vector<PlotPos> getAdjacentPlots() const;     // 获取相邻的地皮
+    PLAPI std::vector<PlotRoadPos> getAdjacentRoads() const; // 获取相邻的道路
+
+    PLAPI std::vector<PlotRoadPos> getRangedRoads() const;    // 获取范围内的道路
+    PLAPI std::vector<PlotCrossPos> getRangedCrosses() const; // 获取范围内的路口
 
     PLAPI bool operator==(PlotPos const& other) const;
     PLAPI bool operator!=(PlotPos const& other) const;

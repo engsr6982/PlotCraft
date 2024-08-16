@@ -14,7 +14,6 @@ namespace plo::data {
 class PlayerNameDB {
 private:
     std::unique_ptr<ll::data::KeyValueDB> mPlayerNameDB;
-    bool                                  isInit = false;
 
     PlayerNameDB()                               = default;
     PlayerNameDB(const PlayerNameDB&)            = delete;
@@ -25,10 +24,10 @@ public:
     PLAPI bool                 initPlayerNameDB();
 
     PLAPI bool hasPlayer(string const& realName);
-    PLAPI bool hasPlayer(UUID_ const& uuid); // mce::UUID
+    PLAPI bool hasPlayer(UUIDm const& uuid); // mce::UUID
 
-    PLAPI string getPlayerName(UUID const& uuid);
-    PLAPI UUID   getPlayerUUID(string const& realName);
+    PLAPI string getPlayerName(UUIDs const& uuid);
+    PLAPI UUIDs  getPlayerUUID(string const& realName);
 
     PLAPI bool insertPlayer(Player& player);
 };

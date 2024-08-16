@@ -57,22 +57,22 @@ void _buyPlot(Player& player, PlotMetadataPtr pt) {
     auto& cfg  = config::cfg.plotWorld;
 
     if (static_cast<int>(impl->getPlots(player.getUuid().asString()).size()) >= cfg.maxBuyPlotCount) {
-        sendText<utils::Level::Warn>(player, "你已经购买了太多地皮，无法购买新的地皮。");
+        sendText<LogLevel::Warn>(player, "你已经购买了太多地皮，无法购买新的地皮。");
         return;
     }
 
-    auto*      ms       = &Moneys::getInstance();
+    auto*      ms       = &EconomySystem::getInstance();
     bool const hasOwner = !pt->getPlotOwner().empty();
     bool const hasSale  = pt->isSale();
     bool const fromSale = hasOwner && hasSale; // 是否从出售地皮购买(玩家)
     int const  price    = fromSale ? pt->getSalePrice() : cfg.buyPlotPrice;
 
     if (hasOwner && !hasSale) {
-        sendText<utils::Level::Warn>(player, "这个地皮没有出售，无法购买。");
+        sendText<LogLevel::Warn>(player, "这个地皮没有出售，无法购买。");
         return;
     }
     if (pt->getPlotOwner() == player.getUuid().asString()) {
-        sendText<utils::Level::Warn>(player, "你不能购买自己的地皮。");
+        sendText<LogLevel::Warn>(player, "你不能购买自己的地皮。");
         return;
     }
 
@@ -96,7 +96,7 @@ void _buyPlot(Player& player, PlotMetadataPtr pt) {
                 return;
             }
 
-            if (ms->reduceMoney(pl, price)) {
+            if (ms->reduce(pl, price)) {
                 pev::PlayerBuyPlotAfter ev{&pl, pt, price};
                 auto&                   bus = ll::event::EventBus::getInstance();
                 if (fromSale) {
@@ -109,7 +109,7 @@ void _buyPlot(Player& player, PlotMetadataPtr pt) {
                         // 把扣除的经济转移给出售者
                         auto plptr = ll::service::getLevel()->getPlayer(pt->getPlotOwner());
                         if (plptr) {
-                            ms->addMoney(plptr, newPrice); // 出售者(当前地皮主人)在线
+                            ms->add(*plptr, newPrice); // 出售者(当前地皮主人)在线
                             sendText(
                                 plptr,
                                 "玩家 {} 购买了您出售的地皮 {}, 经济 +{}",
@@ -123,14 +123,14 @@ void _buyPlot(Player& player, PlotMetadataPtr pt) {
 
                         bus.publish(ev);
                         sendText(pl, "地皮购买成功");
-                    } else sendText<utils::Level::Error>(pl, "地皮购买失败");
+                    } else sendText<LogLevel::Error>(pl, "地皮购买失败");
                 } else {
                     PlotPos    ps{pt->getX(), pt->getZ()};
                     bool const ok = impl->addPlot(ps.getPlotID(), pl.getUuid().asString(), pt->getX(), pt->getZ());
                     if (ok) {
                         bus.publish(ev);
                         sendText(pl, "地皮购买成功");
-                    } else sendText<utils::Level::Error>(pl, "地皮购买失败");
+                    } else sendText<LogLevel::Error>(pl, "地皮购买失败");
                 }
             }
         });

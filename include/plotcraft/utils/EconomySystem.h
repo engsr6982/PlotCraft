@@ -25,8 +25,8 @@ public:
     EconomySystem(const EconomySystem&)            = delete;
     EconomySystem& operator=(const EconomySystem&) = delete;
 
-    PLAPI EconomySystem& getInstance();
-    PLAPI bool           updateConfig(EconomyConfig config);
+    PLAPI static EconomySystem& getInstance();
+    PLAPI bool                  updateConfig(EconomyConfig config);
 
     PLAPI long long get(Player& player);
 
