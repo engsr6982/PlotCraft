@@ -1,5 +1,3 @@
-#ifndef OVERWORLD
-
 #pragma once
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/BlockVolume.h"
@@ -39,5 +37,3 @@ public:
 };
 
 } // namespace plo::core
-
-#endif // OVERWORLD

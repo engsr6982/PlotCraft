@@ -1,5 +1,3 @@
-#ifndef OVERWORLD
-
 #include "PlotGenerator.h"
 #include "mc/deps/core/utility/buffer_span_mut.h"
 #include "mc/world/level/BlockPos.h"
@@ -155,4 +153,3 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
 
 } // namespace plo::core
 
-#endif // OVERWORLD

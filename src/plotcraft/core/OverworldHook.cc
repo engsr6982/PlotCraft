@@ -8,7 +8,7 @@
 #include "mc/world/level/levelgen/structure/StructureSetRegistry.h"
 #include "mc/world/level/levelgen/structure/VillageFeature.h"
 #include "PlotGenerator.h"
-#include "Utils.h"
+#include "plotcraft/core/Utils.h"
 
 LL_AUTO_TYPE_INSTANCE_HOOK(
     OverworldDimensionCreateGeneratorHook,
