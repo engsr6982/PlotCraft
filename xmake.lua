@@ -21,9 +21,6 @@ end
 option("overworld") -- Overworld
     set_default(false)
 
-option("test")
-    set_default(false)
-
 target("PlotCraft")
     add_cxflags(
         "/EHa",
@@ -66,10 +63,6 @@ target("PlotCraft")
     else
         add_defines("OVERWORLD")
     end 
-
-    if get_config("test") then
-        add_defines("TEST")
-    end
 
     add_defines("BuildVersionInfo=\"Overworld: " .. tostring(get_config("overworld")) .. "\"")
 

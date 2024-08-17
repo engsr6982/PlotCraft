@@ -11,25 +11,27 @@ using string = std::string;
 
 namespace plo::config {
 
+enum class PlotGeneratorType : int { Default, Custom };
 struct _Config {
     int version = CONFIG_VERSION;
 
     struct _Generator {
-        int plotWidth   = 64; // 地皮大小
-        int roadWidth   = 5;  // 道路宽度
-        int subChunkNum = 4;  // 子区块数量（负责高度,n*16）
+        PlotGeneratorType type = PlotGeneratorType::Default; // 生成器类型
 
+        // Default Generator
+        int    plotWidth   = 64; // 地皮大小
+        int    roadWidth   = 5;  // 道路宽度
+        int    subChunkNum = 4;  // 子区块数量（负责高度,n*16）
         string roadBlock   = "minecraft:cherry_planks";
         string fillBlock   = "minecraft:grass_block";
         string borderBlock = "minecraft:stone_block_slab";
+
+        // Custom Generator
+        int    cuPlotChunkNum     = 3; // >= 2
+        string cuPlotTemplatePath = "";
     } generator;
 
     utils::EconomyConfig economy; // 经济系统配置
-    struct SwitchDim {
-        std::vector<float> overWorld = {0, 100, 0}; // 切换维度时传送的坐标
-
-        std::vector<float> plotWorld = {0.5, 0, 0.5};
-    } switchDim;
 
     struct PlotWorld {
         int    maxBuyPlotCount   = 25;   // 最大购买地皮数量
@@ -50,6 +52,12 @@ struct _Config {
             std::vector<string> onUseItemOnWhiteList = {"minecraft:clock"};
         } eventListener;
     } plotWorld;
+
+    struct SwitchDim {
+        std::vector<float> overWorld = {0, 100, 0}; // 切换维度时传送的坐标
+
+        std::vector<float> plotWorld = {0.5, 0, 0.5};
+    } switchDim;
 
     std::vector<int> allowedPlotTeleportDim = {0, 1, 2, 3}; // 允许传送到地皮维度的维度列表
 };

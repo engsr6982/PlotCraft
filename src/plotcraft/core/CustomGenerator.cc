@@ -1,4 +1,3 @@
-#ifdef TEST
 #include "CustomGenerator.h"
 #include "mc/deps/core/utility/buffer_span_mut.h"
 #include "mc/world/level/BlockPos.h"
@@ -201,6 +200,3 @@ void CustomGenerator::loadChunk(LevelChunk& levelchunk, bool) {
 
 
 } // namespace plo::core
-
-
-#endif

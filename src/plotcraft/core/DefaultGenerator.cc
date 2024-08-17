@@ -1,4 +1,4 @@
-#include "PlotGenerator.h"
+#include "DefaultGenerator.h"
 #include "mc/deps/core/utility/buffer_span_mut.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
@@ -22,7 +22,7 @@
 
 namespace plo::core {
 
-PlotGenerator::PlotGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON)
+DefaultGenerator::DefaultGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON)
 : FlatWorldGenerator(dimension, seed, generationOptionsJSON) {
     mBiome       = getLevel().getBiomeRegistry().lookupByHash(VanillaBiomeNames::Plains);
     mBiomeSource = std::make_unique<FixedBiomeSource>(*mBiome);
@@ -89,7 +89,7 @@ int positiveMod(int value, int modulus) {
 }
 
 
-void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateReplacementDataLoad */) {
+void DefaultGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateReplacementDataLoad */) {
     auto& gen = config::cfg.generator;
 
     auto blockSource = &mDimension->getBlockSourceFromMainChunkSource();
@@ -152,4 +152,3 @@ void PlotGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateRepl
 }
 
 } // namespace plo::core
-

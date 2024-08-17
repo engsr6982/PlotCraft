@@ -1,17 +1,13 @@
 #ifdef OVERWORLD
+#include "CustomGenerator.h"
+#include "DefaultGenerator.h"
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/dimension/OverworldDimension.h"
+#include "mc/world/level/levelgen/WorldGenerator.h"
 #include "mc/world/level/levelgen/structure/StructureSetRegistry.h"
-
-
-#if defined(TEST)
-#include "CustomGenerator.h"
-#else
-#include "PlotGenerator.h"
-#endif
-
+#include "plotcraft/Config.h"
 
 LL_AUTO_TYPE_INSTANCE_HOOK(
     OverworldDimensionCreateGeneratorHook,
@@ -27,14 +23,13 @@ LL_AUTO_TYPE_INSTANCE_HOOK(
     auto  seed      = getLevel().getSeed();
     auto& levelData = getLevel().getLevelData();
 
-
-#if defined(TEST)
-    worldGenerator =
-        std::make_unique<plo::core::CustomGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
-#else
-    worldGenerator = std::make_unique<plo::core::PlotGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
-#endif
-
+    if (plo::config::cfg.generator.type == plo::config::PlotGeneratorType::Default) {
+        worldGenerator =
+            std::make_unique<plo::core::DefaultGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
+    } else {
+        worldGenerator =
+            std::make_unique<plo::core::CustomGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
+    }
 
     worldGenerator->init();
     return std::move(worldGenerator);

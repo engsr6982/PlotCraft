@@ -13,7 +13,7 @@ namespace plo::core {
 
 using TemplateSubChunkVector = std::vector<Block const*>;
 
-class PlotGenerator : public FlatWorldGenerator {
+class DefaultGenerator : public FlatWorldGenerator {
 public:
     Block const* mBlock_Dirt;    // 初始方块：泥土
     Block const* mBlock_Bedrock; // 初始方块：基岩
@@ -32,7 +32,7 @@ public:
     std::vector<std::unique_ptr<BlockVolume>> mTemplateSubChunks;      // 子区块地形模板
 
 
-    PlotGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON);
+    DefaultGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON);
     void loadChunk(LevelChunk& levelchunk, bool forceImmediateReplacementDataLoad);
 };
 

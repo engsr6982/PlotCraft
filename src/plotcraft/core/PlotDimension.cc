@@ -1,7 +1,7 @@
 #ifndef OVERWORLD
-
 #include "PlotDimension.h"
-#include "PlotGenerator.h"
+#include "CustomGenerator.h"
+#include "DefaultGenerator.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/DimensionConversionData.h"
 #include "mc/world/level/Level.h"
@@ -16,6 +16,7 @@
 #include "mc/world/level/levelgen/structure/StructureSetRegistry.h"
 #include "mc/world/level/levelgen/structure/VillageFeature.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
+#include "plotcraft/Config.h"
 #include "plotcraft/core/Utils.h"
 
 
@@ -35,12 +36,18 @@ CompoundTag PlotDimension::generateNewData() { return {}; }
 
 std::unique_ptr<WorldGenerator>
 PlotDimension::createGenerator(br::worldgen::StructureSetRegistry const& /* structureSetRegistry */) {
-    auto  seed      = getLevel().getSeed();
-    auto& levelData = getLevel().getLevelData();
+    std::unique_ptr<WorldGenerator> worldGenerator;
+    auto                            seed      = getLevel().getSeed();
+    auto&                           levelData = getLevel().getLevelData();
 
     // 实例化 地皮生成器
-    auto worldGenerator =
-        std::make_unique<plo::core::PlotGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
+    if (plo::config::cfg.generator.type == plo::config::PlotGeneratorType::Default) {
+        worldGenerator =
+            std::make_unique<plo::core::DefaultGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
+    } else {
+        worldGenerator =
+            std::make_unique<plo::core::CustomGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
+    }
 
     worldGenerator->init(); // 必须调用，初始化生成器
 

@@ -1,4 +1,3 @@
-#ifdef TEST
 #pragma once
 #include "mc/world/level/block/BlockVolume.h"
 #include "mc/world/level/levelgen/flat/FlatWorldGenerator.h"
@@ -55,4 +54,3 @@ public:
 };
 
 } // namespace plo::core
-#endif // TEST
