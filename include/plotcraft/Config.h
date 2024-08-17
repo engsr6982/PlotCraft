@@ -11,7 +11,7 @@ using string = std::string;
 
 namespace plo::config {
 
-enum class PlotGeneratorType : int { Default, Custom };
+enum class PlotGeneratorType : int { Default, Template };
 struct _Config {
     int version = CONFIG_VERSION;
 

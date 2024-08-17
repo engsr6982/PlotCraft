@@ -20,7 +20,7 @@ enum class GDirection : int {
 };
 
 
-class CustomGenerator : public FlatWorldGenerator {
+class TemplateGenerator : public FlatWorldGenerator {
 public:
     int const mChunkNum = 3; // 一个地皮的区块数量
 
@@ -48,7 +48,7 @@ public:
         {GDirection::WN,    mPrototype},
     }; // 区块原型
 
-    CustomGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON);
+    TemplateGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON);
 
     void loadChunk(class LevelChunk& levelchunk, bool forceImmediateReplacementDataLoad);
 };

@@ -1,7 +1,7 @@
 #ifndef OVERWORLD
 #include "PlotDimension.h"
-#include "CustomGenerator.h"
 #include "DefaultGenerator.h"
+#include "TemplateGenerator.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/DimensionConversionData.h"
 #include "mc/world/level/Level.h"
@@ -18,6 +18,7 @@
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/core/Utils.h"
+
 
 
 namespace plo::core {
@@ -46,7 +47,7 @@ PlotDimension::createGenerator(br::worldgen::StructureSetRegistry const& /* stru
             std::make_unique<plo::core::DefaultGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
     } else {
         worldGenerator =
-            std::make_unique<plo::core::CustomGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
+            std::make_unique<plo::core::TemplateGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
     }
 
     worldGenerator->init(); // 必须调用，初始化生成器

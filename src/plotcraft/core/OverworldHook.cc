@@ -1,6 +1,6 @@
 #ifdef OVERWORLD
-#include "CustomGenerator.h"
 #include "DefaultGenerator.h"
+#include "TemplateGenerator.h"
 #include "ll/api/memory/Hook.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/world/level/Level.h"
@@ -8,6 +8,7 @@
 #include "mc/world/level/levelgen/WorldGenerator.h"
 #include "mc/world/level/levelgen/structure/StructureSetRegistry.h"
 #include "plotcraft/Config.h"
+
 
 LL_AUTO_TYPE_INSTANCE_HOOK(
     OverworldDimensionCreateGeneratorHook,
@@ -28,7 +29,7 @@ LL_AUTO_TYPE_INSTANCE_HOOK(
             std::make_unique<plo::core::DefaultGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
     } else {
         worldGenerator =
-            std::make_unique<plo::core::CustomGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
+            std::make_unique<plo::core::TemplateGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
     }
 
     worldGenerator->init();

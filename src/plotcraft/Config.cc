@@ -27,7 +27,7 @@ void loadConfig() {
         updateConfig();
     }
 
-    if (cfg.generator.cuPlotChunkNum < 2 && cfg.generator.type == PlotGeneratorType::Custom) {
+    if (cfg.generator.cuPlotChunkNum < 2 && cfg.generator.type == PlotGeneratorType::Template) {
         cfg.generator.cuPlotChunkNum = 2;
         logger.error("cuPlotChunkNum 不能小于2，已自动设置为2");
         updateConfig();

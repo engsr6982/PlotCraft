@@ -1,4 +1,4 @@
-#include "CustomGenerator.h"
+#include "TemplateGenerator.h"
 #include "mc/deps/core/utility/buffer_span_mut.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
@@ -23,7 +23,7 @@
 namespace plo::core {
 
 
-CustomGenerator::CustomGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON)
+TemplateGenerator::TemplateGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON)
 : FlatWorldGenerator(dimension, seed, generationOptionsJSON) {
     mBiome       = getLevel().getBiomeRegistry().lookupByHash(VanillaBiomeNames::Plains);
     mBiomeSource = std::make_unique<FixedBiomeSource>(*mBiome);
@@ -158,7 +158,7 @@ CustomGenerator::CustomGenerator(Dimension& dimension, uint seed, Json::Value co
 }
 
 
-void CustomGenerator::loadChunk(LevelChunk& levelchunk, bool) {
+void TemplateGenerator::loadChunk(LevelChunk& levelchunk, bool) {
     auto chunkPos = levelchunk.getPosition();
 
     int const& n     = mChunkNum;
