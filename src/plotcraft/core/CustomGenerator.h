@@ -23,7 +23,7 @@ enum class GDirection : int {
 
 class CustomGenerator : public FlatWorldGenerator {
 public:
-    int const mChunkNum = 2; // 一个地皮的区块数量
+    int const mChunkNum = 3; // 一个地皮的区块数量
 
     std::unordered_map<std::string, Block const*> mBlockCache; // 方块缓存
 
@@ -55,4 +55,4 @@ public:
 };
 
 } // namespace plo::core
-#endif // GEN_2
+#endif // TEST
