@@ -17,7 +17,7 @@ enum class PlotDirection : int {
     West  = 3  // 西
 };
 
-
+// TODO
 class PlotRoadPos {
 public:
     int       mX, mZ;
@@ -39,7 +39,7 @@ public:
     PLAPI static bool isAdjacent(const PlotRoadPos& road1, const PlotRoadPos& road2);
 };
 
-
+// TODO
 class PlotCrossPos {
 public:
     int       mX, mZ;
@@ -84,15 +84,15 @@ public:
 
     PLAPI bool isPosOnBorder(const Vec3& vec3) const;
 
-    PLAPI bool canMerge(PlotPos& other) const;
-    PLAPI bool checkAndFixVertexs();
-    PLAPI bool tryMergeAndFixVertexs(PlotPos& other);
+    PLAPI bool canMerge(PlotPos& other) const;        // TODO
+    PLAPI bool checkAndFixVertexs();                  // TODO
+    PLAPI bool tryMergeAndFixVertexs(PlotPos& other); // TODO
 
     PLAPI std::vector<PlotPos> getAdjacentPlots() const;     // 获取相邻的地皮
-    PLAPI std::vector<PlotRoadPos> getAdjacentRoads() const; // 获取相邻的道路
+    PLAPI std::vector<PlotRoadPos> getAdjacentRoads() const; // TODO: 获取相邻的道路
 
-    PLAPI std::vector<PlotRoadPos> getRangedRoads() const;    // 获取范围内的道路
-    PLAPI std::vector<PlotCrossPos> getRangedCrosses() const; // 获取范围内的路口
+    PLAPI std::vector<PlotRoadPos> getRangedRoads() const;    // TODO: 获取范围内的道路
+    PLAPI std::vector<PlotCrossPos> getRangedCrosses() const; // TODO: 获取范围内的路口
 
     PLAPI bool operator==(PlotPos const& other) const;
     PLAPI bool operator!=(PlotPos const& other) const;

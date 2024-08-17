@@ -1,6 +1,6 @@
 
 // Config
-#define CONFIG_VERSION 6
+#define CONFIG_VERSION 7
 
 // PlotMetadata
 #define METADATA_VERSION 4
