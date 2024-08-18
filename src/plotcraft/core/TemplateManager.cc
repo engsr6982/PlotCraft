@@ -14,6 +14,7 @@
 #include "plugin/MyPlugin.h"
 #include <filesystem>
 #include <fstream>
+#include <ostream>
 
 
 namespace plo::core {
@@ -52,10 +53,10 @@ bool TemplateManager::_parseTemplate() {
     }
 
 
-    int totalHeight = data.template_offset + data.template_height + 64; // y 偏移量 + buffer 高度
-    if (data.template_offset < 0) totalHeight += 64;                    // + 原版-64
+    int totalHeight = data.template_offset + data.template_height; // y 偏移量 + buffer 高度
+    if (data.template_offset > 0) totalHeight += 64;               // + 原版-64
 
-    int startHeight = data.template_offset < 0 ? data.template_offset + 64 : data.template_offset; // 起始高度
+    int startHeight = data.template_offset > 0 ? data.template_offset + 64 : data.template_offset; // 起始高度
 
     int totalVolume = totalHeight * 16 * 16; // buffer 体积  16 * 16 * totalHeight
 
@@ -98,7 +99,11 @@ bool TemplateManager::loadTemplate(const string& path) {
 int    TemplateManager::getChunkNum() { return mTemplateData.template_chunk_num; }
 string TemplateManager::calculateChunkID(const ChunkPos& pos) {
     int n = getChunkNum();
-    return fmt::format("({},{})", (pos.x * 16 / n), (pos.z * 16 / n));
+    int x = pos.x * 16 % n;
+    int z = pos.z * 16 % n;
+    if (x < 0) x = -x; // 防止负数
+    if (z < 0) z = -z;
+    return fmt::format("({},{})", x, z);
 }
 
 
@@ -120,7 +125,7 @@ bool TemplateManager::prepareRecordTemplate(
     mRecordData.template_height     = endY - stratY;
     mRecordData.template_road_width = roadWidth;
     mRecordData.fill_bedrock        = fillBedrock;
-    mRecordData.default_block       = defaultBlock;
+    mRecordData.default_block       = string{defaultBlock};
 
     mIsRecording = true;
     return true;
@@ -129,7 +134,7 @@ bool TemplateManager::postRecordTemplateStart(const ChunkPos& start) {
     if (!mIsRecording) return false;
     if (start.x != 0 && start.z != 0) return false; // 限定 (0,0) 开始
 
-    mRecordStart = start;
+    mRecordStart = ChunkPos{start};
 
     return true;
 }
@@ -137,7 +142,7 @@ bool TemplateManager::postRecordTemplateEnd(const ChunkPos& end) {
     if (!mIsRecording) return false;
     if (end.x != end.z) return false; // 限定正方形
 
-    mRecordEnd                     = end;
+    mRecordEnd                     = ChunkPos{end};
     mRecordData.template_chunk_num = end.x + 1; // +1 因为 (0,0) 开始
 
     mCanRecord = true;
@@ -147,7 +152,6 @@ bool TemplateManager::postRecordTemplateEnd(const ChunkPos& end) {
 
 
 bool TemplateManager::_processChunk(const LevelChunk& chunk) {
-    if (!mCanRecord) return false;
     auto const& min = chunk.getMin();
     auto const& bs  = chunk.getDimension().getBlockSourceFromMainChunkSource();
 
@@ -158,21 +162,20 @@ bool TemplateManager::_processChunk(const LevelChunk& chunk) {
 
 
     int totalHeight = data.template_offset + data.template_height + 64; // y 偏移量 + buffer 高度
-    if (data.template_offset < 0) totalHeight += 64;                    // + 原版-64
+    if (data.template_offset > 0) totalHeight += 64;                    // + 原版-64
     int const totalVolume = totalHeight * 16 * 16;                      // buffer 体积  16 * 16 * totalHeight
 
     buffer.reserve(totalVolume); // 预分配空间
 
     BlockPos cur(min);
-    for (int x = 0; x < 16; x++) {
-        cur.x += x;
-        for (int z = 0; z < 16; z++) {
-            cur.z += z;
-            cur.y  = mRecordData.template_offset; // 重置 y 轴
-            for (int y = mRecordData.template_offset; y < mRecordData.template_height; y++) {
-                cur.y      += y;
-                auto& bl    = bs.getBlock(cur).getTypeName();
-                auto  iter  = map.find(bl);
+    cur.y = mRecordData.template_offset; // 重置 y 轴
+    for (int _x = 0; _x < 16; _x++) {
+        for (int _z = 0; _z < 16; _z++) {
+            for (int _y = mRecordData.template_offset; _y < mRecordData.template_height; _y++) {
+                cur.y++;
+                // printf("cur: (%d,%d,%d)\n", cur.x, cur.y, cur.z);
+                auto& bl   = bs.getBlock(cur).getTypeName();
+                auto  iter = map.find(bl);
                 if (iter == map.end()) {
                     map[bl] = map.size() + 1;
                     buffer.push_back(map[bl]);
@@ -180,7 +183,11 @@ bool TemplateManager::_processChunk(const LevelChunk& chunk) {
                     buffer.push_back(iter->second);
                 }
             }
+            cur.z++;
+            cur.y = mRecordData.template_offset; // 重置 y 轴
         }
+        cur.x++;
+        cur.z = min.z; // 重置 z 轴
     }
 
     return true;
