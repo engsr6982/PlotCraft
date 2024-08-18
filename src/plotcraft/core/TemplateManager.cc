@@ -1,27 +1,38 @@
 #include "TemplateManager.h"
 #include "mc/deps/core/utility/buffer_span_mut.h"
+#include "mc/enums/LogLevel.h"
+#include "mc/world/level/BlockSource.h"
+#include "mc/world/level/ChunkPos.h"
 #include "mc/world/level/block/Block.h"
-#include "mc/world/level/block/BlockLegacy.h"
 #include "mc/world/level/block/BlockVolume.h"
 #include "mc/world/level/block/registry/BlockTypeRegistry.h"
+#include "mc/world/level/chunk/ChunkSource.h"
 #include "nlohmann/json.hpp"
 #include "plotcraft/Config.h"
 #include "plotcraft/utils/JsonHelper.h"
-#include <algorithm>
+#include "plotcraft/utils/Mc.h"
+#include "plugin/MyPlugin.h"
 #include <filesystem>
+#include <fstream>
 
 
 namespace plo::core {
 namespace fs = std::filesystem;
 using json   = nlohmann::json;
+using namespace plo::mc;
 
 // static member definitions
 TemplateData                                          TemplateManager::mTemplateData;
 std::unordered_map<string, Block const*>              TemplateManager::mBlockMap;
 std::unordered_map<string, std::vector<Block const*>> TemplateManager::mBlockBuffer;
 std::unordered_map<string, BlockVolume>               TemplateManager::mBlockVolume;
-TemplateData                                          TemplateManager::mRecordTemplateData;
-bool                                                  TemplateManager::mIsRecordTemplateing;
+
+TemplateData                    TemplateManager::mRecordData; // Record
+bool                            TemplateManager::mCanRecord;
+bool                            TemplateManager::mIsRecording;
+ChunkPos                        TemplateManager::mRecordStart;
+ChunkPos                        TemplateManager::mRecordEnd;
+std::unordered_map<string, int> TemplateManager::mRecordBlockIDMap; // key: typeName
 
 
 // functions
@@ -94,5 +105,136 @@ string TemplateManager::calculateChunkID(const ChunkPos& pos) {
 
 
 // Record
+bool TemplateManager::isRecordTemplateing() { return mIsRecording; }
+bool TemplateManager::canRecordTemplate() { return !mIsRecording; }
+
+
+bool TemplateManager::prepareRecordTemplate(
+    int           stratY,    // = offset
+    int           endY,      // = offset + height
+    int           roadWidth, // = roadWidth
+    bool          lockChunkNum,
+    bool          fillBedrock,
+    string const& defaultBlock
+) {
+    if (mIsRecording) return false;
+
+    mRecordData.template_offset     = stratY;
+    mRecordData.template_height     = endY - stratY;
+    mRecordData.template_road_width = roadWidth;
+    mRecordData.lock_chunk_num      = lockChunkNum;
+    mRecordData.fill_bedrock        = fillBedrock;
+    mRecordData.default_block       = defaultBlock;
+
+    mIsRecording = true;
+    return mIsRecording;
+}
+bool TemplateManager::postRecordTemplateStart(const ChunkPos& start) {
+    if (!mIsRecording) return false;
+    if (start.x != 0 && start.z != 0) return false; // 限定 (0,0) 开始
+
+    mRecordStart = start;
+
+    return true;
+}
+bool TemplateManager::postRecordTemplateEnd(const ChunkPos& end) {
+    if (!mIsRecording) return false;
+    if (end.x != end.z) return false; // 限定正方形
+
+    mRecordEnd                     = end;
+    mRecordData.template_chunk_num = end.x + 1; // +1 因为 (0,0) 开始
+
+    mCanRecord = true;
+
+    return true;
+}
+
+
+bool TemplateManager::_processChunk(const LevelChunk& chunk) {
+    if (!mCanRecord) return false;
+    auto const& min = chunk.getMin();
+    auto const& bs  = chunk.getDimension().getBlockSourceFromMainChunkSource();
+
+    // 获取当前区块的 buffer
+    auto& map    = mRecordBlockIDMap;
+    auto& data   = mRecordData;
+    auto& buffer = data.template_data[calculateChunkID(chunk.getPosition())];
+
+
+    int totalHeight = data.template_offset + data.template_height + 64; // y 偏移量 + buffer 高度
+    if (data.template_offset < 0) totalHeight += 64;                    // + 原版-64
+    int const totalVolume = totalHeight * 16 * 16;                      // buffer 体积  16 * 16 * totalHeight
+
+    buffer.reserve(totalVolume); // 预分配空间
+
+    BlockPos cur(min);
+    for (int x = 0; x < 16; x++) {
+        cur.x += x;
+        for (int z = 0; z < 16; z++) {
+            cur.z += z;
+            cur.y  = mRecordData.template_offset; // 重置 y 轴
+            for (int y = mRecordData.template_offset; y < mRecordData.template_height; y++) {
+                cur.y      += y;
+                auto& bl    = bs.getBlock(cur).getTypeName();
+                auto  iter  = map.find(bl);
+                if (iter == map.end()) {
+                    map[bl] = map.size() + 1;
+                    buffer.push_back(map[bl]);
+                } else {
+                    buffer.push_back(iter->second);
+                }
+            }
+        }
+    }
+
+    return true;
+}
+bool TemplateManager::postRecordAndSaveTemplate(const string& fileName, Player& player) {
+    if (!mCanRecord) return false;
+
+    mCanRecord = false;
+    mRecordData.block_map.clear();
+    mRecordData.template_data.clear();
+
+    auto const& bs = player.getDimensionBlockSourceConst();
+
+    for (int x = mRecordStart.x; x <= mRecordEnd.x; x++) {
+        for (int z = mRecordStart.z; z <= mRecordEnd.z; z++) {
+            auto ch = bs.getChunk(x, z);
+            if (!ch) {
+                sendText<LogLevel::Error>(player, "[TemplateManager] Can't get chunk ({},{}).", x, z);
+                continue;
+            }
+            if (!ch->isFullyLoaded()) {
+                sendText<LogLevel::Error>(player, "[TemplateManager] Chunk ({},{}) is not fully loaded.", x, z);
+                continue;
+            }
+            if (_processChunk(*ch)) {
+                sendText<LogLevel::Success>(player, "[TemplateManager] Process chunk ({},{}).", x, z);
+            } else {
+                sendText<LogLevel::Error>(player, "[TemplateManager] Can't process chunk ({},{}).", x, z);
+            }
+        }
+    }
+
+    auto& idMap = mRecordData.block_map;
+    idMap.reserve(mRecordBlockIDMap.size());
+    for (auto& [name, id] : mRecordBlockIDMap) {
+        idMap.emplace(id, name); // id -> name
+    }
+
+    auto& data = mRecordData;
+    auto  out  = my_plugin::MyPlugin::getInstance().getSelf().getConfigDir() / fileName;
+
+    std::ofstream ofs(out.string());
+    if (ofs.is_open()) {
+        ofs << utils::JsonHelper::structToJsonString(data);
+        ofs.close();
+    }
+    sendText<LogLevel::Success>(player, "[TemplateManager] Template saved to {}", out.string());
+
+    return true;
+}
+
 
 } // namespace plo::core
