@@ -33,6 +33,10 @@ void loadConfig() {
         updateConfig();
     }
 
+    if (cfg.generator.cuPlotTemplatePath == "" && cfg.generator.type == PlotGeneratorType::Template) {
+        throw std::runtime_error("初始化失败，cuPlotTemplatePath 必须指定一个有效的模板文件！");
+    }
+
     if (!ok) {
         logger.warn("loadConfig 返回了预期之外的结果，尝试备份并覆写配置文件...");
         updateConfig();

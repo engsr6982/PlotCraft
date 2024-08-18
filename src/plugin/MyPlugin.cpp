@@ -25,6 +25,7 @@
 #include "plotcraft/utils/EconomySystem.h"
 #include "plotcraft/utils/Mc.h"
 
+#include "plotcraft/core/TemplateManager.h"
 
 #if !defined(OVERWORLD)
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
@@ -51,23 +52,32 @@ bool MyPlugin::load() {
     logger.info(R"(                 ---- Author: engsr6982 ----               )");
     logger.info(R"(                                                           )");
     logger.info("加载中...");
-
-    logger.info("编译版本信息: {}", BuildVersionInfo);
-
+    logger.info("编译参数: {}", BuildVersionInfo);
     logger.info("尝试创建必要的文件夹...");
 
-    if (!fs::exists(getSelf().getDataDir())) {
-        fs::create_directories(getSelf().getDataDir());
-    }
+    auto& dataDir   = getSelf().getDataDir();
+    auto& langDir   = getSelf().getLangDir();
+    auto& configDir = getSelf().getConfigDir();
+
+    if (!fs::exists(dataDir)) fs::create_directories(dataDir);
+
 
     logger.info("尝试加载数据...");
     plo::config::loadConfig();
-    ll::i18n::load(getSelf().getLangDir());
+    ll::i18n::load(langDir);
+
+
+    auto& cfg = plo::config::cfg;
+    if (!plo::core::TemplateManager::loadTemplate((configDir / cfg.generator.cuPlotTemplatePath).string())) {
+        logger.error("加载模板失败，请检查配置文件");
+        return false;
+    };
+
     plo::data::PlotBDStorage::getInstance().load();
     plo::data::PlayerNameDB::getInstance().initPlayerNameDB();
     plo::EconomyQueue::getInstance().load();
 
-    plo::utils::EconomySystem::getInstance().updateConfig(plo::config::cfg.economy);
+    plo::utils::EconomySystem::getInstance().updateConfig(cfg.economy);
 
     return true;
 }

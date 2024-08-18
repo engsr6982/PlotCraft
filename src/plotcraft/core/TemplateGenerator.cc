@@ -1,4 +1,5 @@
 #include "TemplateGenerator.h"
+#include "TemplateManager.h"
 #include "mc/deps/core/utility/buffer_span_mut.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
@@ -81,56 +82,6 @@ TemplateGenerator::TemplateGenerator(Dimension& dimension, uint seed, Json::Valu
     }
     // clang-format on
 
-
-    {
-        // 修改模板区块，测试生成方向
-        auto green  = &BlockTypeRegistry::getDefaultBlockState("minecraft:green_wool");
-        auto orange = &BlockTypeRegistry::getDefaultBlockState("minecraft:orange_wool");
-        auto purple = &BlockTypeRegistry::getDefaultBlockState("minecraft:purple_wool");
-        auto red    = &BlockTypeRegistry::getDefaultBlockState("minecraft:red_wool");
-        auto white  = &BlockTypeRegistry::getDefaultBlockState("minecraft:white_wool");
-        auto yellow = &BlockTypeRegistry::getDefaultBlockState("minecraft:yellow_wool");
-        auto blue   = &BlockTypeRegistry::getDefaultBlockState("minecraft:blue_wool");
-        auto brown  = &BlockTypeRegistry::getDefaultBlockState("minecraft:brown_wool");
-        auto gold   = &BlockTypeRegistry::getDefaultBlockState("minecraft:raw_gold_block");
-
-        mBlockCache[green->getTypeName()]  = green;
-        mBlockCache[orange->getTypeName()] = orange;
-        mBlockCache[purple->getTypeName()] = purple;
-        mBlockCache[red->getTypeName()]    = red;
-        mBlockCache[white->getTypeName()]  = white;
-        mBlockCache[yellow->getTypeName()] = yellow;
-        mBlockCache[blue->getTypeName()]   = blue;
-        mBlockCache[brown->getTypeName()]  = brown;
-        mBlockCache[gold->getTypeName()]   = gold;
-
-        auto& east  = mChunkPrototypeBlocks[GDirection::East];
-        auto& south = mChunkPrototypeBlocks[GDirection::South];
-        auto& west  = mChunkPrototypeBlocks[GDirection::West];
-        auto& north = mChunkPrototypeBlocks[GDirection::North];
-        auto& es    = mChunkPrototypeBlocks[GDirection::ES];
-        auto& sw    = mChunkPrototypeBlocks[GDirection::SW];
-        auto& ne    = mChunkPrototypeBlocks[GDirection::NE];
-        auto& wn    = mChunkPrototypeBlocks[GDirection::WN];
-
-        // 替换所有区块第一个y轴
-        for (int i = 0; i < 16; i++) {
-            east[i]  = green;  // 东
-            south[i] = orange; // 南
-            west[i]  = purple; // 西
-            north[i] = red;    // 北
-            es[i]    = white;  // 东南
-            sw[i]    = yellow; // 西南
-            ne[i]    = blue;   // 东北
-            wn[i]    = brown;  // 西北
-        }
-        east[16 + 15]        = gold; // 替换东边第二个y轴的最后一个方块
-        east[16 + 16 + 15]   = gold; // 替换东边第三个y轴的最后一个方块
-        east[(16 * 16) + 15] = gold; // 替换东边第16个y轴的最后一个方块
-        east[(16 * 16) + 16] = gold; // 替换东边第17个y轴的最后一个方块
-    }
-
-
     // 重新赋值处理
     mChunkPrototypeVolumes[GDirection::East].mBlocks.mBegin = &*mChunkPrototypeBlocks[GDirection::East].begin();
     mChunkPrototypeVolumes[GDirection::East].mBlocks.mEnd   = &*mChunkPrototypeBlocks[GDirection::East].end();
@@ -159,7 +110,10 @@ TemplateGenerator::TemplateGenerator(Dimension& dimension, uint seed, Json::Valu
 
 
 void TemplateGenerator::loadChunk(LevelChunk& levelchunk, bool) {
-    auto chunkPos = levelchunk.getPosition();
+    auto& chunkPos = levelchunk.getPosition();
+
+    // levelchunk.setBlockVolume(TemplateManager::mBlockVolume[TemplateManager::calculateChunkID(chunkPos)], 0);
+
 
     int const& n     = mChunkNum;
     auto       pos_x = (chunkPos.x % n + n) % n;
