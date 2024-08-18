@@ -68,7 +68,7 @@ bool TemplateManager::_parseTemplate() {
 
             // 读 template_height 个方块
             for (size_t r = 0; r < templateBlocks.size() && r < static_cast<size_t>(data.template_height); r++) {
-                auto bl                       = mBlockMap[data.block_map[templateBlocks[y * r]]]; // 获取方块
+                auto bl = mBlockMap[data.block_map[std::to_string(templateBlocks[y * r])]]; // 获取方块
                 buffer[(y * startHeight) + r] = bl;
             }
         }
@@ -89,15 +89,13 @@ bool TemplateManager::loadTemplate(const string& path) {
     if (!file.is_open()) return false;
 
     auto jdata = json::parse(file);
-    utils::JsonHelper::jsonToStructNoMerge(jdata, mTemplateData);
+    utils::JsonHelper::jsonToStruct(jdata, mTemplateData);
 
     return _parseTemplate();
 }
 
 // Tools
-int TemplateManager::getChunkNum() {
-    return mTemplateData.lock_chunk_num ? mTemplateData.template_chunk_num : config::cfg.generator.cuPlotChunkNum;
-}
+int    TemplateManager::getChunkNum() { return mTemplateData.template_chunk_num; }
 string TemplateManager::calculateChunkID(const ChunkPos& pos) {
     int n = getChunkNum();
     return fmt::format("({},{})", (pos.x * 16 / n), (pos.z * 16 / n));
@@ -113,7 +111,6 @@ bool TemplateManager::prepareRecordTemplate(
     int           stratY,    // = offset
     int           endY,      // = offset + height
     int           roadWidth, // = roadWidth
-    bool          lockChunkNum,
     bool          fillBedrock,
     string const& defaultBlock
 ) {
@@ -122,12 +119,11 @@ bool TemplateManager::prepareRecordTemplate(
     mRecordData.template_offset     = stratY;
     mRecordData.template_height     = endY - stratY;
     mRecordData.template_road_width = roadWidth;
-    mRecordData.lock_chunk_num      = lockChunkNum;
     mRecordData.fill_bedrock        = fillBedrock;
     mRecordData.default_block       = defaultBlock;
 
     mIsRecording = true;
-    return mIsRecording;
+    return true;
 }
 bool TemplateManager::postRecordTemplateStart(const ChunkPos& start) {
     if (!mIsRecording) return false;
@@ -220,7 +216,7 @@ bool TemplateManager::postRecordAndSaveTemplate(const string& fileName, Player& 
     auto& idMap = mRecordData.block_map;
     idMap.reserve(mRecordBlockIDMap.size());
     for (auto& [name, id] : mRecordBlockIDMap) {
-        idMap.emplace(id, name); // id -> name
+        idMap.emplace(std::to_string(id), name); // id -> name
     }
 
     auto& data = mRecordData;
@@ -235,6 +231,14 @@ bool TemplateManager::postRecordAndSaveTemplate(const string& fileName, Player& 
 
     return true;
 }
-
+bool TemplateManager::resetRecordTemplate() {
+    mRecordData  = {};
+    mIsRecording = false;
+    mCanRecord   = false;
+    mRecordStart = {};
+    mRecordEnd   = {};
+    mRecordBlockIDMap.clear();
+    return true;
+}
 
 } // namespace plo::core

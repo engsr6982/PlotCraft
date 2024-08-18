@@ -261,6 +261,8 @@ bool registerCommand() {
     // cmd.overload().text("merge").text("confirm").execute(PlotMergeBindData::confirm); // plo merge confirm
     // cmd.overload().text("merge").text("cancel").execute(PlotMergeBindData::cancel);   // plo merge cancel
 
+    _setupTemplateCommand();
+
 #ifndef OVERWORLD
     cmd.overload<ParamGo>().text("go").required("dim").execute(LambdaGo); // plo go <overworld|plot>
 #endif

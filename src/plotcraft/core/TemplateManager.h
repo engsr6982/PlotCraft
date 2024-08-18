@@ -11,10 +11,9 @@ using string = std::string;
 
 namespace plo::core {
 
-
+typedef string ints;
 struct TemplateData {
     int    version{2};                     // 模板版本
-    bool   lock_chunk_num{false};          // 是否锁定区块数量
     int    template_chunk_num{2};          // 模板区块数量
     int    template_road_width{2};         // 模板道路宽度
     int    template_height{16};            // 模板高度
@@ -22,7 +21,7 @@ struct TemplateData {
     bool   fill_bedrock{true};             // 是否填充基岩
     string default_block{"minecraft:air"}; // 默认方块
 
-    std::unordered_map<int, string>              block_map;     // 方块映射 key: hashID
+    std::unordered_map<ints, string>             block_map;     // 方块映射 key: hashID
     std::unordered_map<string, std::vector<int>> template_data; // 模板数据 key: chunkID
 };
 
@@ -54,7 +53,6 @@ public:
         int           stratY,          // = offset
         int           endY,            // = offset + height
         int           roadWidth,       // = roadWidth
-        bool          lockChunkNum,
         bool          fillBedrock,
         string const& defaultBlock
     );
@@ -63,6 +61,8 @@ public:
     static bool postRecordTemplateEnd(ChunkPos const& end);     // 记录模板结束
 
     static bool postRecordAndSaveTemplate(string const& fileName, Player& player); // 记录并保存模板
+
+    static bool resetRecordTemplate(); // 重置记录模板
 
     static bool _processChunk(LevelChunk const& chunk); // 处理区块
 

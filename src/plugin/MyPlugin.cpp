@@ -66,11 +66,12 @@ bool MyPlugin::load() {
     plo::config::loadConfig();
     ll::i18n::load(langDir);
 
-
+    logger.info("尝试加载地皮模板...");
     auto& cfg = plo::config::cfg;
-    if (!plo::core::TemplateManager::loadTemplate((configDir / cfg.generator.cuPlotTemplatePath).string())) {
+    if (cfg.generator.type == plo::config::PlotGeneratorType::Template
+        && !plo::core::TemplateManager::loadTemplate((configDir / cfg.generator.templateFile).string())) {
         logger.error("加载模板失败，请检查配置文件");
-        return false;
+        // return false;
     };
 
     plo::data::PlotBDStorage::getInstance().load();

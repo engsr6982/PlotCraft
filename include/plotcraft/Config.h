@@ -26,9 +26,8 @@ struct _Config {
         string fillBlock   = "minecraft:grass_block";
         string borderBlock = "minecraft:stone_block_slab";
 
-        // Custom Generator
-        int    cuPlotChunkNum     = 3; // >= 2
-        string cuPlotTemplatePath = "";
+        // Tempplate Generator
+        string templateFile = "";
     } generator;
 
     utils::EconomyConfig economy; // 经济系统配置

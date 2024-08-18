@@ -67,6 +67,7 @@ using ll::command::CommandRegistrar;
 namespace plo::command {
 
 bool registerCommand();
+void _setupTemplateCommand();
 
 // ------------------------------ tools ----------------------------------
 inline string CommandOriginTypeToString(CommandOriginType type) {

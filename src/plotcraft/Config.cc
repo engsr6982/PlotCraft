@@ -27,14 +27,8 @@ void loadConfig() {
         updateConfig();
     }
 
-    if (cfg.generator.cuPlotChunkNum < 2 && cfg.generator.type == PlotGeneratorType::Template) {
-        cfg.generator.cuPlotChunkNum = 2;
-        logger.error("cuPlotChunkNum 不能小于2，已自动设置为2");
-        updateConfig();
-    }
-
-    if (cfg.generator.cuPlotTemplatePath == "" && cfg.generator.type == PlotGeneratorType::Template) {
-        throw std::runtime_error("初始化失败，cuPlotTemplatePath 必须指定一个有效的模板文件！");
+    if (cfg.generator.templateFile == "" && cfg.generator.type == PlotGeneratorType::Template) {
+        throw std::runtime_error("初始化失败，templateFile 不能为空!");
     }
 
     if (!ok) {
