@@ -115,10 +115,8 @@ void TemplateManager::toPositive(int& num) {
 }
 string TemplateManager::calculateChunkID(const ChunkPos& pos) {
     int n = getChunkNum();
-    int x = pos.x * 16 % n;
-    int z = pos.z * 16 % n;
-    toPositive(x); // 防止负数
-    toPositive(z);
+    int x = ((pos.x % n) + n) % n;
+    int z = ((pos.z % n) + n) % n;
     return fmt::format("({},{})", x, z);
 }
 
