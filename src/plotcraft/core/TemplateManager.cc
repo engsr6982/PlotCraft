@@ -86,7 +86,7 @@ bool TemplateManager::loadTemplate(const string& path) {
     if (!file.is_open()) return false;
 
     auto jdata = json::parse(file);
-    utils::JsonHelper::jsonToStruct(jdata, mTemplateData);
+    utils::JsonHelper::jsonToStructNoMerge(jdata, mTemplateData);
 
     return _parseTemplate();
 }
@@ -108,13 +108,17 @@ bool TemplateManager::generatorBlockVolume(BlockVolume& volume) {
     return true;
 }
 
+int  TemplateManager::getCurrentTemplateVersion() { return mTemplateData.version; }
+int  TemplateManager::getCurrentTemplateChunkNum() { return mTemplateData.template_chunk_num; }
+int  TemplateManager::getCurrentTemplateRoadWidth() { return mTemplateData.template_road_width; }
+bool TemplateManager::isUseTemplate() { return config::cfg.generator.type == config::PlotGeneratorType::Template; }
+
 // Tools
-int  TemplateManager::getChunkNum() { return mTemplateData.template_chunk_num; }
 void TemplateManager::toPositive(int& num) {
     if (num < 0) num = -num;
 }
 string TemplateManager::calculateChunkID(const ChunkPos& pos) {
-    int n = getChunkNum();
+    int n = getCurrentTemplateChunkNum();
     int x = ((pos.x % n) + n) % n;
     int z = ((pos.z % n) + n) % n;
     return fmt::format("({},{})", x, z);
@@ -134,6 +138,7 @@ bool TemplateManager::prepareRecordTemplate(
     string const& defaultBlock
 ) {
     if (mIsRecording) return false;
+    if (stratY >= endY) return false;
 
     mRecordData.template_offset     = stratY;
     mRecordData.template_height     = endY - stratY;
@@ -154,7 +159,8 @@ bool TemplateManager::postRecordTemplateStart(const ChunkPos& start) {
 }
 bool TemplateManager::postRecordTemplateEnd(const ChunkPos& end) {
     if (!mIsRecording) return false;
-    if (end.x != end.z) return false; // 限定正方形
+    if (end.x != end.z) return false;           // 限定正方形
+    if (end.x <= 0 || end.z <= 0) return false; // 禁止2、3、4象限
 
     mRecordEnd                     = ChunkPos{end};
     mRecordData.template_chunk_num = end.x + 1; // +1 因为 (0,0) 开始

@@ -1,73 +1,112 @@
 #include "plotcraft/core/PlotPos.h"
-#include "fmt/core.h"
 #include "fmt/format.h"
 #include "plotcraft/Config.h"
+#include "plotcraft/core/TemplateManager.h"
 #include <cmath>
 
-#include "plotcraft/data/PlotBDStorage.h"
 
 namespace plo {
+using TemplateManager = core::TemplateManager;
+
 
 /*
     基准点：Vec3{0,0,0}
     地皮(0,0).minPos = Vec3{0,-64,0}
     地皮(0,0).maxPos = Vec3{0 + config::cfg.generator.plotWidth -1 ,320,0 + config::cfg.generator.plotWidth -1}
-
-    横向x轴，纵向z轴
-    -1,1   0,1   1,1
-    -1,0   0,0   1,0
-    -1,-1  0,-1  1,-1
  */
 
 PlotPos::PlotPos() : mX(0), mZ(0) {}
 PlotPos::PlotPos(int x, int z) : mX(x), mZ(z) {
-    auto& cfg       = config::cfg.generator;
-    int   totalSize = cfg.plotWidth + cfg.roadWidth;
+    auto& cfg = config::cfg.generator;
+
+    Vec3 min, max;
 
     // 计算地皮的四个顶点
-    Vec3 minPos = Vec3{x * totalSize, -64, z * totalSize};
-    Vec3 maxPos = Vec3{minPos.x + cfg.plotWidth - 1, 320, minPos.z + cfg.plotWidth - 1};
+    if (!TemplateManager::isUseTemplate()) {
+        // DefaultGenerator
+        int total = cfg.plotWidth + cfg.roadWidth;
+        min       = Vec3{x * total, -64, z * total};
+        max       = Vec3{min.x + cfg.plotWidth - 1, 320, min.z + cfg.plotWidth - 1};
+
+    } else {
+        // TemplateGenerator
+        int r     = TemplateManager::getCurrentTemplateRoadWidth();
+        int total = TemplateManager::getCurrentTemplateChunkNum() * 16;
+        min       = Vec3{x * total + r, -64, z * total + r};
+        max       = Vec3{min.x + total - r, 320, min.z + total - r};
+    }
 
     // 按顺时针顺序存储顶点
     mVertexs = {
-        minPos, // 左下角
-        Vec3{maxPos.x, minPos.y, minPos.z}, // 右下角
-        maxPos, // 右上角
-        Vec3{minPos.x, minPos.y, maxPos.z}, // 左上角
-        minPos  // 回到起点，形成闭合多边形
+        min, // 左下角
+        Vec3{max.x, min.y, min.z}, // 右下角
+        max, // 右上角
+        Vec3{min.x, min.y, max.z}, // 左上角
+        min  // 回到起点，形成闭合多边形
     };
 }
 
 PlotPos::PlotPos(const Vec3& vec3) {
-    auto& cfg       = config::cfg.generator;
-    int   totalSize = cfg.plotWidth + cfg.roadWidth;
+    auto& cfg = config::cfg.generator;
 
-    mX = std::floor(vec3.x / totalSize);
-    mZ = std::floor(vec3.z / totalSize);
+    // 计算总长度
+    bool const isUseTemplate = TemplateManager::isUseTemplate();
+    int const  roadWidth     = isUseTemplate ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
+    int total  = isUseTemplate ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
+    int width  = isUseTemplate ? (total - (roadWidth * 2)) : cfg.plotWidth;
+    int localX = static_cast<int>(std::floor(vec3.x)) % total;
+    int localZ = static_cast<int>(std::floor(vec3.z)) % total;
 
-    int localX = static_cast<int>(std::floor(vec3.x)) % totalSize;
-    int localZ = static_cast<int>(std::floor(vec3.z)) % totalSize;
+    // 计算地皮坐标
+    mX = std::floor(vec3.x / total);
+    mZ = std::floor(vec3.z / total);
 
-    if (localX < 0) localX += totalSize;
-    if (localZ < 0) localZ += totalSize;
+    Vec3 min, max;
+    bool isValid = true;
 
-    if (localX >= cfg.plotWidth || localZ >= cfg.plotWidth) {
-        mVertexs.clear();
+    if (!TemplateManager::isUseTemplate()) {
+        // DefaultGenerator
+        if (localX < 0) localX += total;
+        if (localZ < 0) localZ += total;
+        if (localX >= width || localZ >= width) {
+            isValid = false;
+        } else {
+            min = Vec3{mX * total, -64, mZ * total};
+            max = Vec3{min.x + width - 1, 320, min.z + width - 1};
+        }
+
     } else {
-        Vec3 minPos = Vec3{mX * totalSize, -64, mZ * totalSize};
-        Vec3 maxPos = Vec3{minPos.x + cfg.plotWidth - 1, 320, minPos.z + cfg.plotWidth - 1};
+        // TemplateGenerator
+        if (localX < 1) localX += total;
+        if (localZ < 1) localZ += total;
+        if (localX > width || localZ > width) {
+            isValid = false;
+        } else {
+            min = Vec3{mX * total + roadWidth, -64, mZ * total + roadWidth};
+            max = Vec3{min.x + width - roadWidth, 320, min.z + width - roadWidth};
+        }
+    }
 
+
+    if (isValid) {
         // 按顺时针顺序存储顶点
         mVertexs = {
-            minPos, // 左下角
-            Vec3{maxPos.x, minPos.y, minPos.z}, // 右下角
-            maxPos, // 右上角
-            Vec3{minPos.x, minPos.y, maxPos.z}, // 左上角
-            minPos  // 回到起点，形成闭合多边形
+            min, // 左下角
+            Vec3{max.x, min.y, min.z}, // 右下角
+            max, // 右上角
+            Vec3{min.x, min.y, max.z}, // 左上角
+            min  // 回到起点，形成闭合多边形
         };
+    } else {
+        mVertexs.clear();
+        mX = 0;
+        mZ = 0;
     }
 }
-int    PlotPos::getSurfaceY() const { return -64 + (config::cfg.generator.subChunkNum * 16); }
+int PlotPos::getSurfaceY() const {
+    return TemplateManager::isUseTemplate() ? (TemplateManager::mTemplateData.template_offset + 1)
+                                            : -64 + (config::cfg.generator.subChunkNum * 16);
+}
 bool   PlotPos::isValid() const { return !mVertexs.empty(); }
 string PlotPos::getPlotID() const { return fmt::format("({0},{1})", mX, mZ); }
 Vec3   PlotPos::getSafestPos() const {
@@ -89,7 +128,6 @@ bool PlotPos::isPosInPlot(const Vec3& vec3) const {
 std::vector<PlotPos> PlotPos::getAdjacentPlots() const {
     return {PlotPos(mX - 1, mZ), PlotPos(mX + 1, mZ), PlotPos(mX, mZ - 1), PlotPos(mX, mZ + 1)};
 }
-
 
 bool PlotPos::isPosOnBorder(const Vec3& vec3) const {
     if (vec3.y < -64 || vec3.y > 320) {
@@ -113,11 +151,11 @@ bool PlotPos::isPosOnBorder(const Vec3& vec3) const {
                 if (vec3.z == v1.z) return true;
             }
             // 如果边是斜的（虽然在这个情况下不太可能）
-            else {
-                double slope     = (v2.z - v1.z) / (v2.x - v1.x);
-                double intercept = v1.z - slope * v1.x;
-                if (std::abs(vec3.z - (slope * vec3.x + intercept)) < 1e-6) return true;
-            }
+            // else {
+            //     double slope     = (v2.z - v1.z) / (v2.x - v1.x);
+            //     double intercept = v1.z - slope * v1.x;
+            //     if (std::abs(vec3.z - (slope * vec3.x + intercept)) < 1e-6) return true;
+            // }
         }
     }
 
@@ -154,8 +192,7 @@ bool PlotPos::isAdjacent(const PlotPos& plot1, const PlotPos& plot2) {
     // 3. 两个地皮都是有效的
     return ((dx == 0 && dz == 1) || (dx == 1 && dz == 0)) && (plot1.isValid() && plot2.isValid());
 }
-
-// 辅助函数：判断点是否在多边形内部（使用射线法）
+// 判断点是否在多边形内部（射线法）
 bool PlotPos::isPointInPolygon(const Vec3& point, const std::vector<Vec3>& polygon) {
     bool inside = false;
     int  n      = polygon.size();
