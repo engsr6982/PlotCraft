@@ -7,10 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.7.0] - 2024-x-xx
 
+### Added
+
+- 新增 “模板生成器” 和 “模板记录器”
+- Config.generator 新增 `type`、`templateFile` 配置
+
 ### Changed
 
 - 重构 EconomicSystem、PlotPos
 - 移除 RemoteCall API
+- 重构 PlotPos 实现
+- Config.moneys 改为 Config.economy
 
 ## [0.6.1] - 2024-07-24
 
