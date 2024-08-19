@@ -40,7 +40,7 @@ std::unordered_map<string, int> TemplateManager::mRecordBlockIDMap; // key: type
 bool TemplateManager::_parseTemplate() {
     auto& data = mTemplateData;
 
-    // 解析 方块映射
+    // 解析 block_map
     auto defBlock     = &BlockTypeRegistry::getDefaultBlockState(data.default_block.c_str());
     auto bedrockBlock = &BlockTypeRegistry::getDefaultBlockState("minecraft:bedrock");
     auto airBlock     = &BlockTypeRegistry::getDefaultBlockState("minecraft:air");
@@ -53,32 +53,28 @@ bool TemplateManager::_parseTemplate() {
     }
 
 
-    int totalHeight = data.template_offset + data.template_height; // y 偏移量 + buffer 高度
-    if (data.template_offset > 0) totalHeight += 64;               // + 原版-64
-
-    int startHeight = data.template_offset > 0 ? data.template_offset + 64 : data.template_offset; // 起始高度
-
-    int totalVolume = totalHeight * 16 * 16; // buffer 体积  16 * 16 * totalHeight
+    // 解析 template_data
+    int startHeight = data.template_offset;
+    if (startHeight < 0) startHeight += 64;               // -64 为世界底部高度, +64为了正确指向buffer
+    int totalHeight = startHeight + data.template_height; // 起点 + buffer 高度
+    int totalVolume = totalHeight * 16 * 16;              // buffer = 16 * 16 * totalHeight
 
     for (auto& [key, templateBlocks] : data.template_data) {
-        auto& buffer = mBlockBuffer[key];
+        auto& buffer = mBlockBuffer[string(key)];
         buffer.resize(totalVolume, defBlock); // 直接调整大小并填充默认方块
 
         for (int y = 0; y < 256; y++) { // 遍历 256 个Y轴
             if (data.fill_bedrock) buffer[y * totalHeight] = bedrockBlock;
 
             // 读 template_height 个方块
-            for (size_t r = 0; r < templateBlocks.size() && r < static_cast<size_t>(data.template_height); r++) {
-                auto bl = mBlockMap[data.block_map[std::to_string(templateBlocks[y * r])]]; // 获取方块
-                buffer[(y * startHeight) + r] = bl;
+            int mapIndex    = y * data.template_height; // block_map 的索引
+            int bufferIndex = y * totalHeight;          // buffer 的索引
+            for (int r = 0; r < data.template_height; r++) {
+                auto bl = mBlockMap[data.block_map[std::to_string(templateBlocks[mapIndex + r])]];
+
+                buffer[bufferIndex + r] = bl;
             }
         }
-
-        // 生成 BlockVolume
-        buffer_span_mut<Block const*> span;
-        span.mBegin       = &*buffer.begin();
-        span.mEnd         = &*buffer.end();
-        mBlockVolume[key] = BlockVolume(span, 16, totalHeight, 16, *airBlock, 0);
     }
 
     return true;
@@ -94,15 +90,35 @@ bool TemplateManager::loadTemplate(const string& path) {
 
     return _parseTemplate();
 }
+bool TemplateManager::generatorBlockVolume(BlockVolume& volume) {
+    auto& data        = mTemplateData;
+    int   startHeight = data.template_offset;
+    if (startHeight < 0) startHeight += 64;               // 64 为世界底部高度, +64为了正确指向buffer
+    int totalHeight = startHeight + data.template_height; // 起点 + buffer 高度
+
+    for (auto& [key, buffer] : mBlockBuffer) {
+        mBlockVolume[string(key)] = BlockVolume(volume);
+
+        auto& v = mBlockVolume[key];
+
+        v.mHeight        = totalHeight;
+        v.mBlocks.mBegin = &*buffer.begin();
+        v.mBlocks.mEnd   = &*buffer.end();
+    }
+    return true;
+}
 
 // Tools
-int    TemplateManager::getChunkNum() { return mTemplateData.template_chunk_num; }
+int  TemplateManager::getChunkNum() { return mTemplateData.template_chunk_num; }
+void TemplateManager::toPositive(int& num) {
+    if (num < 0) num = -num;
+}
 string TemplateManager::calculateChunkID(const ChunkPos& pos) {
     int n = getChunkNum();
     int x = pos.x * 16 % n;
     int z = pos.z * 16 % n;
-    if (x < 0) x = -x; // 防止负数
-    if (z < 0) z = -z;
+    toPositive(x); // 防止负数
+    toPositive(z);
     return fmt::format("({},{})", x, z);
 }
 
@@ -167,12 +183,15 @@ bool TemplateManager::_processChunk(const LevelChunk& chunk) {
 
     buffer.reserve(totalVolume); // 预分配空间
 
+
+    int const height = data.template_offset + data.template_height; // -64 + 16 = 48
+
     BlockPos cur(min);
-    cur.y = mRecordData.template_offset; // 重置 y 轴
+    cur.y = mRecordData.template_offset; // 初始 y 轴
     for (int _x = 0; _x < 16; _x++) {
         for (int _z = 0; _z < 16; _z++) {
-            for (int _y = mRecordData.template_offset; _y < mRecordData.template_height; _y++) {
-                cur.y++;
+            for (int _y = mRecordData.template_offset; _y < height; _y++) {
+                cur.y = _y;
                 // printf("cur: (%d,%d,%d)\n", cur.x, cur.y, cur.z);
                 auto& bl   = bs.getBlock(cur).getTypeName();
                 auto  iter = map.find(bl);
@@ -184,7 +203,6 @@ bool TemplateManager::_processChunk(const LevelChunk& chunk) {
                 }
             }
             cur.z++;
-            cur.y = mRecordData.template_offset; // 重置 y 轴
         }
         cur.x++;
         cur.z = min.z; // 重置 z 轴
@@ -201,16 +219,18 @@ bool TemplateManager::postRecordAndSaveTemplate(const string& fileName, Player& 
 
     auto const& bs = player.getDimensionBlockSourceConst();
 
+    // 处理区块
     for (int x = mRecordStart.x; x <= mRecordEnd.x; x++) {
         for (int z = mRecordStart.z; z <= mRecordEnd.z; z++) {
+            // printf("Processing chunk (%d,%d)\n", x, z);
             auto ch = bs.getChunk(x, z);
             if (!ch) {
                 sendText<LogLevel::Error>(player, "[TemplateManager] Can't get chunk ({},{}).", x, z);
-                continue;
+                break;
             }
             if (!ch->isFullyLoaded()) {
                 sendText<LogLevel::Error>(player, "[TemplateManager] Chunk ({},{}) is not fully loaded.", x, z);
-                continue;
+                break;
             }
             if (_processChunk(*ch)) {
                 sendText<LogLevel::Success>(player, "[TemplateManager] Process chunk ({},{}).", x, z);

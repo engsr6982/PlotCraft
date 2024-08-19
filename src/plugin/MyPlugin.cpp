@@ -41,7 +41,8 @@ static std::unique_ptr<MyPlugin> instance;
 MyPlugin& MyPlugin::getInstance() { return *instance; }
 
 bool MyPlugin::load() {
-    auto& logger = getSelf().getLogger();
+    auto& self   = getSelf();
+    auto& logger = self.getLogger();
     logger.info(R"(                                                           )");
     logger.info(R"(         ____   __        __   ______              ____ __ )");
     logger.info(R"(        / __ \ / /____   / /_ / ____/_____ ____ _ / __// /_)");
@@ -51,43 +52,45 @@ bool MyPlugin::load() {
     logger.info(R"(                                                           )");
     logger.info(R"(                 ---- Author: engsr6982 ----               )");
     logger.info(R"(                                                           )");
-    logger.info("加载中...");
+    logger.info("Loading...");
     logger.info("编译参数: {}", BuildVersionInfo);
-    logger.info("尝试创建必要的文件夹...");
+    logger.info("创建 data 文件夹...");
 
-    auto& dataDir   = getSelf().getDataDir();
-    auto& langDir   = getSelf().getLangDir();
-    auto& configDir = getSelf().getConfigDir();
+    auto& dataDir = self.getDataDir();
+    auto& langDir = self.getLangDir();
 
     if (!fs::exists(dataDir)) fs::create_directories(dataDir);
 
-
-    logger.info("尝试加载数据...");
+    logger.info("加载数据...");
     plo::config::loadConfig();
     ll::i18n::load(langDir);
-
-    logger.info("尝试加载地皮模板...");
-    auto& cfg = plo::config::cfg;
-    if (cfg.generator.type == plo::config::PlotGeneratorType::Template
-        && !plo::core::TemplateManager::loadTemplate((configDir / cfg.generator.templateFile).string())) {
-        logger.error("加载模板失败，请检查配置文件");
-        // return false;
-    };
-
     plo::data::PlotBDStorage::getInstance().load();
     plo::data::PlayerNameDB::getInstance().initPlayerNameDB();
     plo::EconomyQueue::getInstance().load();
-
-    plo::utils::EconomySystem::getInstance().updateConfig(cfg.economy);
+    plo::utils::EconomySystem::getInstance().updateConfig(plo::config::cfg.economy);
 
     return true;
 }
 
 
 bool MyPlugin::enable() {
-    auto& logger = getSelf().getLogger();
+    auto& self   = getSelf();
+    auto& logger = self.getLogger();
     logger.info("Enabling...");
-    logger.info("尝试注册 命令、维度、事件...");
+    logger.info("注册 命令、事件...");
+
+    auto& cfg       = plo::config::cfg;
+    auto& configDir = self.getConfigDir();
+    if (cfg.generator.type == plo::config::PlotGeneratorType::Template) {
+        logger.info("检测到使用模板生成器，加载地皮模板...");
+        if (plo::core::TemplateManager::loadTemplate((configDir / cfg.generator.templateFile).string())) {
+            logger.info("加载模板成功");
+        } else {
+            logger.error("加载模板失败，请检查配置文件");
+            return false;
+        }
+    };
+
 
 #ifdef DEBUG
     plo::mc::executeCommand("gamerule showcoordinates true");

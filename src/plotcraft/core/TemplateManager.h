@@ -28,15 +28,17 @@ struct TemplateData {
 
 class TemplateManager {
 public:
+    // Template
     static TemplateData                                          mTemplateData; // 模板数据
     static std::unordered_map<string, Block const*>              mBlockMap;     // 方块映射     key: typeName
     static std::unordered_map<string, std::vector<Block const*>> mBlockBuffer;  // 方块缓冲区   key: chunkID
     static std::unordered_map<string, BlockVolume>               mBlockVolume;  // 方块体积     key: chunkID
 
+    static bool generatorBlockVolume(BlockVolume& volume); // 生成方块体积
+
     static bool loadTemplate(string const& path);
 
     static bool _parseTemplate();
-
 
     // Record Template
     static TemplateData                    mRecordData;       // 记录模板数据
@@ -68,6 +70,7 @@ public:
 
 
     // Tool functions
+    static void   toPositive(int& num);                  // 将数字转换为正数
     static string calculateChunkID(ChunkPos const& pos); // 计算区块ID
 
     static int getChunkNum(); // 获取区块数量
