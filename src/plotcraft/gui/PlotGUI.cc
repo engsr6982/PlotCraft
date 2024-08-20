@@ -10,7 +10,7 @@ void _selectPlot(Player& player) {
     fm.appendButton("返回", "textures/ui/icon_import", "path", [](Player& pl) { MainGUI(pl); });
 
 
-    auto plots = data::PlotBDStorage::getInstance().getPlots();
+    auto plots = data::PlotDBStorage::getInstance().getPlots();
 
     for (auto const& plt : plots) {
         if (!plt->isOwner(player.getUuid().asString())) continue; // 不是自己的地皮

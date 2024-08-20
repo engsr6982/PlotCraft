@@ -121,11 +121,7 @@ SDK 包可在 Release 页面下载
 
     "eventListener": {
       "onSculkSpreadListener": true, // 禁止幽匿块蔓延（地皮维度）
-      "onSculkBlockGrowthListener": true, // 禁止幽匿尖啸体生成（地皮维度）
-      "onUseItemOnWhiteList": [
-        // 玩家右键使用物品白名单（地皮维度）
-        "minecraft:clock"
-      ]
+      "onSculkBlockGrowthListener": true // 禁止幽匿尖啸体生成（地皮维度）
     }
   },
   "switchDim": {

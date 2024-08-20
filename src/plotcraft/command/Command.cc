@@ -15,7 +15,7 @@
 #include "plotcraft/Config.h"
 #include "plotcraft/core/Utils.h"
 #include "plotcraft/data/PlayerNameDB.h"
-#include "plotcraft/data/PlotBDStorage.h"
+#include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
 #include "plotcraft/gui/Global.h"
 #include <unordered_map>
@@ -34,7 +34,7 @@ const auto LambdaOP = [](CommandOrigin const& origin, CommandOutput& output, Par
     auto& pdb  = data::PlayerNameDB::getInstance();
     auto  uuid = pdb.getPlayerUUID(param.name);
     if (!uuid.empty()) {
-        auto& impl = data::PlotBDStorage::getInstance();
+        auto& impl = data::PlotDBStorage::getInstance();
         if (param.op == ParamOp::Op) {
             if (impl.isAdmin(uuid)) {
                 sendText<LogLevel::Error>(output, "玩家 \"{}\" 已经是管理员!", param.name);
@@ -91,7 +91,7 @@ const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output) {
 
     PlotPos pos = PlotPos{player.getPosition()};
     if (pos.isValid()) {
-        std::shared_ptr<data::PlotMetadata> plot = data::PlotBDStorage::getInstance().getPlot(pos.getPlotID());
+        std::shared_ptr<data::PlotMetadata> plot = data::PlotDBStorage::getInstance().getPlot(pos.getPlotID());
         if (plot == nullptr) {
             plot = data::PlotMetadata::make(pos.getPlotID(), pos.mX, pos.mZ);
         }
@@ -112,7 +112,7 @@ const auto LambdaDefault = [](CommandOrigin const& origin, CommandOutput& output
 
 const auto LambdaDBSave = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::DedicatedServer);
-    data::PlotBDStorage::getInstance().save();
+    data::PlotDBStorage::getInstance().save();
     sendText<LogLevel::Success>(output, "操作完成!");
 };
 
@@ -205,7 +205,7 @@ const auto confirm = [](CommandOrigin const& origin, CommandOutput& output) {
         return;
     }
 
-    auto& db      = data::PlotBDStorage::getInstance();
+    auto& db      = data::PlotDBStorage::getInstance();
     auto  firMeta = db.getPlot(firID);
     auto  secMeta = db.getPlot(secID);
 

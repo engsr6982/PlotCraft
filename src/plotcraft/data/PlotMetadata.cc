@@ -1,5 +1,5 @@
 #include "plotcraft/data/PlotMetadata.h"
-#include "plotcraft/data/PlotBDStorage.h"
+#include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/utils/Date.h"
 #include "plotcraft/utils/JsonHelper.h"
 #include <algorithm>
@@ -186,7 +186,7 @@ PlotPermissionTable&       PlotMetadata::getPermissionTable() { return mPermissi
 PlotPermissionTable const& PlotMetadata::getPermissionTableConst() const { return mPermissionTable; }
 
 
-void PlotMetadata::save() { PlotBDStorage::getInstance().save(*this); }
+void PlotMetadata::save() { PlotDBStorage::getInstance().save(*this); }
 
 string PlotMetadata::toString() const { return JsonHelper::structToJson(*this).dump(); }
 

@@ -47,8 +47,6 @@ struct _Config {
         struct EventListener {
             bool onSculkSpreadListener{true};
             bool onSculkBlockGrowthListener{true};
-
-            std::vector<string> onUseItemOnWhiteList = {"minecraft:clock"};
         } eventListener;
     } plotWorld;
 

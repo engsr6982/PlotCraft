@@ -9,7 +9,7 @@ void PlotShopGUI(Player& player) {
 
     fm.setContent("PlotCraft > 地皮商店(玩家出售)");
 
-    auto* impl = &data::PlotBDStorage::getInstance();
+    auto* impl = &data::PlotDBStorage::getInstance();
 
     auto sls = impl->getSaleingPlots();
     for (auto const& sl : sls) {
@@ -53,7 +53,7 @@ void _plotShopShowPlot(Player& player, PlotMetadataPtr pt) {
 
 void _buyPlot(Player& player, PlotMetadataPtr pt) {
 
-    auto* impl = &data::PlotBDStorage::getInstance();
+    auto* impl = &data::PlotDBStorage::getInstance();
     auto& cfg  = config::cfg.plotWorld;
 
     if (static_cast<int>(impl->getPlots(player.getUuid().asString()).size()) >= cfg.maxBuyPlotCount) {

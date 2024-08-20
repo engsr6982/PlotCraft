@@ -6,7 +6,7 @@
 #include "mc/server/commands/CommandOutput.h"
 #include "mc/server/commands/CommandSelector.h"
 #include "plotcraft/core/TemplateManager.h"
-#include "plotcraft/data/PlotBDStorage.h"
+#include "plotcraft/data/PlotDBStorage.h"
 
 namespace plo::command {
 using namespace plo::data;
@@ -28,7 +28,7 @@ struct ExecuteData {
 const auto start = [](CommandOrigin const& ori, CommandOutput& out, StartData const& data) {
     CHECK_COMMAND_TYPE(out, ori, CommandOriginType::Player);
     auto& player = *static_cast<Player*>(ori.getEntity());
-    if (!PlotBDStorage::getInstance().isAdmin(player.getUuid().asString())) {
+    if (!PlotDBStorage::getInstance().isAdmin(player.getUuid().asString())) {
         sendText<LogLevel::Error>(player, "此命令仅限地皮管理员使用");
         return;
     }
@@ -60,7 +60,7 @@ const auto start = [](CommandOrigin const& ori, CommandOutput& out, StartData co
 const auto pos1 = [](CommandOrigin const& ori, CommandOutput& out) {
     CHECK_COMMAND_TYPE(out, ori, CommandOriginType::Player);
     auto& player = *static_cast<Player*>(ori.getEntity());
-    if (!PlotBDStorage::getInstance().isAdmin(player.getUuid().asString())) {
+    if (!PlotDBStorage::getInstance().isAdmin(player.getUuid().asString())) {
         sendText<LogLevel::Error>(player, "此命令仅限地皮管理员使用");
         return;
     }
@@ -85,7 +85,7 @@ const auto pos1 = [](CommandOrigin const& ori, CommandOutput& out) {
 const auto pos2 = [](CommandOrigin const& ori, CommandOutput& out) {
     CHECK_COMMAND_TYPE(out, ori, CommandOriginType::Player);
     auto& player = *static_cast<Player*>(ori.getEntity());
-    if (!PlotBDStorage::getInstance().isAdmin(player.getUuid().asString())) {
+    if (!PlotDBStorage::getInstance().isAdmin(player.getUuid().asString())) {
         sendText<LogLevel::Error>(player, "此命令仅限地皮管理员使用");
         return;
     }
@@ -111,7 +111,7 @@ const auto pos2 = [](CommandOrigin const& ori, CommandOutput& out) {
 const auto execute = [](CommandOrigin const& ori, CommandOutput& out, ExecuteData const& data) {
     CHECK_COMMAND_TYPE(out, ori, CommandOriginType::Player);
     auto& player = *static_cast<Player*>(ori.getEntity());
-    if (!PlotBDStorage::getInstance().isAdmin(player.getUuid().asString())) {
+    if (!PlotDBStorage::getInstance().isAdmin(player.getUuid().asString())) {
         sendText<LogLevel::Error>(player, "此命令仅限地皮管理员使用");
         return;
     }
@@ -139,7 +139,7 @@ const auto execute = [](CommandOrigin const& ori, CommandOutput& out, ExecuteDat
 const auto reset = [](CommandOrigin const& ori, CommandOutput& out) {
     CHECK_COMMAND_TYPE(out, ori, CommandOriginType::Player);
     auto& player = *static_cast<Player*>(ori.getEntity());
-    if (!PlotBDStorage::getInstance().isAdmin(player.getUuid().asString())) {
+    if (!PlotDBStorage::getInstance().isAdmin(player.getUuid().asString())) {
         sendText<LogLevel::Error>(player, "此命令仅限地皮管理员使用");
         return;
     }

@@ -3,7 +3,7 @@
 namespace plo::gui {
 
 void PluginSettingGUI(Player& player) {
-    auto* impl = &data::PlotBDStorage::getInstance();
+    auto* impl = &data::PlotDBStorage::getInstance();
     auto* cfg  = &config::cfg.switchDim;
 
     if (!impl->isAdmin(player.getUuid().asString())) {

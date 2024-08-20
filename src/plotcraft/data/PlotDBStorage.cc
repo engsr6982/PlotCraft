@@ -1,4 +1,4 @@
-#include "plotcraft/data/PlotBDStorage.h"
+#include "plotcraft/data/PlotDBStorage.h"
 #include "ll/api/data/KeyValueDB.h"
 #include "nlohmann/json_fwd.hpp"
 #include "plotcraft/utils/Date.h"
@@ -10,17 +10,14 @@
 #include <vector>
 
 
-#ifdef DEBUG
-#define debugger(...) std::cout << "[Debug] " << __VA_ARGS__ << std::endl;
-#else
-#define debugger(...) ((void)0)
-#endif
+#include "plotcraft/utils/Debugger.h"
+
 
 using namespace plo::utils;
 
 namespace plo::data {
 
-void PlotBDStorage::tryStartSaveThread() {
+void PlotDBStorage::tryStartSaveThread() {
     static bool isStarted = false;
     if (isStarted) return;
     isStarted = true;
@@ -34,9 +31,9 @@ void PlotBDStorage::tryStartSaveThread() {
     }).detach();
 }
 
-ll::data::KeyValueDB& PlotBDStorage::getDB() { return *mDB; }
-PlotBDStorage&        PlotBDStorage::getInstance() {
-    static PlotBDStorage instance;
+ll::data::KeyValueDB& PlotDBStorage::getDB() { return *mDB; }
+PlotDBStorage&        PlotDBStorage::getInstance() {
+    static PlotDBStorage instance;
     return instance;
 }
 
@@ -45,7 +42,7 @@ PlotBDStorage&        PlotBDStorage::getInstance() {
 #define DB_PlotAdminsKey     "PlotAdmins"
 #define DB_ArchivedPrefix    "Archived_" // Archived_(0,1)
 
-void PlotBDStorage::_initKey() {
+void PlotDBStorage::_initKey() {
     if (!mDB->has(DB_PlayerSettingsKey)) {
         mDB->set(DB_PlayerSettingsKey, "{}");
     }
@@ -55,7 +52,7 @@ void PlotBDStorage::_initKey() {
 }
 
 
-void PlotBDStorage::load() {
+void PlotDBStorage::load() {
     if (!mDB) {
         mDB = std::make_unique<ll::data::KeyValueDB>(
             my_plugin::MyPlugin::getInstance().getSelf().getDataDir() / "PlotDBStorage"
@@ -100,10 +97,10 @@ void PlotBDStorage::load() {
     logger->info("已加载 {}位 玩家设置数据", mPlayerSettings.size());
 }
 
-void PlotBDStorage::save(PlotMetadata const& plot) {
+void PlotDBStorage::save(PlotMetadata const& plot) {
     mDB->set(plot.getPlotID(), JsonHelper::structToJson(plot).dump());
 }
-void PlotBDStorage::save() {
+void PlotDBStorage::save() {
     // PlotMetadata
     for (auto const& [id, ptr] : mPlots) save(*ptr);
 
@@ -115,12 +112,12 @@ void PlotBDStorage::save() {
 }
 
 
-bool PlotBDStorage::hasAdmin(UUIDs const& uuid) const {
+bool PlotDBStorage::hasAdmin(UUIDs const& uuid) const {
     return std::find(mAdmins.begin(), mAdmins.end(), uuid) != mAdmins.end();
 }
-bool PlotBDStorage::isAdmin(UUIDs const& uuid) const { return hasAdmin(uuid); }
+bool PlotDBStorage::isAdmin(UUIDs const& uuid) const { return hasAdmin(uuid); }
 
-bool PlotBDStorage::addAdmin(UUIDs const& uuid) {
+bool PlotDBStorage::addAdmin(UUIDs const& uuid) {
     if (hasAdmin(uuid)) {
         return false;
     }
@@ -128,7 +125,7 @@ bool PlotBDStorage::addAdmin(UUIDs const& uuid) {
     return true;
 }
 
-bool PlotBDStorage::delAdmin(UUIDs const& uuid) {
+bool PlotDBStorage::delAdmin(UUIDs const& uuid) {
     auto it = std::find(mAdmins.begin(), mAdmins.end(), uuid);
     if (it == mAdmins.end()) {
         return false;
@@ -137,13 +134,13 @@ bool PlotBDStorage::delAdmin(UUIDs const& uuid) {
     return true;
 }
 
-std::vector<UUIDs> PlotBDStorage::getAdmins() const { return mAdmins; }
+std::vector<UUIDs> PlotDBStorage::getAdmins() const { return mAdmins; }
 
 
 // Plots
-bool PlotBDStorage::hasPlot(PlotID const& id) const { return mPlots.find(id) != mPlots.end(); }
+bool PlotDBStorage::hasPlot(PlotID const& id) const { return mPlots.find(id) != mPlots.end(); }
 
-bool PlotBDStorage::delPlot(PlotID const& id) {
+bool PlotDBStorage::delPlot(PlotID const& id) {
     auto it = mPlots.find(id);
     if (it == mPlots.end()) {
         return false;
@@ -152,7 +149,7 @@ bool PlotBDStorage::delPlot(PlotID const& id) {
     return true;
 }
 
-bool PlotBDStorage::addPlot(PlotMetadataPtr ptr) {
+bool PlotDBStorage::addPlot(PlotMetadataPtr ptr) {
     if (hasPlot(ptr->getPlotID())) {
         return false;
     }
@@ -165,12 +162,12 @@ bool PlotBDStorage::addPlot(PlotMetadataPtr ptr) {
     return true;
 }
 
-bool PlotBDStorage::addPlot(PlotID const& id, UUIDs const& owner, int x, int z) {
+bool PlotDBStorage::addPlot(PlotID const& id, UUIDs const& owner, int x, int z) {
     auto ptr = PlotMetadata::make(id, owner, x, z);
     return addPlot(ptr);
 }
 
-PlotMetadataPtr PlotBDStorage::getPlot(PlotID const& id) const {
+PlotMetadataPtr PlotDBStorage::getPlot(PlotID const& id) const {
     auto it = mPlots.find(id);
     if (it == mPlots.end()) {
         return nullptr;
@@ -178,7 +175,7 @@ PlotMetadataPtr PlotBDStorage::getPlot(PlotID const& id) const {
     return it->second;
 }
 
-std::vector<PlotMetadataPtr> PlotBDStorage::getPlots() const {
+std::vector<PlotMetadataPtr> PlotDBStorage::getPlots() const {
     std::vector<PlotMetadataPtr> res;
     for (auto const& [id, ptr] : mPlots) {
         res.push_back(ptr);
@@ -186,7 +183,7 @@ std::vector<PlotMetadataPtr> PlotBDStorage::getPlots() const {
     return res;
 }
 
-std::vector<PlotMetadataPtr> PlotBDStorage::getPlots(UUIDs const& owner) const {
+std::vector<PlotMetadataPtr> PlotDBStorage::getPlots(UUIDs const& owner) const {
     std::vector<PlotMetadataPtr> res;
     for (auto const& [id, ptr] : mPlots) {
         if (ptr->getPlotOwner() == owner) {
@@ -197,24 +194,24 @@ std::vector<PlotMetadataPtr> PlotBDStorage::getPlots(UUIDs const& owner) const {
 }
 
 
-bool PlotBDStorage::hasPlayerSetting(UUIDs const& uuid) const {
+bool PlotDBStorage::hasPlayerSetting(UUIDs const& uuid) const {
     return mPlayerSettings.find(uuid) != mPlayerSettings.end();
 }
-bool PlotBDStorage::initPlayerSetting(UUIDs const& uuid) {
+bool PlotDBStorage::initPlayerSetting(UUIDs const& uuid) {
     if (hasPlayerSetting(uuid)) {
         return false;
     }
     mPlayerSettings[uuid] = PlayerSettingItem{};
     return true;
 }
-bool PlotBDStorage::setPlayerSetting(UUIDs const& uuid, PlayerSettingItem const& setting) {
+bool PlotDBStorage::setPlayerSetting(UUIDs const& uuid, PlayerSettingItem const& setting) {
     if (!hasPlayerSetting(uuid)) {
         return false;
     }
     mPlayerSettings[uuid] = PlayerSettingItem{setting}; // copy
     return true;
 }
-PlayerSettingItem PlotBDStorage::getPlayerSetting(UUIDs const& uuid) const {
+PlayerSettingItem PlotDBStorage::getPlayerSetting(UUIDs const& uuid) const {
     auto it = mPlayerSettings.find(uuid);
     if (it == mPlayerSettings.end()) {
         return PlayerSettingItem{};
@@ -223,7 +220,7 @@ PlayerSettingItem PlotBDStorage::getPlayerSetting(UUIDs const& uuid) const {
 }
 
 
-std::vector<PlotMetadataPtr> PlotBDStorage::getSaleingPlots() const {
+std::vector<PlotMetadataPtr> PlotDBStorage::getSaleingPlots() const {
     std::vector<PlotMetadataPtr> res;
     for (auto const& [id, ptr] : mPlots) {
         if (ptr->isSale()) {
@@ -233,7 +230,7 @@ std::vector<PlotMetadataPtr> PlotBDStorage::getSaleingPlots() const {
     return res;
 }
 
-bool PlotBDStorage::buyPlotFromSale(PlotID const& id, UUIDs const& buyer, bool resetShares) {
+bool PlotDBStorage::buyPlotFromSale(PlotID const& id, UUIDs const& buyer, bool resetShares) {
     auto ptr = getPlot(id);
     if (!ptr) return false;
 
@@ -244,7 +241,7 @@ bool PlotBDStorage::buyPlotFromSale(PlotID const& id, UUIDs const& buyer, bool r
     return true;
 }
 
-PlotPermission PlotBDStorage::getPlayerPermission(UUIDs const& uuid, PlotID const& id, bool ignoreAdmin) const {
+PlotPermission PlotDBStorage::getPlayerPermission(UUIDs const& uuid, PlotID const& id, bool ignoreAdmin) const {
     if (!ignoreAdmin && isAdmin(uuid)) return PlotPermission::Admin;
 
     auto ptr = getPlot(id);

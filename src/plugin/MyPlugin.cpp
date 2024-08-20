@@ -20,7 +20,7 @@
 #include "plotcraft/command/Command.h"
 #include "plotcraft/core/PlotDimension.h"
 #include "plotcraft/data/PlayerNameDB.h"
-#include "plotcraft/data/PlotBDStorage.h"
+#include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/event/Event.h"
 #include "plotcraft/utils/EconomySystem.h"
 #include "plotcraft/utils/Mc.h"
@@ -64,7 +64,7 @@ bool MyPlugin::load() {
     logger.info("加载数据...");
     plo::config::loadConfig();
     ll::i18n::load(langDir);
-    plo::data::PlotBDStorage::getInstance().load();
+    plo::data::PlotDBStorage::getInstance().load();
     plo::data::PlayerNameDB::getInstance().initPlayerNameDB();
     plo::EconomyQueue::getInstance().load();
     plo::utils::EconomySystem::getInstance().updateConfig(plo::config::cfg.economy);
@@ -102,7 +102,7 @@ bool MyPlugin::enable() {
 
     plo::event::registerEventListener();                          // 注册事件监听器
     plo::command::registerCommand();                              // 注册命令
-    plo::data::PlotBDStorage::getInstance().tryStartSaveThread(); // 尝试启动自动保存线程
+    plo::data::PlotDBStorage::getInstance().tryStartSaveThread(); // 尝试启动自动保存线程
 
     return true;
 }
@@ -112,7 +112,7 @@ bool MyPlugin::disable() {
     logger.info("Disabling...");
 
     logger.warn("正在保存数据，请不要强制关闭进程...");
-    plo::data::PlotBDStorage::getInstance().save();
+    plo::data::PlotDBStorage::getInstance().save();
 
     plo::event::unRegisterEventListener();
 

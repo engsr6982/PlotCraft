@@ -22,7 +22,7 @@ struct PlayerSettingItem {
 };
 
 
-class PlotBDStorage {
+class PlotDBStorage {
 private:
     std::unique_ptr<ll::data::KeyValueDB> mDB;
 
@@ -32,12 +32,12 @@ private:
     std::unordered_map<UUIDs, PlayerSettingItem> mPlayerSettings; // 玩家设置
 
 public:
-    PlotBDStorage()                                = default;
-    PlotBDStorage(const PlotBDStorage&)            = delete;
-    PlotBDStorage& operator=(const PlotBDStorage&) = delete;
+    PlotDBStorage()                                = default;
+    PlotDBStorage(const PlotDBStorage&)            = delete;
+    PlotDBStorage& operator=(const PlotDBStorage&) = delete;
 
     PLAPI ll::data::KeyValueDB& getDB();
-    PLAPI static PlotBDStorage& getInstance();
+    PLAPI static PlotDBStorage& getInstance();
 
     PLAPI void load();
     PLAPI void save(); // 保存所有数据
