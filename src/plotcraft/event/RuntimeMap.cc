@@ -198,10 +198,6 @@ std::unordered_map<MapType, std::vector<std::string>> RuntimeMap::mData = {
          "minecraft:wither",                // 凋零
          "minecraft:wither_skull",          // 凋零之首
          "minecraft:wither_skull_dangerous" // 蓝色凋灵之首(Wiki)
-     }                   },
-    {MapType::AttackBlock,
-     {
-         "minecraft:dragon_egg" // 龙蛋
      }                   }
 };
 

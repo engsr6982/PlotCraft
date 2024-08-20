@@ -38,9 +38,11 @@
 #include <memory>
 #include <string>
 
+#include "EventHook.h"
 #include "RuntimeMap.h"
 #include "Scheduler.h"
 #include "plotcraft/utils/Debugger.h"
+
 
 #include "plotcraft/event/hook/SculkBlockGrowthEvent.h"
 #include "plotcraft/event/hook/SculkSpreadEvent.h"
@@ -68,8 +70,9 @@ ll::event::ListenerPtr mPlayerEnterPlotEvent;     // 玩家进入地皮
 namespace plo::event {
 using namespace core;
 
-bool CheckPerm(PlotDBStorage* pdb, PlotID const& id, UUIDs const& uuid, bool ignoreAdmin = false) {
-    return pdb->getPlayerPermission(uuid, id, ignoreAdmin) != PlotPermission::None;
+bool CheckPerm(PlotDBStorage* pdb, PlotID const& id, UUIDs const& uuid, bool ignoreAdmin) {
+    PlotDBStorage* db = pdb ? pdb : &PlotDBStorage::getInstance();
+    return db->getPlayerPermission(uuid, id, ignoreAdmin) != PlotPermission::None;
 }
 bool StringFind(string const& str, string const& sub) { return str.rfind(sub) != string::npos; }
 
@@ -113,6 +116,8 @@ bool registerEventListener() {
     }
 
     // Minecraft events
+    registerHook();
+
     mPlayerJoinEvent = bus->emplaceListener<ll::event::PlayerJoinEvent>([ndb, pdb](ll::event::PlayerJoinEvent& e) {
         if (e.self().isSimulatedPlayer()) return true; // skip simulated player
         ndb->insertPlayer(e.self());
@@ -120,7 +125,6 @@ bool registerEventListener() {
         pdb->initPlayerSetting(e.self().getUuid().asString());
         return true;
     });
-
 
     mPlayerDestroyBlockEvent =
         bus->emplaceListener<ll::event::PlayerDestroyBlockEvent>([pdb](ll::event::PlayerDestroyBlockEvent& ev) {
@@ -412,6 +416,8 @@ bool unRegisterEventListener() {
     bus.removeListener(mSculkSpreadEvent);
     bus.removeListener(mSculkBlockGrowthEvent);
     bus.removeListener(mPlayerUseItemEvent);
+
+    unregisterHook();
 
     return true;
 }

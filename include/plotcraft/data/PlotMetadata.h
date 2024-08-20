@@ -36,7 +36,10 @@ struct PlotShareItem {
 
 struct PlotPermissionTable {
     // Added
-    bool allowFireSpread{true}; // 火焰蔓延
+    bool allowFireSpread{true};       // 火焰蔓延
+    bool allowAttackDragonEgg{false}; // 攻击龙蛋
+    bool allowFarmDecay{true};        // 耕地退化
+    bool allowPistonPush{true};       // 活塞推动
 
     // TODO：1.0.0
     bool allow_destroy{false};         // 允许破坏

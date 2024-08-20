@@ -10,8 +10,7 @@ enum class MapType : int {
     ItemWhiteList   = 2, // 物品白名单
     SpecialAttack   = 3, // 特殊攻击
     AnimalEntity    = 4, // 动物实体
-    MobEntity       = 5, // 生物实体
-    AttackBlock     = 6  // 攻击方块
+    MobEntity       = 5  // 生物实体
 };
 
 struct RuntimeMap {
