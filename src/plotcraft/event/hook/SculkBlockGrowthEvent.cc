@@ -16,11 +16,13 @@ BlockSource*    SculkBlockGrowthEvent::getSource() const { return mSource; }
 BlockPos const& SculkBlockGrowthEvent::getPos() const { return mPos; }
 
 
-LL_STATIC_HOOK(
+LL_TYPE_STATIC_HOOK(
     SculkBlockGrowthHook,
     ll::memory::HookPriority::Normal,
-    "?_placeGrowthAt@SculkBlockBehavior@@CAXAEAVIBlockWorldGenAPI@@PEAVBlockSource@@AEBVBlockPos@@AEAVRandom@@"
-    "AEAVSculkSpreader@@@Z",
+    SculkBlockBehavior,
+    // "?_placeGrowthAt@SculkBlockBehavior@@CAXAEAVIBlockWorldGenAPI@@PEAVBlockSource@@AEBVBlockPos@@AEAVRandom@@"
+    // "AEAVSculkSpreader@@@Z",
+    &SculkBlockBehavior::_placeGrowthAt,
     void,
     IBlockWorldGenAPI& a1, // target
     BlockSource*       a2, // region

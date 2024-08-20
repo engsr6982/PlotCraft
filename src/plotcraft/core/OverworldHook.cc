@@ -14,8 +14,9 @@ LL_AUTO_TYPE_INSTANCE_HOOK(
     OverworldDimensionCreateGeneratorHook,
     ll::memory::HookPriority::Normal,
     OverworldDimension,
-    "?createGenerator@OverworldDimension@@UEAA?AV?$unique_ptr@VWorldGenerator@@U?$default_delete@VWorldGenerator@@@std@"
-    "@@std@@AEBVStructureSetRegistry@worldgen@br@@@Z",
+    // "?createGenerator@OverworldDimension@@UEAA?AV?$unique_ptr@VWorldGenerator@@U?$default_delete@VWorldGenerator@@@std@"
+    // "@@std@@AEBVStructureSetRegistry@worldgen@br@@@Z",
+    &OverworldDimension::createGenerator,
     std::unique_ptr<WorldGenerator>,
     br::worldgen::StructureSetRegistry const& 
 ) {

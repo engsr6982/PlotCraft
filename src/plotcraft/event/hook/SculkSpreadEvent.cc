@@ -14,11 +14,13 @@ BlockPos const&           SculkSpreadEvent::getPos() const { return mPos; }
 optional_ref<BlockSource> SculkSpreadEvent::getBlockSource() const { return mBlockSource; }
 
 
-LL_STATIC_HOOK(
+LL_TYPE_STATIC_HOOK(
     SculkVeinSpreadEventHook,
     ll::memory::HookPriority::Normal,
-    "?_attemptPlaceSculk@SculkVeinBlockBehavior@@CA_NAEAVIBlockWorldGenAPI@@PEAVBlockSource@@AEBVBlockPos@@"
-    "AEAVSculkSpreader@@AEAVRandom@@@Z",
+    SculkVeinBlockBehavior,
+    // "?_attemptPlaceSculk@SculkVeinBlockBehavior@@CA_NAEAVIBlockWorldGenAPI@@PEAVBlockSource@@AEBVBlockPos@@"
+    // "AEAVSculkSpreader@@AEAVRandom@@@Z",
+    &SculkVeinBlockBehavior::_attemptPlaceSculk,
     bool,
     IBlockWorldGenAPI& target,
     BlockSource*       region,
