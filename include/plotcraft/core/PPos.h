@@ -1,9 +1,8 @@
 #pragma once
 #include "mc/math/Vec3.h"
-#include "mc/world/level/block/Block.h"
+#include "mc/world/level/BlockPos.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/Macro.h"
-#include <utility>
 
 
 namespace plo {
@@ -46,16 +45,18 @@ namespace plo {
 //     PLAPI std::vector<PlotRoadPos> getAdjacentRoads() const;
 // };
 
+using Vertexs = std::vector<Vec3>; // 顶点
+
 
 class PPos {
 public:
-    int               mX, mZ;   // 地皮坐标
-    std::vector<Vec3> mVertexs; // 地皮顶点
+    int     mX, mZ;   // 地皮坐标
+    Vertexs mVertexs; // 地皮顶点
 
     PLAPI PPos();
     PLAPI PPos(int x, int z);
     PLAPI PPos(const Vec3& vec3);
-    PLAPI PPos(int x, int z, const std::vector<Vec3>& vertexs);
+    PLAPI PPos(int x, int z, Vertexs const& vertexs);
 
     PLAPI bool isValid() const;
 
@@ -75,31 +76,38 @@ public:
     // PLAPI bool checkAndFixVertexs();                  // TODO
     // PLAPI bool tryMergeAndFixVertexs(PPos& other); // TODO
 
-    PLAPI std::vector<PPos> getAdjacentPlots() const; // 获取相邻的地皮
-    // PLAPI std::vector<PlotRoadPos> getAdjacentRoads() const; // TODO: 获取相邻的道路
-
+    // PLAPI std::vector<PPos> getRangedPlots() const;           // TODO: 获取范围内的地皮
     // PLAPI std::vector<PlotRoadPos> getRangedRoads() const;    // TODO: 获取范围内的道路
     // PLAPI std::vector<PlotCrossPos> getRangedCrosses() const; // TODO: 获取范围内的路口
 
     PLAPI bool operator==(PPos const& other) const;
     PLAPI bool operator!=(PPos const& other) const;
 
-
     // static
     PLAPI static bool isAdjacent(PPos const& plot1, PPos const& plot2);
 
-    PLAPI static bool isPointInPolygon(const Vec3& point, const std::vector<Vec3>& polygon);
+    PLAPI static bool isPointInPolygon(const Vec3& point, Vertexs const& polygon);
 };
+
 
 class Cube {
 public:
+    BlockPos mMin, mMax;
+
     Cube() = delete;
-};
+    Cube(BlockPos const& min, BlockPos const& max);
 
-class Area {
-public:
-    Area() = delete;
-};
+    Vertexs get2DVertexs() const; // 获取2D顶点
 
+    bool hasPos(BlockPos const& pos) const; // 判断一个点是否在立方体内
+
+    std::vector<PPos> getRangedPlots() const; // 获取范围内的地皮
+
+    bool operator==(const Cube& other) const;
+    bool operator!=(const Cube& other) const;
+
+    // static
+    static bool isCollision(Cube const& cube1, Cube const& cube2); // 判断两个立方体是否碰撞
+};
 
 } // namespace plo
