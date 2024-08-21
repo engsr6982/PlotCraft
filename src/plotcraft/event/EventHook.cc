@@ -505,8 +505,29 @@ LL_TYPE_INSTANCE_HOOK(
     try {
         if (region.getDimensionId() != getPlotDimensionId()) return origin(level, bb, region, range, type);
 
-        // TODO: allow_entity_destroy
-        // TODO: Cube support
+        Cube  c(bb.min, bb.max);
+        auto  land = c.getRangedPlots();
+        auto& db   = PlotDBStorage::getInstance();
+
+        for (auto const& p : land) {
+            if (p.isCubeOnBorder(c)) {
+                my_plugin::MyPlugin::getInstance().getSelf().getLogger().warn(
+                    "Wither try to destroy block on border of plot {} at {}",
+                    p.getPlotID(),
+                    bb.toString()
+                );
+                return; // 禁止破坏边框
+            }
+
+            auto meta = db.getPlot(p.getPlotID());
+            if (meta) {
+                if (!meta->getPermissionTableConst().allow_entity_destroy) {
+                    return;
+                }
+            } else return; // 如果地块不存在，则不进行破坏
+        }
+
+        return origin(level, bb, region, range, type);
     }
     CATCH;
 }
@@ -548,14 +569,17 @@ LL_TYPE_INSTANCE_HOOK(
 
 
 // 红石更新
-const auto RedStoneUpdateCallback = [](BlockSource& bs, BlockPos const& pos, int strength, bool isFirstTime) -> bool {
+const auto RedStoneUpdateCallback =
+    [](BlockSource& bs, BlockPos const& pos, int /* level */, bool /* isActive */) -> bool {
     if (bs.getDimensionId() != getPlotDimensionId()) return true;
 
     auto pps = PPos(pos);
     if (!pps.isValid()) return true;
 
-    // TODO: ev_redstone_update
-    // TODO: Cube support
+    auto meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
+    if (meta) {
+        if (meta->getPermissionTableConst().allowRedstoneUpdate) return true;
+    }
 
     return false;
 };
@@ -611,10 +635,24 @@ const auto ExplodeCallback = [](Actor*       source,
                                 float        maxResistance) -> bool {
     if (bs.getDimensionId() != getPlotDimensionId()) return true;
 
-    // TODO: ev_explode
-    // TODO: Cube support
+    Radius r(pos, explosionRadius + 1);
+    auto   land = r.getRangedPlots();
+    auto&  db   = PlotDBStorage::getInstance();
 
-    return false;
+    for (auto& p : land) {
+        if (p.isRadiusOnBorder(r)) {
+            return false; // 禁止破坏边框
+        }
+
+        auto meta = db.getPlot(p.getPlotID());
+        if (meta) {
+            if (!meta->getPermissionTableConst().allowExplode) {
+                return false; // 地皮禁止爆炸
+            }
+        }
+    }
+
+    return false; // 地皮世界禁止爆炸
 };
 LL_TYPE_INSTANCE_HOOK(
     ExplodeHook,
