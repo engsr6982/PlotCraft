@@ -233,8 +233,8 @@ LL_TYPE_INSTANCE_HOOK(
         auto pps = PPos(this->getPosition());
 
         if (!pps.isValid()) return origin(source, damage);
-        auto meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
 
+        auto meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
         if (meta) {
             auto const& et  = this->getTypeName();
             auto const& tab = meta->getPermissionTableConst();

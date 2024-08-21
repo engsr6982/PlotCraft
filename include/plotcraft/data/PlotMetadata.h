@@ -102,7 +102,12 @@ struct PlotPermissionTable {
     bool useBucket{false};           // 使用桶
     bool usePressurePlate{false};    // 使用压力板
     bool useArmorStand{false};       // 使用盔甲架
-    bool editFlowerPot{false};       // 允许编辑花盆
+    bool useBoneMeal{false};         // 使用骨粉
+    bool useHoe{false};              // 使用锄头
+    bool useShovel{false};           // 使用锹
+
+    bool editFlowerPot{false}; // 编辑花盆
+    bool editSign{false};      // 编辑告示牌
 };
 
 

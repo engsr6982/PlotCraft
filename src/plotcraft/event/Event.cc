@@ -186,25 +186,27 @@ bool registerEventListener() {
             if (!pps.isValid()) return true; // 不在地皮上
             if (CheckPerm(pdb, pps.getPlotID(), player.getUuid().asString())) return true;
 
-            auto const meta = pdb->getPlot(pps.getPlotID());
-
             auto const& bt = e.block()->getTypeName();
             auto const& it = e.item().getTypeName();
-            if (!RuntimeMap::has(MapType::UseItemOn, bt)) {
+            if (!RuntimeMap::has(MapType::UseItemOn, bt) && !RuntimeMap::has(MapType::UseItemOn, it)) {
                 return true;
             }
 
+            auto const meta = pdb->getPlot(pps.getPlotID());
             if (meta) {
                 // clang-format off
                 auto const& tab = meta->getPermissionTableConst();
-                if (StringFind(it, "bucket") && tab.useBucket) return true;           // 各种桶
-                if (StringFind(it, "axe") && tab.allowAxePeeled) return true;         // 斧头给木头去皮
+                if (StringFind(it, "bucket") && tab.useBucket) return true;    // 各种桶
+                if (StringFind(it, "axe") && tab.allowAxePeeled) return true; // 斧头给木头去皮
+                if (StringFind(it, "hoe") && tab.useHoe) return true;         // 锄头耕地
+                if (StringFind(it, "_shovel") && tab.useShovel) return true;  // 锹铲除草径
                 if (it == "minecraft:skull" && tab.allowPlace) return true;           // 放置头颅
                 if (it == "minecraft:banner" && tab.allowPlace) return true;          // 放置旗帜
                 if (it == "minecraft:glow_ink_sac" && tab.allowPlace) return true;    // 发光墨囊给木牌上色
                 if (it == "minecraft:end_crystal" && tab.allowPlace) return true;     // 末地水晶
                 if (it == "minecraft:ender_eye" && tab.allowPlace) return true;       // 放置末影之眼
                 if (it == "minecraft:flint_and_steel" && tab.useFiregen) return true; // 使用打火石
+                if (it == "minecraft:bone_meal" && tab.useBoneMeal) return true;      // 使用骨粉
 
                 if (StringFind(bt, "button") && tab.useButton) return true;       // 各种按钮
                 if (bt == "minecraft:dragon_egg" && tab.allowAttackDragonEgg) return true; // 右键龙蛋
@@ -213,7 +215,7 @@ bool registerEventListener() {
                 if (bt == "minecraft:crafting_table" && tab.useCraftingTable) return true; // 工作台
                 if ((bt == "minecraft:campfire" || bt == "minecraft:soul_campfire") && tab.useCampfire) return true; // 营火（烧烤）
                 if (bt == "minecraft:composter" && tab.useComposter) return true; // 堆肥桶（放置肥料）
-                if ((bt == "minecraft:undyed_shulker_box" || bt == "minecraft:shulker_box") && tab.useShulkerBox) return true;  // 潜匿箱
+                if (StringFind(bt,"shulker_box") && tab.useShulkerBox) return true;  // 潜影盒
                 if (bt == "minecraft:noteblock" && tab.useNoteBlock) return true; // 音符盒（调音）
                 if (bt == "minecraft:jukebox" && tab.useJukebox) return true;     // 唱片机（放置/取出唱片）
                 if (bt == "minecraft:bell" && tab.useBell) return true;           // 钟（敲钟）
@@ -226,6 +228,7 @@ bool registerEventListener() {
                 if (StringFind(bt, "fence_gate") && tab.useFenceGate) return true;  // 各种栏栅门
                 if (StringFind(bt, "trapdoor") && tab.useTrapdoor) return true;     // 各种活板门
                 if (bt == "minecraft:flower_pot" && tab.editFlowerPot) return true;          // 花盆
+                if (StringFind(bt, "_sign") && tab.editSign) return true; // 编辑告示牌
                 // clang-format on
             }
 
