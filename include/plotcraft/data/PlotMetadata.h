@@ -36,29 +36,32 @@ struct PlotShareItem {
 
 struct PlotPermissionTable {
     // 标记 [x] 为复用权限
-    bool allowFireSpread{true};       // 火焰蔓延
-    bool allowAttackDragonEgg{false}; // 攻击龙蛋
-    bool allowFarmDecay{true};        // 耕地退化
-    bool allowPistonPush{true};       // 活塞推动
-    bool allowRedstoneUpdate{true};   // 红石更新
-    bool allowExplode{false};         // 爆炸
-    bool allowDestroy{false};         // 允许破坏
-    bool allowWitherDestroy{false};   // 允许凋零破坏
-    bool allowPlace{false};           // 允许放置 [x]
-    bool allowAttackPlayer{false};    // 允许攻击玩家
-    bool allowAttackAnimal{false};    // 允许攻击动物
-    bool allowAttackMob{true};        // 允许攻击怪物
-    bool allowOpenChest{false};       // 允许打开箱子
-    bool allowPickupItem{false};      // 允许拾取物品
-    bool allowThrowSnowball{true};    // 允许投掷雪球
-    bool allowThrowEnderPearl{true};  // 允许投掷末影珍珠
-    bool allowThrowEgg{true};         // 允许投掷鸡蛋
-    bool allowThrowTrident{true};     // 允许投掷三叉戟
-    bool allowDropItem{true};         // 允许丢弃物品
-    bool allowShoot{false};           // 允许射击 [x]
-    bool allowThrowPotion{false};     // 允许投掷药水 [x]
-    bool allowRideEntity{false};      // 允许骑乘实体
-    bool allowRideTrans{false};       // 允许骑乘矿车、船
+    bool allowFireSpread{true};          // 火焰蔓延
+    bool allowAttackDragonEgg{false};    // 攻击龙蛋
+    bool allowFarmDecay{true};           // 耕地退化
+    bool allowPistonPush{true};          // 活塞推动
+    bool allowRedstoneUpdate{true};      // 红石更新
+    bool allowExplode{false};            // 爆炸
+    bool allowDestroy{false};            // 允许破坏
+    bool allowWitherDestroy{false};      // 允许凋零破坏
+    bool allowPlace{false};              // 允许放置 [x]
+    bool allowAttackPlayer{false};       // 允许攻击玩家
+    bool allowAttackAnimal{false};       // 允许攻击动物
+    bool allowAttackMob{true};           // 允许攻击怪物
+    bool allowOpenChest{false};          // 允许打开箱子
+    bool allowPickupItem{false};         // 允许拾取物品
+    bool allowThrowSnowball{true};       // 允许投掷雪球
+    bool allowThrowEnderPearl{true};     // 允许投掷末影珍珠
+    bool allowThrowEgg{true};            // 允许投掷鸡蛋
+    bool allowThrowTrident{true};        // 允许投掷三叉戟
+    bool allowDropItem{true};            // 允许丢弃物品
+    bool allowShoot{false};              // 允许射击 [x]
+    bool allowThrowPotion{false};        // 允许投掷药水 [x]
+    bool allowRideEntity{false};         // 允许骑乘实体
+    bool allowRideTrans{false};          // 允许骑乘矿车、船
+    bool allowAxePeeled{false};          // 允许斧头去皮
+    bool allowAttackEnderCrystal{false}; // 允许攻击末地水晶
+    bool allowDestroyArmorStand{false};  // 允许破坏盔甲架
 
     bool useAnvil{false};            // 使用铁砧
     bool useBarrel{false};           // 使用木桶

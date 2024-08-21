@@ -626,13 +626,13 @@ RedstoneUpdateHookMacro(
 
 
 // 方块/实体爆炸
-const auto ExplodeCallback = [](Actor*       source,
+const auto ExplodeCallback = [](Actor* /* source */,
                                 BlockSource& bs,
                                 Vec3 const&  pos,
                                 float        explosionRadius,
-                                bool         fire,
-                                bool         breaksBlocks,
-                                float        maxResistance) -> bool {
+                                bool /* fire */,
+                                bool /* breaksBlocks */,
+                                float /* maxResistance */) -> bool {
     if (bs.getDimensionId() != getPlotDimensionId()) return true;
 
     Radius r(pos, explosionRadius + 1);

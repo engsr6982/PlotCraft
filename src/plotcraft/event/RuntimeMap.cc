@@ -5,7 +5,7 @@ namespace plo::event {
 
 
 std::unordered_map<MapType, std::vector<std::string>> RuntimeMap::mData = {
-    {MapType::UseItem,
+    {MapType::UseItemOn,
      {
          "minecraft:bed",                        // 床
          "minecraft:chest",                      // 箱子
@@ -60,9 +60,32 @@ std::unordered_map<MapType, std::vector<std::string>> RuntimeMap::mData = {
          "minecraft:crimson_door",               // 绯红木门
          "minecraft:warped_door",                // 诡异木门
          "minecraft:dragon_egg",                 // 龙蛋
-         "minecraft:flower_pot"                  // 花盆
-     }                   },
-    {MapType::BlockInteracted,
+         "minecraft:flower_pot",                 // 花盆
+
+         "minecraft:glow_ink_sac",         // 荧光墨囊
+         "minecraft:end_crystal",          // 末地水晶
+         "minecraft:ender_eye",            // 末影之眼
+         "minecraft:axolotl_bucket",       // 美西螈桶
+         "minecraft:powder_snow_bucket",   // 细雪桶
+         "minecraft:pufferfish_bucket",    // 河豚桶
+         "minecraft:tropical_fish_bucket", // 热带鱼桶
+         "minecraft:salmon_bucket",        // 桶装鲑鱼
+         "minecraft:cod_bucket",           // 鳕鱼桶
+         "minecraft:water_bucket",         // 水桶
+         "minecraft:cod_bucket",           // 鳕鱼桶
+         "minecraft:lava_bucket",          // 熔岩桶
+         "minecraft:bucket",               // 桶
+         "minecraft:flint_and_steel",      // 打火石
+         "minecraft:skull",                // 头颅
+         "minecraft:wooden_axe",           // 木斧
+         "minecraft:stone_axe",            // 石斧
+         "minecraft:iron_axe",             // 铁斧
+         "minecraft:golden_axe",           // 金斧
+         "minecraft:diamond_axe",          // 钻石斧
+         "minecraft:netherite_axe",        // 下界合金斧
+         "minecraft:banner"                // 旗帜
+     }},
+    {MapType::InteractBlock,
      {
          "minecraft:cartography_table", // 制图台
          "minecraft:smithing_table",    // 锻造台
@@ -83,35 +106,7 @@ std::unordered_map<MapType, std::vector<std::string>> RuntimeMap::mData = {
          "minecraft:lit_furnace",       // 燃烧中的熔炉
          "minecraft:lit_blast_furnace", // 燃烧中的高炉
          "minecraft:lit_smoker"         // 燃烧中的烟熏炉
-     }                   },
-    {MapType::ItemWhiteList,
-     {"minecraft:glow_ink_sac",         // 荧光墨囊
-      "minecraft:end_crystal",          // 末地水晶
-      "minecraft:ender_eye",            // 末影之眼
-      "minecraft:axolotl_bucket",       // 美西螈桶
-      "minecraft:powder_snow_bucket",   // 细雪桶
-      "minecraft:pufferfish_bucket",    // 河豚桶
-      "minecraft:tropical_fish_bucket", // 热带鱼桶
-      "minecraft:salmon_bucket",        // 桶装鲑鱼
-      "minecraft:cod_bucket",           // 鳕鱼桶
-      "minecraft:water_bucket",         // 水桶
-      "minecraft:cod_bucket",           // 鳕鱼桶
-      "minecraft:lava_bucket",          // 熔岩桶
-      "minecraft:bucket",               // 桶
-      "minecraft:flint_and_steel",      // 打火石
-      "minecraft:skull",                // 头颅
-      "minecraft:wooden_axe",           // 木斧
-      "minecraft:stone_axe",            // 石斧
-      "minecraft:iron_axe",             // 铁斧
-      "minecraft:golden_axe",           // 金斧
-      "minecraft:diamond_axe",          // 钻石斧
-      "minecraft:netherite_axe",        // 下界合金斧
-      "minecraft:banner"}},
-    {MapType::SpecialAttack,
-     {
-         "minecraft:ender_crystal", // 末地水晶
-         "minecraft:armor_stand"    // 盔甲架
-     }                   },
+     }},
     {MapType::AnimalEntity,
      {
          "minecraft:axolotl",          // 美西螈
@@ -141,7 +136,7 @@ std::unordered_map<MapType, std::vector<std::string>> RuntimeMap::mData = {
          "minecraft:villager_v2",      // 村民
          "minecraft:wandering_trader", // 流浪商人
          "minecraft:npc"               // NPC
-     }                   },
+     }},
     {MapType::MobEntity,
      {
          // type A
@@ -198,7 +193,7 @@ std::unordered_map<MapType, std::vector<std::string>> RuntimeMap::mData = {
          "minecraft:wither",                // 凋零
          "minecraft:wither_skull",          // 凋零之首
          "minecraft:wither_skull_dangerous" // 蓝色凋灵之首(Wiki)
-     }                   }
+     }}
 };
 
 bool RuntimeMap::has(MapType type, std::string const& typeName) {

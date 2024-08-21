@@ -5,14 +5,14 @@
 namespace plo::event {
 
 enum class MapType : int {
-    UseItem         = 0, // 使用物品
-    BlockInteracted = 1, // 方块交互
-    ItemWhiteList   = 2, // 物品白名单
-    SpecialAttack   = 3, // 特殊攻击
-    AnimalEntity    = 4, // 动物实体
-    MobEntity       = 5  // 生物实体
+    UseItemOn     = 0, // 使用物品
+    InteractBlock = 1, // 方块交互
+    AnimalEntity  = 2, // 动物实体
+    MobEntity     = 3  // 生物实体
 };
 
+// 运行时表
+// 用于大量if时预检查字符串是否存在
 struct RuntimeMap {
 public:
     RuntimeMap()                             = delete;
