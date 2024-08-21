@@ -338,21 +338,23 @@ bool registerEventListener() {
 
     mPlayerUseItemEvent = bus->emplaceListener<ll::event::PlayerUseItemEvent>([](ll::event::PlayerUseItemEvent& ev) {
         if (ev.self().getDimensionId() != getPlotDimensionId()) return true;
-        auto& player = ev.self();
+        if (!StringFind(ev.item().getTypeName(), "bucket")) return true;
 
-        auto const val = player.traceRay(5.5f, false, true, [&](BlockSource const&, Block const& bl, bool) {
+        auto& player = ev.self();
+        auto  val    = player.traceRay(5.5f, false, true, [&](BlockSource const&, Block const& bl, bool) {
             // if (!bl.isSolid()) return false;            // 非固体方块
             if (bl.getMaterial().isLiquid()) return false; // 液体方块
             return true;
         });
 
-        auto const&     item = ev.item();
-        BlockPos const& pos  = val.mBlockPos;
-        Block const&    bl   = player.getDimensionBlockSource().getBlock(pos);
+        BlockPos const&  pos  = val.mBlockPos;
+        ItemStack const& item = ev.item();
+        Block const&     bl   = player.getDimensionBlockSource().getBlock(pos);
 
         debugger("[UseItem]: " << item.getTypeName() << ", 位置: " << pos.toString() << ", 方块: " << bl.getTypeName());
 
-        if (PPos(pos).isPosOnBorder(pos)) {
+        auto pps = PPos(pos);
+        if (pps.isValid() && pps.isPosOnBorder(pos)) {
             ev.cancel();
             UpdateBlockPacket(
                 pos,
