@@ -61,7 +61,7 @@
 #include "Scheduler.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/EconomyQueue.h"
-#include "plotcraft/core/PlotPos.h"
+#include "plotcraft/core/PPos.h"
 #include "plotcraft/core/Utils.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotDBStorage.h"
@@ -125,7 +125,7 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     try {
         if (player->getDimensionId() != getPlotDimensionId()) return origin(player, pos);
-        auto pps = PlotPos(pos);
+        auto pps = PPos(pos);
 
         if (!pps.isValid()) return origin(player, pos);
         if (CheckPerm(nullptr, pps.getPlotID(), player->getUuid().asString())) return origin(player, pos);
@@ -155,7 +155,7 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     try {
         if (player.getDimensionId() != getPlotDimensionId()) return origin(player, slot);
-        auto pps = PlotPos(player.getPosition());
+        auto pps = PPos(player.getPosition());
 
         if (!pps.isValid()) return origin(player, slot);
         if (CheckPerm(nullptr, pps.getPlotID(), player.getUuid().asString())) return origin(player, slot);
@@ -174,7 +174,7 @@ LL_TYPE_INSTANCE_HOOK(
 // 玩家丢弃物品
 const auto DropItemCallback = [](Player& player) {
     if (player.getDimensionId() != getPlotDimensionId()) return true;
-    auto pps = PlotPos(player.getPosition());
+    auto pps = PPos(player.getPosition());
 
     if (!pps.isValid()) return true;
     if (CheckPerm(nullptr, pps.getPlotID(), player.getUuid().asString())) return true;
@@ -230,7 +230,7 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     try {
         if (this->getDimensionId() != getPlotDimensionId()) return origin(source, damage);
-        auto pps = PlotPos(this->getPosition());
+        auto pps = PPos(this->getPosition());
 
         if (!pps.isValid()) return origin(source, damage);
         auto meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
@@ -271,7 +271,7 @@ LL_TYPE_INSTANCE_HOOK(
     try {
         if (region.getDimensionId() != getPlotDimensionId()) return origin(region, pos, actor, fallDistance);
 
-        auto pps = PlotPos(pos);
+        auto pps = PPos(pos);
         if (!pps.isValid()) return origin(region, pos, actor, fallDistance);
 
         auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
@@ -287,7 +287,7 @@ LL_TYPE_INSTANCE_HOOK(
 const auto UseFrameBlockCallback = [](Player& player, BlockPos const& pos) -> bool {
     if (player.getDimensionId() != getPlotDimensionId()) return false;
 
-    auto pps = PlotPos(pos);
+    auto pps = PPos(pos);
     if (!pps.isValid()) return true;
 
     auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
@@ -335,7 +335,7 @@ LL_TYPE_INSTANCE_HOOK(
 const auto SpawnProjectileCallback = [](Actor* actor, string const& type) -> bool {
     if (actor->getDimensionId() != getPlotDimensionId()) return false;
 
-    auto pps = PlotPos(actor->getPosition());
+    auto pps = PPos(actor->getPosition());
     if (!pps.isValid()) return true;
 
     auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
@@ -427,7 +427,7 @@ LL_TYPE_INSTANCE_HOOK(
     try {
         if (region.getDimensionId() != getPlotDimensionId()) return origin(region, pos, entity);
 
-        auto pps = PlotPos(pos);
+        auto pps = PPos(pos);
         if (!pps.isValid()) return origin(region, pos, entity);
 
         auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
@@ -462,7 +462,7 @@ LL_TYPE_INSTANCE_HOOK(
 
         if (!passenger.isPlayer()) return origin(passenger);
 
-        auto pps = PlotPos(passenger.getPosition());
+        auto pps = PPos(passenger.getPosition());
         if (!pps.isValid()) return origin(passenger);
 
         auto const& type = this->getTypeName();
@@ -528,8 +528,8 @@ LL_TYPE_INSTANCE_HOOK(
         if (region.getDimensionId() != getPlotDimensionId())
             return origin(region, curPos, curBranchFacing, pistonMoveFacing);
 
-        auto sou = PlotPos(this->getPosition());
-        auto tar = PlotPos(curPos);
+        auto sou = PPos(this->getPosition());
+        auto tar = PPos(curPos);
 
         if (sou.isValid() && tar.isValid() && sou == tar) {
             if (!sou.isPosOnBorder(curPos) && !tar.isPosOnBorder(curPos)) {
@@ -551,7 +551,7 @@ LL_TYPE_INSTANCE_HOOK(
 const auto RedStoneUpdateCallback = [](BlockSource& bs, BlockPos const& pos, int strength, bool isFirstTime) -> bool {
     if (bs.getDimensionId() != getPlotDimensionId()) return true;
 
-    auto pps = PlotPos(pos);
+    auto pps = PPos(pos);
     if (!pps.isValid()) return true;
 
     // TODO: ev_redstone_update

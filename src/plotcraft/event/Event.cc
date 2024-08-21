@@ -26,7 +26,7 @@
 #include "mc/world/phys/HitResult.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/EconomyQueue.h"
-#include "plotcraft/core/PlotPos.h"
+#include "plotcraft/core/PPos.h"
 #include "plotcraft/core/Utils.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotDBStorage.h"
@@ -92,7 +92,7 @@ bool registerEventListener() {
             auto const gamemode = pl->getPlayerGameType();
             if (gamemode == GameType::Creative || gamemode == GameType::Spectator) return; // 不处理创造模式和旁观模式
 
-            auto pps   = PlotPos(pl->getPosition());
+            auto pps   = PPos(pl->getPosition());
             auto level = pdb->getPlayerPermission(pl->getUuid().asString(), pps.toString(), true);
 
             if (level == PlotPermission::Owner || level == PlotPermission::Shared) {
@@ -132,7 +132,7 @@ bool registerEventListener() {
             if (player.getDimensionId() != getPlotDimensionId()) return true; // 被破坏的方块不在地皮世界
 
             auto const& blockPos = ev.pos();
-            auto        pps      = PlotPos(blockPos);
+            auto        pps      = PPos(blockPos);
 
             debugger("[DestroyBlock]: " << blockPos.toString());
 
@@ -156,7 +156,7 @@ bool registerEventListener() {
             if (player.getDimensionId() != getPlotDimensionId()) return true;
 
             auto const& blockPos = mc::face2Pos(ev.pos(), ev.face()); // 计算实际放置位置
-            auto        pps      = PlotPos(blockPos);
+            auto        pps      = PPos(blockPos);
 
             debugger("[PlaceingBlock]: " << blockPos.toString());
 
@@ -179,7 +179,7 @@ bool registerEventListener() {
             if (player.getDimensionId() != getPlotDimensionId()) return true;
 
             auto const& vec3 = e.clickPos();
-            auto        pps  = PlotPos(vec3);
+            auto        pps  = PPos(vec3);
 
             debugger("[UseItemOn]: " << e.item().getTypeName() << ", 位置: " << vec3.toString());
 
@@ -242,7 +242,7 @@ bool registerEventListener() {
 
     mFireSpreadEvent = bus->emplaceListener<ll::event::FireSpreadEvent>([pdb](ll::event::FireSpreadEvent& e) {
         auto const& pos  = e.pos();
-        auto        pps  = PlotPos(pos);
+        auto        pps  = PPos(pos);
         auto const  meta = pdb->getPlot(pps.getPlotID());
 
         if (meta) {
@@ -259,7 +259,7 @@ bool registerEventListener() {
             if (player.getDimensionId() != getPlotDimensionId()) return true;
 
             auto const& pos = e.target().getPosition();
-            auto        pps = PlotPos(pos);
+            auto        pps = PPos(pos);
 
             debugger("[AttackEntity]: " << e.target().getTypeName() << ", 位置: " << pos.toString());
 
@@ -289,7 +289,7 @@ bool registerEventListener() {
             if (player.getDimensionId() != getPlotDimensionId()) return true;
 
             auto const& pos = e.itemActor().getPosition();
-            auto        pps = PlotPos(pos);
+            auto        pps = PPos(pos);
 
             debugger("[PickUpItem]: " << e.itemActor().getTypeName() << ", 位置: " << pos.toString());
 
@@ -311,7 +311,7 @@ bool registerEventListener() {
             if (player.getDimensionId() != getPlotDimensionId()) return true;
 
             auto const& pos = e.blockPos(); // 交互的方块位置
-            auto        pps = PlotPos(pos);
+            auto        pps = PPos(pos);
 
             debugger("[InteractBlock]: " << pos.toString());
 
@@ -358,7 +358,7 @@ bool registerEventListener() {
 
         debugger("[UseItem]: " << item.getTypeName() << ", 位置: " << pos.toString() << ", 方块: " << bl.getTypeName());
 
-        if (PlotPos(pos).isPosOnBorder(pos)) {
+        if (PPos(pos).isPosOnBorder(pos)) {
             ev.cancel();
             UpdateBlockPacket(
                 pos,

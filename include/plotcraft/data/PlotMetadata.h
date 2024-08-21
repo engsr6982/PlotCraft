@@ -15,7 +15,7 @@ using string = std::string;
 namespace plo::data {
 
 
-typedef string    PlotID; // PlotPos::getPlotID()
+typedef string    PlotID; // PPos::getPlotID()
 typedef mce::UUID UUIDm;
 typedef string    UUIDs;
 typedef int       CommentID;

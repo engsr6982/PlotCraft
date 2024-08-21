@@ -11,7 +11,7 @@
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/EconomyQueue.h"
-#include "plotcraft/core/PlotPos.h"
+#include "plotcraft/core/PPos.h"
 #include "plotcraft/core/Utils.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotDBStorage.h"

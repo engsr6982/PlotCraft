@@ -2,7 +2,7 @@
 #include "ll/api/data/KeyValueDB.h"
 #include "plotcraft/Macro.h"
 #include "plotcraft/Version.h"
-#include "plotcraft/core/PlotPos.h"
+#include "plotcraft/core/PPos.h"
 #include "plotcraft/data/PlotMetadata.h"
 #include <cstddef>
 #include <memory>

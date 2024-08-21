@@ -1,8 +1,9 @@
-#include "plotcraft/core/PlotPos.h"
 #include "fmt/format.h"
 #include "plotcraft/Config.h"
+#include "plotcraft/core/PPos.h"
 #include "plotcraft/core/TemplateManager.h"
 #include <cmath>
+
 
 
 namespace plo {
@@ -15,8 +16,8 @@ using TemplateManager = core::TemplateManager;
     地皮(0,0).maxPos = Vec3{0 + config::cfg.generator.plotWidth -1 ,320,0 + config::cfg.generator.plotWidth -1}
  */
 
-PlotPos::PlotPos() : mX(0), mZ(0) {}
-PlotPos::PlotPos(int x, int z) : mX(x), mZ(z) {
+PPos::PPos() : mX(0), mZ(0) {}
+PPos::PPos(int x, int z) : mX(x), mZ(z) {
     auto& cfg = config::cfg.generator;
 
     Vec3 min, max;
@@ -46,7 +47,7 @@ PlotPos::PlotPos(int x, int z) : mX(x), mZ(z) {
     };
 }
 
-PlotPos::PlotPos(const Vec3& vec3) {
+PPos::PPos(const Vec3& vec3) {
     auto& cfg = config::cfg.generator;
 
     // 计算总长度
@@ -103,13 +104,13 @@ PlotPos::PlotPos(const Vec3& vec3) {
         mZ = 0;
     }
 }
-int PlotPos::getSurfaceY() const {
+int PPos::getSurfaceY() const {
     return TemplateManager::isUseTemplate() ? (TemplateManager::mTemplateData.template_offset + 1)
                                             : -64 + (config::cfg.generator.subChunkNum * 16);
 }
-bool   PlotPos::isValid() const { return !mVertexs.empty(); }
-string PlotPos::getPlotID() const { return fmt::format("({0},{1})", mX, mZ); }
-Vec3   PlotPos::getSafestPos() const {
+bool   PPos::isValid() const { return !mVertexs.empty(); }
+string PPos::getPlotID() const { return fmt::format("({0},{1})", mX, mZ); }
+Vec3   PPos::getSafestPos() const {
     if (isValid()) {
         auto& v3 = mVertexs[0];
         return Vec3{v3.x, getSurfaceY() + 1, v3.z};
@@ -118,18 +119,18 @@ Vec3   PlotPos::getSafestPos() const {
 }
 
 
-bool PlotPos::isPosInPlot(const Vec3& vec3) const {
+bool PPos::isPosInPlot(const Vec3& vec3) const {
     if (vec3.y < -64 || vec3.y > 320) {
         return false;
     }
     return isPointInPolygon(vec3, mVertexs);
 }
 
-std::vector<PlotPos> PlotPos::getAdjacentPlots() const {
-    return {PlotPos(mX - 1, mZ), PlotPos(mX + 1, mZ), PlotPos(mX, mZ - 1), PlotPos(mX, mZ + 1)};
+std::vector<PPos> PPos::getAdjacentPlots() const {
+    return {PPos(mX - 1, mZ), PPos(mX + 1, mZ), PPos(mX, mZ - 1), PPos(mX, mZ + 1)};
 }
 
-bool PlotPos::isPosOnBorder(const Vec3& vec3) const {
+bool PPos::isPosOnBorder(const Vec3& vec3) const {
     if (vec3.y < -64 || vec3.y > 320) {
         return false;
     }
@@ -163,7 +164,7 @@ bool PlotPos::isPosOnBorder(const Vec3& vec3) const {
 }
 
 
-string PlotPos::toString() const {
+string PPos::toString() const {
 #if !defined(DEBUG)
     return fmt::format("{0} | Vertex: {1}", getPlotID(), mVertexs.size());
 #else
@@ -177,12 +178,12 @@ string PlotPos::toString() const {
 }
 
 
-bool PlotPos::operator!=(PlotPos const& other) const { return !(*this == other); }
-bool PlotPos::operator==(PlotPos const& other) const { return other.mVertexs == this->mVertexs; }
+bool PPos::operator!=(PPos const& other) const { return !(*this == other); }
+bool PPos::operator==(PPos const& other) const { return other.mVertexs == this->mVertexs; }
 
 
 // static
-bool PlotPos::isAdjacent(const PlotPos& plot1, const PlotPos& plot2) {
+bool PPos::isAdjacent(const PPos& plot1, const PPos& plot2) {
     int dx = std::abs(plot1.mX - plot2.mX);
     int dz = std::abs(plot1.mZ - plot2.mZ);
 
@@ -193,7 +194,7 @@ bool PlotPos::isAdjacent(const PlotPos& plot1, const PlotPos& plot2) {
     return ((dx == 0 && dz == 1) || (dx == 1 && dz == 0)) && (plot1.isValid() && plot2.isValid());
 }
 // 判断点是否在多边形内部（射线法）
-bool PlotPos::isPointInPolygon(const Vec3& point, const std::vector<Vec3>& polygon) {
+bool PPos::isPointInPolygon(const Vec3& point, const std::vector<Vec3>& polygon) {
     bool inside = false;
     int  n      = polygon.size();
     for (int i = 0, j = n - 1; i < n; j = i++) {

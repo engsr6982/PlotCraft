@@ -28,7 +28,7 @@ namespace plo {
 //     PLAPI string toString() const;
 //     PLAPI string getRoadID() const;
 //     PLAPI bool fillRoad(Block& block, bool includeBorder = false);
-//     PLAPI std::vector<class PlotPos> getAdjacentPlots() const;
+//     PLAPI std::vector<class PPos> getAdjacentPlots() const;
 //     PLAPI static bool isAdjacent(const PlotRoadPos& road1, const PlotRoadPos& road2);
 // };
 // class PlotCrossPos {
@@ -47,15 +47,15 @@ namespace plo {
 // };
 
 
-class PlotPos {
+class PPos {
 public:
     int               mX, mZ;   // 地皮坐标
     std::vector<Vec3> mVertexs; // 地皮顶点
 
-    PLAPI PlotPos();
-    PLAPI PlotPos(int x, int z);
-    PLAPI PlotPos(const Vec3& vec3);
-    PLAPI PlotPos(int x, int z, const std::vector<Vec3>& vertexs);
+    PLAPI PPos();
+    PLAPI PPos(int x, int z);
+    PLAPI PPos(const Vec3& vec3);
+    PLAPI PPos(int x, int z, const std::vector<Vec3>& vertexs);
 
     PLAPI bool isValid() const;
 
@@ -71,24 +71,34 @@ public:
 
     PLAPI bool isPosOnBorder(const Vec3& vec3) const;
 
-    // PLAPI bool canMerge(PlotPos& other) const;        // TODO
+    // PLAPI bool canMerge(PPos& other) const;        // TODO
     // PLAPI bool checkAndFixVertexs();                  // TODO
-    // PLAPI bool tryMergeAndFixVertexs(PlotPos& other); // TODO
+    // PLAPI bool tryMergeAndFixVertexs(PPos& other); // TODO
 
-    PLAPI std::vector<PlotPos> getAdjacentPlots() const; // 获取相邻的地皮
+    PLAPI std::vector<PPos> getAdjacentPlots() const; // 获取相邻的地皮
     // PLAPI std::vector<PlotRoadPos> getAdjacentRoads() const; // TODO: 获取相邻的道路
 
     // PLAPI std::vector<PlotRoadPos> getRangedRoads() const;    // TODO: 获取范围内的道路
     // PLAPI std::vector<PlotCrossPos> getRangedCrosses() const; // TODO: 获取范围内的路口
 
-    PLAPI bool operator==(PlotPos const& other) const;
-    PLAPI bool operator!=(PlotPos const& other) const;
+    PLAPI bool operator==(PPos const& other) const;
+    PLAPI bool operator!=(PPos const& other) const;
 
 
     // static
-    PLAPI static bool isAdjacent(PlotPos const& plot1, PlotPos const& plot2);
+    PLAPI static bool isAdjacent(PPos const& plot1, PPos const& plot2);
 
     PLAPI static bool isPointInPolygon(const Vec3& point, const std::vector<Vec3>& polygon);
+};
+
+class Cube {
+public:
+    Cube() = delete;
+};
+
+class Area {
+public:
+    Area() = delete;
 };
 
 
