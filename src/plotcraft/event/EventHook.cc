@@ -190,7 +190,7 @@ LL_TYPE_INSTANCE_HOOK(
     PlayerDropItemHook1,
     HookPriority::Normal,
     Player,
-    &Player::drop, // "?drop@Player@@UEAA_NAEBVItemStack@@_N@Z"
+    "?drop@Player@@UEAA_NAEBVItemStack@@_N@Z",
     bool,
     ItemStack const& item,
     bool             randomly
@@ -547,25 +547,127 @@ LL_TYPE_INSTANCE_HOOK(
 }
 
 
+// 红石更新
+const auto RedStoneUpdateCallback = [](BlockSource& bs, BlockPos const& pos, int strength, bool isFirstTime) -> bool {
+    if (bs.getDimensionId() != getPlotDimensionId()) return true;
+
+    auto pps = PlotPos(pos);
+    if (!pps.isValid()) return true;
+
+    // TODO: ev_redstone_update
+    // TODO: Cube support
+
+    return false;
+};
+#define RedstoneUpdateHookMacro(NAME, TYPE, SYMBOL)                                                                    \
+    LL_TYPE_INSTANCE_HOOK(                                                                                             \
+        NAME,                                                                                                          \
+        HookPriority::Normal,                                                                                          \
+        TYPE,                                                                                                          \
+        SYMBOL,                                                                                                        \
+        void,                                                                                                          \
+        BlockSource&    region,                                                                                        \
+        BlockPos const& pos,                                                                                           \
+        int             strength,                                                                                      \
+        bool            isFirstTime                                                                                    \
+    ) {                                                                                                                \
+        try {                                                                                                          \
+            if (RedStoneUpdateCallback(region, pos, strength, isFirstTime)) {                                          \
+                origin(region, pos, strength, isFirstTime);                                                            \
+            }                                                                                                          \
+        }                                                                                                              \
+        CATCH;                                                                                                         \
+    }
+
+RedstoneUpdateHookMacro(
+    RedstoneUpdateHook1,
+    RedStoneWireBlock,
+    "?onRedstoneUpdate@RedStoneWireBlock@@UEBAXAEAVBlockSource@@AEBVBlockPos@@H_N@Z"
+);
+RedstoneUpdateHookMacro(
+    RedstoneUpdateHook2,
+    DiodeBlock,
+    "?onRedstoneUpdate@DiodeBlock@@UEBAXAEAVBlockSource@@AEBVBlockPos@@H_N@Z"
+);
+RedstoneUpdateHookMacro(
+    RedstoneUpdateHook3,
+    RedstoneTorchBlock,
+    "?onRedstoneUpdate@RedstoneTorchBlock@@UEBAXAEAVBlockSource@@AEBVBlockPos@@H_N@Z"
+);
+RedstoneUpdateHookMacro(
+    RedstoneUpdateHook4,
+    ComparatorBlock,
+    "?onRedstoneUpdate@ComparatorBlock@@UEBAXAEAVBlockSource@@AEBVBlockPos@@H_N@Z"
+);
+
+
+// 方块/实体爆炸
+const auto ExplodeCallback = [](Actor*       source,
+                                BlockSource& bs,
+                                Vec3 const&  pos,
+                                float        explosionRadius,
+                                bool         fire,
+                                bool         breaksBlocks,
+                                float        maxResistance) -> bool {
+    if (bs.getDimensionId() != getPlotDimensionId()) return true;
+
+    // TODO: ev_explode
+    // TODO: Cube support
+
+    return false;
+};
+LL_TYPE_INSTANCE_HOOK(
+    ExplodeHook,
+    HookPriority::Normal,
+    Level,
+    &Level::explode,
+    bool,
+    BlockSource& region,
+    Actor*       source,
+    Vec3 const&  pos,
+    float        explosionRadius,
+    bool         fire,
+    bool         breaksBlocks,
+    float        maxResistance,
+    bool         allowUnderwater
+) {
+    try {
+        if (ExplodeCallback(source, region, pos, explosionRadius, fire, breaksBlocks, maxResistance)) {
+            return origin(region, source, pos, explosionRadius, fire, breaksBlocks, maxResistance, allowUnderwater);
+        }
+        return false;
+    }
+    CATCH_RET(false);
+}
+
+
 // Hook Manager
 auto GetHooks() {
     return ll::memory::HookRegistrar<
-        PlayerAttackBlockHook,  // 玩家攻击方块
-        ArmorStandSwapItemHook, // 玩家操作盔甲架
-        PlayerDropItemHook1,    // 玩家丢弃物品
-        PlayerDropItemHook2,
-        MobHurtEffectHook,   // 生物受伤
-        FarmDecayHook,       // 耕地退化
-        PlayerUseFrameHook1, // 玩家操作物品展示框
-        PlayerUseFrameHook2,
-        ProjectileSpawnHook1, // 弹射物生成
-        ProjectileSpawnHook2,
-        ProjectileSpawnHook3,
+        PlayerAttackBlockHook,    // 玩家攻击方块
+        ArmorStandSwapItemHook,   // 玩家操作盔甲架
         PressurePlateTriggerHook, // 生物踩踏压力板
         ActorRideHook,            // 生物骑乘
         WitherDestroyHook,        // 凋零破坏方块
-        PistonPushHook            // 活塞推动方块
-        >();
+        PistonPushHook,           // 活塞推动方块
+        ExplodeHook,              // 方块/实体 爆炸
+        MobHurtEffectHook,        // 生物受伤
+        FarmDecayHook,            // 耕地退化
+        // 玩家丢弃物品
+        PlayerDropItemHook1,
+        PlayerDropItemHook2,
+        // 玩家操作物品展示框
+        PlayerUseFrameHook1,
+        PlayerUseFrameHook2,
+        // 弹射物生成
+        ProjectileSpawnHook1,
+        ProjectileSpawnHook2,
+        ProjectileSpawnHook3,
+        // 红石更新
+        RedstoneUpdateHook1,
+        RedstoneUpdateHook2,
+        RedstoneUpdateHook3,
+        RedstoneUpdateHook4>();
 }
 void registerHook() { GetHooks().hook(); }
 void unregisterHook() { GetHooks().unhook(); }
