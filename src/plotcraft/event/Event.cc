@@ -370,12 +370,21 @@ bool registerEventListener() {
 
 
     // 可开关事件（作用于地皮世界）
-    if (!config::cfg.plotWorld.spawnMob) {
-        mSpawningMobEvent = bus->emplaceListener<ll::event::SpawningMobEvent>([](ll::event::SpawningMobEvent& e) {
-            if (e.blockSource().getDimensionId() == getPlotDimensionId()) e.cancel(); // 拦截地皮世界生物生成
-            return true;
-        });
-    }
+    mSpawningMobEvent = bus->emplaceListener<ll::event::SpawningMobEvent>([](ll::event::SpawningMobEvent& e) {
+        if (e.blockSource().getDimensionId() != getPlotDimensionId()) return true;
+
+        auto const& type = e.identifier().getFullName();
+
+        // TODO: fix this spawn
+        if (type == "minecraft:snowball") return true;       // 雪球
+        if (type == "minecraft:thrown_trident") return true; // 三叉戟
+        if (type == "minecraft:ender_pearl") return true;    // 末影珍珠
+
+        if (config::cfg.plotWorld.spawnMob) return true;
+
+        e.cancel();
+        return true;
+    });
 
     if (config::cfg.plotWorld.eventListener.onSculkSpreadListener) {
         mSculkSpreadEvent = bus->emplaceListener<hook::SculkSpreadEvent>([](hook::SculkSpreadEvent& ev) {
