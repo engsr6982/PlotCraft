@@ -71,6 +71,7 @@ public:
     PLAPI bool isPosInPlot(const Vec3& vec3) const;
 
     PLAPI bool isPosOnBorder(const Vec3& vec3) const;
+    PLAPI bool isCubeOnBorder(class Cube const& cube) const;
 
     // PLAPI bool canMerge(PPos& other) const;        // TODO
     // PLAPI bool checkAndFixVertexs();                  // TODO

@@ -2,6 +2,7 @@
 #include "fmt/format.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/core/TemplateManager.h"
+#include <algorithm>
 #include <cmath>
 #include <utility>
 
@@ -152,7 +153,49 @@ bool PPos::isPosOnBorder(const Vec3& vec3) const {
 
     return false;
 }
+bool PPos::isCubeOnBorder(Cube const& cube) const {
+    if (!isValid()) {
+        return false;
+    }
 
+    // 检查Cube是否完全在地皮外部或内部
+    bool allInside  = true;
+    bool allOutside = true;
+    for (const auto& corner : cube.get2DVertexs()) {
+        bool inside  = isPosInPlot(corner);
+        allInside   &= inside;
+        allOutside  &= !inside;
+        if (!allInside && !allOutside) {
+            break;
+        }
+    }
+    if (allInside || allOutside) {
+        return false;
+    }
+
+    // 检查Cube的边是否与地皮边界相交
+    for (size_t i = 0; i < mVertexs.size() - 1; ++i) {
+        const BlockPos& v1 = mVertexs[i];
+        const BlockPos& v2 = mVertexs[i + 1];
+
+        // 检查水平边
+        if (v1.z == v2.z) {
+            if (cube.mMin.z <= v1.z && cube.mMax.z >= v1.z
+                && std::max(cube.mMin.x, std::min(v1.x, v2.x)) <= std::min(cube.mMax.x, std::max(v1.x, v2.x))) {
+                return true;
+            }
+        }
+        // 检查垂直边
+        else if (v1.x == v2.x) {
+            if (cube.mMin.x <= v1.x && cube.mMax.x >= v1.x
+                && std::max(cube.mMin.z, std::min(v1.z, v2.z)) <= std::min(cube.mMax.z, std::max(v1.z, v2.z))) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
 
 string PPos::toString() const {
 #if !defined(DEBUG)
