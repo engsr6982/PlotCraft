@@ -72,6 +72,7 @@ public:
 
     PLAPI bool isPosOnBorder(const Vec3& vec3) const;
     PLAPI bool isCubeOnBorder(class Cube const& cube) const;
+    PLAPI bool isRadiusOnBorder(class Radius const& radius) const;
 
     // PLAPI bool canMerge(PPos& other) const;        // TODO
     // PLAPI bool checkAndFixVertexs();                  // TODO
@@ -110,5 +111,21 @@ public:
     // static
     static bool isCollision(Cube const& cube1, Cube const& cube2); // 判断两个立方体是否碰撞
 };
+
+
+class Radius {
+public:
+    BlockPos mCenter;
+    int      mRadius;
+
+    Radius() = delete;
+    Radius(BlockPos const& center, int radius) : mCenter(center), mRadius(radius){};
+
+    std::vector<PPos> getRangedPlots() const; // 获取范围内的地皮
+
+    bool operator==(const Radius& other) const;
+    bool operator!=(const Radius& other) const;
+};
+
 
 } // namespace plo
