@@ -35,69 +35,71 @@ struct PlotShareItem {
 };
 
 struct PlotPermissionTable {
-    // Added
+    // 标记 [x] 为复用权限
     bool allowFireSpread{true};       // 火焰蔓延
     bool allowAttackDragonEgg{false}; // 攻击龙蛋
     bool allowFarmDecay{true};        // 耕地退化
     bool allowPistonPush{true};       // 活塞推动
     bool allowRedstoneUpdate{true};   // 红石更新
-    bool allowExplode{true};          // 爆炸
+    bool allowExplode{false};         // 爆炸
+    bool allowDestroy{false};         // 允许破坏
+    bool allowWitherDestroy{false};   // 允许凋零破坏
+    bool allowPlace{false};           // 允许放置 [x]
+    bool allowAttackPlayer{false};    // 允许攻击玩家
+    bool allowAttackAnimal{false};    // 允许攻击动物
+    bool allowAttackMob{true};        // 允许攻击怪物
+    bool allowOpenChest{false};       // 允许打开箱子
+    bool allowPickupItem{false};      // 允许拾取物品
+    bool allowThrowSnowball{true};    // 允许投掷雪球
+    bool allowThrowEnderPearl{true};  // 允许投掷末影珍珠
+    bool allowThrowEgg{true};         // 允许投掷鸡蛋
+    bool allowThrowTrident{true};     // 允许投掷三叉戟
+    bool allowDropItem{true};         // 允许丢弃物品
+    bool allowShoot{false};           // 允许射击 [x]
+    bool allowThrowPotion{false};     // 允许投掷药水 [x]
+    bool allowRideEntity{false};      // 允许骑乘实体
+    bool allowRideTrans{false};       // 允许骑乘矿车、船
 
-    // TODO：1.0.0
-    bool allow_destroy{false};         // 允许破坏
-    bool allow_entity_destroy{false};  // 允许实体破坏
-    bool allow_place{false};           // 允许放置
-    bool allow_attack_player{false};   // 允许攻击玩家
-    bool allow_attack_animal{false};   // 允许攻击动物
-    bool allow_attack_mobs{true};      // 允许攻击怪物
-    bool allow_open_chest{false};      // 允许打开箱子
-    bool allow_pickupitem{false};      // 允许拾取物品
-    bool allow_dropitem{true};         // 允许丢弃物品
-    bool allow_shoot{false};           // 允许射击
-    bool use_anvil{false};             // 使用铁砧
-    bool use_barrel{false};            // 使用木桶
-    bool use_beacon{false};            // 使用信标
-    bool use_bed{false};               // 使用床
-    bool use_bell{false};              // 使用钟
-    bool use_blast_furnace{false};     // 使用高炉
-    bool use_brewing_stand{false};     // 使用酿造台
-    bool use_campfire{false};          // 使用营火
-    bool use_firegen{false};           // 使用火焰生成
-    bool use_cartography_table{false}; // 使用制图台
-    bool use_composter{false};         // 使用堆肥桶
-    bool use_crafting_table{false};    // 使用工作台
-    bool use_daylight_detector{false}; // 使用阳光探测器
-    bool use_dispenser{false};         // 使用发射器
-    bool use_dropper{false};           // 使用投掷器
-    bool use_enchanting_table{false};  // 使用附魔台
-    bool use_door{false};              // 使用门
-    bool use_fence_gate{false};        // 使用栅栏门
-    bool use_furnace{false};           // 使用熔炉
-    bool use_grindstone{false};        // 使用砂轮
-    bool use_hopper{false};            // 使用漏斗
-    bool use_jukebox{false};           // 使用唱片机
-    bool use_loom{false};              // 使用织布机
-    bool use_stonecutter{false};       // 使用切石机
-    bool use_noteblock{false};         // 使用音符盒
-    bool use_shulker_box{false};       // 使用潜影盒
-    bool use_smithing_table{false};    // 使用锻造台
-    bool use_smoker{false};            // 使用烟熏炉
-    bool use_trapdoor{false};          // 使用活板门
-    bool use_lectern{false};           // 使用讲台
-    bool use_cauldron{false};          // 使用炼药锅
-    bool use_lever{false};             // 使用拉杆
-    bool use_button{false};            // 使用按钮
-    bool use_respawn_anchor{false};    // 使用重生锚
-    bool use_item_frame{false};        // 使用物品展示框
-    bool use_fishing_hook{false};      // 使用钓鱼竿
-    bool use_bucket{false};            // 使用桶
-    bool use_pressure_plate{false};    // 使用压力板
-    bool use_armor_stand{false};       // 使用盔甲架
-    bool eat{false};                   // 允许吃
-    bool allow_throw_potion{false};    // 允许投掷药水
-    bool allow_ride_entity{false};     // 允许骑乘实体
-    bool allow_ride_trans{false};      // 允许骑乘传送门
-    bool edit_flower_pot{false};       // 允许编辑花盆
+    bool useAnvil{false};            // 使用铁砧
+    bool useBarrel{false};           // 使用木桶
+    bool useBeacon{false};           // 使用信标
+    bool useBed{false};              // 使用床
+    bool useBell{false};             // 使用钟
+    bool useBlastFurnace{false};     // 使用高炉
+    bool useBrewingStand{false};     // 使用酿造台
+    bool useCampfire{false};         // 使用营火
+    bool useFiregen{false};          // 使用打火石
+    bool useCartographyTable{false}; // 使用制图台
+    bool useComposter{false};        // 使用堆肥桶
+    bool useCraftingTable{false};    // 使用工作台
+    bool useDaylightDetector{false}; // 使用阳光探测器
+    bool useDispenser{false};        // 使用发射器
+    bool useDropper{false};          // 使用投掷器
+    bool useEnchantingTable{false};  // 使用附魔台
+    bool useDoor{false};             // 使用门
+    bool useFenceGate{false};        // 使用栅栏门
+    bool useFurnace{false};          // 使用熔炉
+    bool useGrindstone{false};       // 使用砂轮
+    bool useHopper{false};           // 使用漏斗
+    bool useJukebox{false};          // 使用唱片机
+    bool useLoom{false};             // 使用织布机
+    bool useStonecutter{false};      // 使用切石机
+    bool useNoteBlock{false};        // 使用音符盒
+    bool useShulkerBox{false};       // 使用潜影盒
+    bool useSmithingTable{false};    // 使用锻造台
+    bool useSmoker{false};           // 使用烟熏炉
+    bool useTrapdoor{false};         // 使用活板门
+    bool useLectern{false};          // 使用讲台
+    bool useCauldron{false};         // 使用炼药锅
+    bool useLever{false};            // 使用拉杆
+    bool useButton{false};           // 使用按钮
+    bool useRespawnAnchor{false};    // 使用重生锚
+    bool useItemFrame{false};        // 使用物品展示框
+    bool useFishingHook{false};      // 使用钓鱼竿
+    bool useBucket{false};           // 使用桶
+    bool usePressurePlate{false};    // 使用压力板
+    bool useArmorStand{false};       // 使用盔甲架
+    bool editFlowerPot{false};       // 允许编辑花盆
 };
 
 

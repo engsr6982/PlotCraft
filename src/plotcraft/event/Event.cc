@@ -142,7 +142,7 @@ bool registerEventListener() {
             if (meta) {
                 auto const& tab = meta->getPermissionTableConst();
 
-                if (pps.isValid() && !pps.isPosOnBorder(blockPos) && tab.allow_destroy)
+                if (pps.isValid() && !pps.isPosOnBorder(blockPos) && tab.allowDestroy)
                     return true; // 玩家有权限破坏地皮内方块
             }
 
@@ -166,7 +166,7 @@ bool registerEventListener() {
             if (meta) {
                 auto const& tab = meta->getPermissionTableConst();
 
-                if (pps.isValid() && !pps.isPosOnBorder(blockPos) && tab.allow_place) return true;
+                if (pps.isValid() && !pps.isPosOnBorder(blockPos) && tab.allowPlace) return true;
             }
 
             ev.cancel();
@@ -203,35 +203,35 @@ bool registerEventListener() {
                 auto const& tab = meta->getPermissionTableConst();
                 // clang-format off
                 if (hasMap) {
-                    if (StringFind(it, "bucket") && tab.use_bucket) return true;   // 各种桶
-                    if (StringFind(it, "axe") && tab.allow_place) return true;     // 斧头给木头去皮
-                    if (it == "minecraft:skull" && tab.allow_place) return true;          // 放置头颅
-                    if (it == "minecraft:banner" && tab.allow_place) return true;         // 放置旗帜
-                    if (it == "minecraft:glow_ink_sac" && tab.allow_place) return true;   // 发光墨囊给木牌上色
-                    if (it == "minecraft:end_crystal" && tab.allow_place) return true;    // 末地水晶
-                    if (it == "minecraft:ender_eye" && tab.allow_place) return true;      // 放置末影之眼
-                    if (it == "minecraft:flint_and_steel" && tab.use_firegen) return true;// 使用打火石
+                    if (StringFind(it, "bucket") && tab.useBucket) return true;   // 各种桶
+                    if (StringFind(it, "axe") && tab.allowPlace) return true;     // 斧头给木头去皮
+                    if (it == "minecraft:skull" && tab.allowPlace) return true;          // 放置头颅
+                    if (it == "minecraft:banner" && tab.allowPlace) return true;         // 放置旗帜
+                    if (it == "minecraft:glow_ink_sac" && tab.allowPlace) return true;   // 发光墨囊给木牌上色
+                    if (it == "minecraft:end_crystal" && tab.allowPlace) return true;    // 末地水晶
+                    if (it == "minecraft:ender_eye" && tab.allowPlace) return true;      // 放置末影之眼
+                    if (it == "minecraft:flint_and_steel" && tab.useFiregen) return true;// 使用打火石
                 } else {
-                    if (StringFind(bt,"button")   && tab.use_button) return true; // 各种按钮
-			        if (bt == "minecraft:dragon_egg" && tab.allow_destroy) return true; // 右键龙蛋
-			        if (bt == "minecraft:bed" && tab.use_bed) return true; // 床
-			        if ((bt == "minecraft:chest" || bt == "minecraft:trapped_chest") && tab.allow_open_chest) return true; // 箱子&陷阱箱
-			        if (bt == "minecraft:crafting_table" && tab.use_crafting_table) return true; // 工作台
-			        if ((bt == "minecraft:campfire" || bt == "minecraft:soul_campfire") && tab.use_campfire) return true; // 营火（烧烤）
-			        if (bt == "minecraft:composter" && tab.use_composter) return true; // 堆肥桶（放置肥料）
-			        if ((bt == "minecraft:undyed_shulker_box" || bt == "minecraft:shulker_box") && tab.use_shulker_box) return true; // 潜匿箱
-			        if (bt == "minecraft:noteblock" && tab.use_noteblock) return true; // 音符盒（调音）
-			        if (bt == "minecraft:jukebox" && tab.use_jukebox) return true; // 唱片机（放置/取出唱片）
-			        if (bt == "minecraft:bell" && tab.use_bell) return true; // 钟（敲钟）
-			        if ((bt == "minecraft:daylight_detector_inverted" || bt == "minecraft:daylight_detector") && tab.use_daylight_detector) return true; // 光线传感器（切换日夜模式）
-			        if (bt == "minecraft:lectern" && tab.use_lectern) return true; // 讲台
-			        if (bt == "minecraft:cauldron" && tab.use_cauldron) return true; // 炼药锅
-			        if (bt == "minecraft:lever" && tab.use_lever) return true; // 拉杆
-			        if (bt == "minecraft:respawn_anchor" && tab.use_respawn_anchor) return true; // 重生锚（充能）
-			        if (StringFind(bt,"_door") && tab.use_door) return true; // 各种门
-			        if (StringFind(bt , "fence_gate")  && tab.use_fence_gate) return true; // 各种栏栅门
-			        if (StringFind(bt,"trapdoor")  && tab.use_trapdoor) return true; // 各种活板门
-			        if (bt == "minecraft:flower_pot" && tab.edit_flower_pot) return true; // 花盆
+                    if (StringFind(bt,"button")   && tab.useButton) return true; // 各种按钮
+			        if (bt == "minecraft:dragon_egg" && tab.allowAttackDragonEgg) return true; // 右键龙蛋
+			        if (bt == "minecraft:bed" && tab.useBed) return true; // 床
+			        if ((bt == "minecraft:chest" || bt == "minecraft:trapped_chest") && tab.allowOpenChest) return true; // 箱子&陷阱箱
+			        if (bt == "minecraft:crafting_table" && tab.useCraftingTable) return true; // 工作台
+			        if ((bt == "minecraft:campfire" || bt == "minecraft:soul_campfire") && tab.useCampfire) return true; // 营火（烧烤）
+			        if (bt == "minecraft:composter" && tab.useComposter) return true; // 堆肥桶（放置肥料）
+			        if ((bt == "minecraft:undyed_shulker_box" || bt == "minecraft:shulker_box") && tab.useShulkerBox) return true; // 潜匿箱
+			        if (bt == "minecraft:noteblock" && tab.useNoteBlock) return true; // 音符盒（调音）
+			        if (bt == "minecraft:jukebox" && tab.useJukebox) return true; // 唱片机（放置/取出唱片）
+			        if (bt == "minecraft:bell" && tab.useBell) return true; // 钟（敲钟）
+			        if ((bt == "minecraft:daylight_detector_inverted" || bt == "minecraft:daylight_detector") && tab.useDaylightDetector) return true; // 光线传感器（切换日夜模式）
+			        if (bt == "minecraft:lectern" && tab.useLectern) return true; // 讲台
+			        if (bt == "minecraft:cauldron" && tab.useCauldron) return true; // 炼药锅
+			        if (bt == "minecraft:lever" && tab.useLever) return true; // 拉杆
+			        if (bt == "minecraft:respawn_anchor" && tab.useRespawnAnchor) return true; // 重生锚（充能）
+			        if (StringFind(bt,"_door") && tab.useDoor) return true; // 各种门
+			        if (StringFind(bt , "fence_gate")  && tab.useFenceGate) return true; // 各种栏栅门
+			        if (StringFind(bt,"trapdoor")  && tab.useTrapdoor) return true; // 各种活板门
+			        if (bt == "minecraft:flower_pot" && tab.editFlowerPot) return true; // 花盆
                 }
                 // clang-format on
             }
@@ -269,12 +269,12 @@ bool registerEventListener() {
             auto const& et  = e.target().getTypeName();
             auto const& tab = pdb->getPlot(pps.getPlotID())->getPermissionTableConst();
             if (RuntimeMap::has(MapType::SpecialAttack, et)) {
-                if (et == "minecraft:ender_crystal" && tab.allow_destroy) return true; // 末影水晶
-                if (et == "minecraft:armor_stand" && tab.allow_destroy) return true;   // 盔甲架
+                if (et == "minecraft:ender_crystal" && tab.allowDestroy) return true; // 末影水晶
+                if (et == "minecraft:armor_stand" && tab.allowDestroy) return true;   // 盔甲架
             } else {
-                if (tab.allow_attack_player && e.target().isPlayer()) return true;                      // 玩家
-                if (tab.allow_attack_animal && RuntimeMap::has(MapType::AnimalEntity, et)) return true; // 动物
-                if (tab.allow_attack_mobs && RuntimeMap::has(MapType::MobEntity, et)) return true;      // 怪物
+                if (tab.allowAttackPlayer && e.target().isPlayer()) return true;                      // 玩家
+                if (tab.allowAttackAnimal && RuntimeMap::has(MapType::AnimalEntity, et)) return true; // 动物
+                if (tab.allowAttackMob && RuntimeMap::has(MapType::MobEntity, et)) return true;       // 怪物
             }
 
             if (CheckPerm(pdb, pps.getPlotID(), player.getUuid().asString(), true)) return true;
@@ -297,7 +297,7 @@ bool registerEventListener() {
             if (pdb->isAdmin(player.getUuid().asString())) return true;
 
             auto const& tab = pdb->getPlot(pps.getPlotID())->getPermissionTableConst();
-            if (tab.allow_pickupitem) return true;
+            if (tab.allowPickupItem) return true;
 
             if (CheckPerm(pdb, pps.getPlotID(), player.getUuid().asString(), true)) return true;
 
@@ -321,22 +321,22 @@ bool registerEventListener() {
             auto const& tab = pdb->getPlot(pps.getPlotID())->getPermissionTableConst();
             auto const& bn  = e.block()->getTypeName();
 
-            if (bn == "minecraft:cartography_table" && tab.use_cartography_table) return true; // 制图台
-            if (bn == "minecraft:smithing_table" && tab.use_smithing_table) return true;       // 锻造台
-            if (bn == "minecraft:brewing_stand" && tab.use_brewing_stand) return true;         // 酿造台
-            if (bn == "minecraft:anvil" && tab.use_anvil) return true;                         // 铁砧
-            if (bn == "minecraft:grindstone" && tab.use_grindstone) return true;               // 磨石
-            if (bn == "minecraft:enchanting_table" && tab.use_enchanting_table) return true;   // 附魔台
-            if (bn == "minecraft:barrel" && tab.use_barrel) return true;                       // 桶
-            if (bn == "minecraft:beacon" && tab.use_beacon) return true;                       // 信标
-            if (bn == "minecraft:hopper" && tab.use_hopper) return true;                       // 漏斗
-            if (bn == "minecraft:dropper" && tab.use_dropper) return true;                     // 投掷器
-            if (bn == "minecraft:dispenser" && tab.use_dispenser) return true;                 // 发射器
-            if (bn == "minecraft:loom" && tab.use_loom) return true;                           // 织布机
-            if (bn == "minecraft:stonecutter_block" && tab.use_stonecutter) return true;       // 切石机
-            if (StringFind(bn, "blast_furnace") && tab.use_blast_furnace) return true;         // 高炉
-            if (StringFind(bn, "furnace") && tab.use_furnace) return true;                     // 熔炉
-            if (StringFind(bn, "smoker") && tab.use_smoker) return true;                       // 烟熏炉
+            if (bn == "minecraft:cartography_table" && tab.useCartographyTable) return true; // 制图台
+            if (bn == "minecraft:smithing_table" && tab.useSmithingTable) return true;       // 锻造台
+            if (bn == "minecraft:brewing_stand" && tab.useBrewingStand) return true;         // 酿造台
+            if (bn == "minecraft:anvil" && tab.useAnvil) return true;                        // 铁砧
+            if (bn == "minecraft:grindstone" && tab.useGrindstone) return true;              // 磨石
+            if (bn == "minecraft:enchanting_table" && tab.useEnchantingTable) return true;   // 附魔台
+            if (bn == "minecraft:barrel" && tab.useBarrel) return true;                      // 桶
+            if (bn == "minecraft:beacon" && tab.useBeacon) return true;                      // 信标
+            if (bn == "minecraft:hopper" && tab.useHopper) return true;                      // 漏斗
+            if (bn == "minecraft:dropper" && tab.useDropper) return true;                    // 投掷器
+            if (bn == "minecraft:dispenser" && tab.useDispenser) return true;                // 发射器
+            if (bn == "minecraft:loom" && tab.useLoom) return true;                          // 织布机
+            if (bn == "minecraft:stonecutter_block" && tab.useStonecutter) return true;      // 切石机
+            if (StringFind(bn, "blast_furnace") && tab.useBlastFurnace) return true;         // 高炉
+            if (StringFind(bn, "furnace") && tab.useFurnace) return true;                    // 熔炉
+            if (StringFind(bn, "smoker") && tab.useSmoker) return true;                      // 烟熏炉
 
             e.cancel();
             return true;

@@ -162,7 +162,7 @@ LL_TYPE_INSTANCE_HOOK(
 
         auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
         if (meta) {
-            if (meta->getPermissionTableConst().use_armor_stand) return origin(player, slot);
+            if (meta->getPermissionTableConst().useArmorStand) return origin(player, slot);
         }
 
         return false;
@@ -181,7 +181,7 @@ const auto DropItemCallback = [](Player& player) {
 
     auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
     if (meta) {
-        if (meta->getPermissionTableConst().allow_dropitem) return true;
+        if (meta->getPermissionTableConst().allowDropItem) return true;
     }
 
     return false;
@@ -238,9 +238,9 @@ LL_TYPE_INSTANCE_HOOK(
         if (meta) {
             auto const& et  = this->getTypeName();
             auto const& tab = meta->getPermissionTableConst();
-            if (tab.allow_attack_player && this->isPlayer()) return origin(source, damage);
-            if (tab.allow_attack_animal && RuntimeMap::has(MapType::AnimalEntity, et)) return origin(source, damage);
-            if (tab.allow_attack_mobs && RuntimeMap::has(MapType::MobEntity, et)) return origin(source, damage);
+            if (tab.allowAttackPlayer && this->isPlayer()) return origin(source, damage);
+            if (tab.allowAttackAnimal && RuntimeMap::has(MapType::AnimalEntity, et)) return origin(source, damage);
+            if (tab.allowAttackMob && RuntimeMap::has(MapType::MobEntity, et)) return origin(source, damage);
         }
 
         if (this->isPlayer()) {
@@ -292,7 +292,7 @@ const auto UseFrameBlockCallback = [](Player& player, BlockPos const& pos) -> bo
 
     auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
     if (meta) {
-        if (meta->getPermissionTableConst().use_item_frame) return true;
+        if (meta->getPermissionTableConst().useItemFrame) return true;
     }
     if (CheckPerm(nullptr, pps.getPlotID(), player.getUuid().asString())) return true;
 
@@ -341,15 +341,15 @@ const auto SpawnProjectileCallback = [](Actor* actor, string const& type) -> boo
     auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
     if (meta) {
         auto const& tab = meta->getPermissionTableConst();
-        if (type == "minecraft:fishing_hook" && tab.use_fishing_hook) return false;       // 钓鱼竿
-        if (type == "minecraft:splash_potion" && tab.allow_throw_potion) return false;    // 喷溅药水
-        if (type == "minecraft:lingering_potion" && tab.allow_throw_potion) return false; // 滞留药水
-        if (type == "minecraft:thrown_trident" && tab.allow_shoot) return false;          // 三叉戟
-        if (type == "minecraft:arrow" && tab.allow_shoot) return false;                   // 箭
-        if (type == "minecraft:crossbow" && tab.allow_shoot) return false;                // 弩射烟花
-        if (type == "minecraft:snowball" && tab.allow_dropitem) return false;             // 雪球
-        if (type == "minecraft:ender_pearl" && tab.allow_dropitem) return false;          // 末影珍珠
-        if (type == "minecraft:egg" && tab.allow_dropitem) return false;                  // 鸡蛋
+        if (type == "minecraft:fishing_hook" && tab.useFishingHook) return false;       // 钓鱼竿
+        if (type == "minecraft:splash_potion" && tab.allowThrowPotion) return false;    // 喷溅药水
+        if (type == "minecraft:lingering_potion" && tab.allowThrowPotion) return false; // 滞留药水
+        if (type == "minecraft:thrown_trident" && tab.allowThrowTrident) return false;  // 三叉戟
+        if (type == "minecraft:arrow" && tab.allowShoot) return false;                  // 箭
+        if (type == "minecraft:crossbow" && tab.allowShoot) return false;               // 弩射烟花
+        if (type == "minecraft:snowball" && tab.allowThrowSnowball) return false;       // 雪球
+        if (type == "minecraft:ender_pearl" && tab.allowThrowEnderPearl) return false;  // 末影珍珠
+        if (type == "minecraft:egg" && tab.allowThrowEgg) return false;                 // 鸡蛋
     }
 
     if (actor->isPlayer()) {
@@ -432,7 +432,7 @@ LL_TYPE_INSTANCE_HOOK(
 
         auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
         if (meta) {
-            if (meta->getPermissionTableConst().use_pressure_plate) return origin(region, pos, entity);
+            if (meta->getPermissionTableConst().usePressurePlate) return origin(region, pos, entity);
         }
 
         if (entity.isPlayer()) {
@@ -470,9 +470,9 @@ LL_TYPE_INSTANCE_HOOK(
         if (meta) {
             auto const& tab = meta->getPermissionTableConst();
             if (type == "minecraft:minecart" || type == "minecraft:boat") {
-                if (tab.allow_ride_trans) return origin(passenger);
+                if (tab.allowRideTrans) return origin(passenger);
             } else {
-                if (tab.allow_ride_entity) return origin(passenger);
+                if (tab.allowRideEntity) return origin(passenger);
             }
         }
 
@@ -521,7 +521,7 @@ LL_TYPE_INSTANCE_HOOK(
 
             auto meta = db.getPlot(p.getPlotID());
             if (meta) {
-                if (!meta->getPermissionTableConst().allow_entity_destroy) {
+                if (!meta->getPermissionTableConst().allowWitherDestroy) {
                     return;
                 }
             } else return; // 如果地块不存在，则不进行破坏
