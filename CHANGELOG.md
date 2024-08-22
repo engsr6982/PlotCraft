@@ -5,12 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.7.0] - 2024-x-xx
+## [1.0.0] - 2024-8-23
 
 ### Added
 
 - 新增 “模板生成器” 和 “模板记录器”
 - Config.generator 新增 `type`、`templateFile` 配置
+- 新增 Radius、Cube 类
 
 ### Changed
 
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - 移除 RemoteCall API
+- 移除 Config.plotWorld.eventListener.onUseItemOnWhiteList
 
 ## [0.6.1] - 2024-07-24
 
