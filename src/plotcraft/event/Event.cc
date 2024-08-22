@@ -62,10 +62,11 @@ ll::event::ListenerPtr mPlayerAttackEntityEvent;  // 玩家攻击实体
 ll::event::ListenerPtr mPlayerPickUpItemEvent;    // 玩家捡起物品
 ll::event::ListenerPtr mPlayerInteractBlockEvent; // 方块接受玩家互动
 ll::event::ListenerPtr mSculkSpreadEvent;         // 幽匿脉络蔓延
-ll::event::ListenerPtr mSculkBlockGrowthEvent;    // 幽匿方块生长(幽匿[尖啸/感测]体)
-ll::event::ListenerPtr mPlayerUseItemEvent;       // 玩家使用物品
 ll::event::ListenerPtr mPlayerLeavePlotEvent;     // 玩家离开地皮
 ll::event::ListenerPtr mPlayerEnterPlotEvent;     // 玩家进入地皮
+ll::event::ListenerPtr mSculkBlockGrowthEvent;    // 幽匿方块生长(幽匿[尖啸/感测]体)
+ll::event::ListenerPtr mPlayerUseItemEvent;       // 玩家使用物品
+
 
 namespace plo::event {
 using namespace core;
@@ -389,21 +390,24 @@ bool registerEventListener() {
     });
 
     if (config::cfg.plotWorld.eventListener.onSculkSpreadListener) {
-        mSculkSpreadEvent = bus->emplaceListener<hook::SculkSpreadEvent>([](hook::SculkSpreadEvent& ev) {
-            auto bs = ev.getBlockSource();
-            if (!bs.has_value()) return true;
-            if (bs->getDimensionId() == getPlotDimensionId()) ev.cancel(); // 地皮世界
-            return true;
-        });
+        mSculkSpreadEvent =
+            bus->emplaceListener<more_events::SculkSpreadBeforeEvent>([](more_events::SculkSpreadBeforeEvent& ev) {
+                auto bs = ev.getBlockSource();
+                if (bs.has_value())
+                    if (bs->getDimensionId() == getPlotDimensionId()) ev.cancel(); // 地皮世界
+                return true;
+            });
     }
 
     if (config::cfg.plotWorld.eventListener.onSculkBlockGrowthListener) {
-        mSculkBlockGrowthEvent = bus->emplaceListener<hook::SculkBlockGrowthEvent>([](hook::SculkBlockGrowthEvent& ev) {
-            auto sou = ev.getSource();
-            if (sou)
-                if (sou->getDimensionId() == getPlotDimensionId()) ev.cancel(); // 地皮世界
-            return true;
-        });
+        mSculkBlockGrowthEvent = bus->emplaceListener<more_events::SculkBlockGrowthBeforeEvent>(
+            [](more_events::SculkBlockGrowthBeforeEvent& ev) {
+                auto bs = ev.getBlockSource();
+                if (bs.has_value())
+                    if (bs->getDimensionId() == getPlotDimensionId()) ev.cancel(); // 地皮世界
+                return true;
+            }
+        );
     }
     return true;
 }
