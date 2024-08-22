@@ -375,6 +375,8 @@ bool registerEventListener() {
 
         auto const& type = e.identifier().getFullName();
 
+        debugger("[SpawningMob]: " << type);
+
         // TODO: fix this spawn
         if (type == "minecraft:snowball") return true;       // 雪球
         if (type == "minecraft:thrown_trident") return true; // 三叉戟

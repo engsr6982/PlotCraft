@@ -15,7 +15,7 @@ optional_ref<BlockSource> SculkSpreadEvent::getBlockSource() const { return mBlo
 
 
 LL_TYPE_STATIC_HOOK(
-    SculkVeinSpreadEventHook,
+    SculkSpreadEventHook,
     ll::memory::HookPriority::Normal,
     SculkVeinBlockBehavior,
     // "?_attemptPlaceSculk@SculkVeinBlockBehavior@@CA_NAEAVIBlockWorldGenAPI@@PEAVBlockSource@@AEBVBlockPos@@"
@@ -40,7 +40,7 @@ LL_TYPE_STATIC_HOOK(
 
 static std::unique_ptr<ll::event::EmitterBase> emitterFactory(ll::event::ListenerBase&);
 class SculkSpreadEventEmitter : public ll::event::Emitter<emitterFactory, SculkSpreadEvent> {
-    ll::memory::HookRegistrar<SculkVeinSpreadEventHook> hook;
+    ll::memory::HookRegistrar<SculkSpreadEventHook> hook;
 };
 
 static std::unique_ptr<ll::event::EmitterBase> emitterFactory(ll::event::ListenerBase&) {

@@ -335,6 +335,8 @@ LL_TYPE_INSTANCE_HOOK(
 const auto SpawnProjectileCallback = [](Actor* actor, string const& type) -> bool {
     if (actor->getDimensionId() != getPlotDimensionId()) return false;
 
+    debugger("[SpawnProjectile] type: " << type);
+
     auto pps = PPos(actor->getPosition());
     if (!pps.isValid()) return true;
 
