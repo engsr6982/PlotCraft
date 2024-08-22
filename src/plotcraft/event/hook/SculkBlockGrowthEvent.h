@@ -9,30 +9,15 @@
 namespace more_events {
 
 
-class SculkBlockGrowthBeforeEvent final : public ll::event::Cancellable<ll::event::Event> {
+class SculkBlockGrowthEvent final : public ll::event::Cancellable<ll::event::Event> {
 protected:
     optional_ref<BlockSource> mBlockSource;
     BlockPos const&           mPos;
 
 public:
-    constexpr explicit SculkBlockGrowthBeforeEvent(optional_ref<BlockSource> source, BlockPos const& pos)
+    constexpr explicit SculkBlockGrowthEvent(optional_ref<BlockSource> source, BlockPos const& pos)
     : Cancellable(),
       mBlockSource(source),
-      mPos(pos) {}
-
-    BlockPos const&           getPos() const;
-    optional_ref<BlockSource> getBlockSource() const;
-};
-
-
-class SculkBlockGrowthAfterEvent final : public ll::event::Event {
-protected:
-    optional_ref<BlockSource> mBlockSource;
-    BlockPos const&           mPos;
-
-public:
-    constexpr explicit SculkBlockGrowthAfterEvent(optional_ref<BlockSource> source, BlockPos const& pos)
-    : mBlockSource(source),
       mPos(pos) {}
 
     BlockPos const&           getPos() const;

@@ -12,11 +12,8 @@
 namespace more_events {
 
 
-optional_ref<BlockSource> SculkBlockGrowthBeforeEvent::getBlockSource() const { return mBlockSource; }
-BlockPos const&           SculkBlockGrowthBeforeEvent::getPos() const { return mPos; }
-
-optional_ref<BlockSource> SculkBlockGrowthAfterEvent::getBlockSource() const { return mBlockSource; }
-BlockPos const&           SculkBlockGrowthAfterEvent::getPos() const { return mPos; }
+optional_ref<BlockSource> SculkBlockGrowthEvent::getBlockSource() const { return mBlockSource; }
+BlockPos const&           SculkBlockGrowthEvent::getPos() const { return mPos; }
 
 
 LL_STATIC_HOOK(
@@ -31,34 +28,23 @@ LL_STATIC_HOOK(
     Random&            random,
     SculkSpreader&     a5
 ) {
-    auto ev = SculkBlockGrowthBeforeEvent(region, pos);
+    auto ev = SculkBlockGrowthEvent(region, pos);
     ll::event::EventBus::getInstance().publish(ev);
     if (ev.isCancelled()) {
         return;
     }
 
     origin(target, region, pos, random, a5);
-
-    auto after = SculkBlockGrowthAfterEvent(region, pos);
-    ll::event::EventBus::getInstance().publish(after);
 }
 
 
 static std::unique_ptr<ll::event::EmitterBase> emitterFactory1(ll::event::ListenerBase&);
-class SculkBlockGrowthBeforeEventEmitter : public ll::event::Emitter<emitterFactory1, SculkBlockGrowthBeforeEvent> {
+class SculkBlockGrowthEventEmitter : public ll::event::Emitter<emitterFactory1, SculkBlockGrowthEvent> {
     ll::memory::HookRegistrar<SculkBlockGrowthHook> hook;
 };
 static std::unique_ptr<ll::event::EmitterBase> emitterFactory1(ll::event::ListenerBase&) {
-    return std::make_unique<SculkBlockGrowthBeforeEventEmitter>();
+    return std::make_unique<SculkBlockGrowthEventEmitter>();
 }
 
-
-static std::unique_ptr<ll::event::EmitterBase> emitterFactory2(ll::event::ListenerBase&);
-class SculkBlockGrowthAfterEventEmitter : public ll::event::Emitter<emitterFactory2, SculkBlockGrowthAfterEvent> {
-    ll::memory::HookRegistrar<SculkBlockGrowthHook> hook;
-};
-static std::unique_ptr<ll::event::EmitterBase> emitterFactory2(ll::event::ListenerBase&) {
-    return std::make_unique<SculkBlockGrowthAfterEventEmitter>();
-}
 
 } // namespace more_events

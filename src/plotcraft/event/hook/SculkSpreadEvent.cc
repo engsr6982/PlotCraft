@@ -10,11 +10,8 @@
 namespace more_events {
 
 
-BlockPos const&           SculkSpreadBeforeEvent::getPos() const { return mPos; }
-optional_ref<BlockSource> SculkSpreadBeforeEvent::getBlockSource() const { return mBlockSource; }
-
-BlockPos const&           SculkSpreadAfterEvent::getPos() const { return mPos; }
-optional_ref<BlockSource> SculkSpreadAfterEvent::getBlockSource() const { return mBlockSource; }
+BlockPos const&           SculkSpreadEvent::getPos() const { return mPos; }
+optional_ref<BlockSource> SculkSpreadEvent::getBlockSource() const { return mBlockSource; }
 
 
 LL_STATIC_HOOK(
@@ -29,38 +26,23 @@ LL_STATIC_HOOK(
     SculkSpreader&     idk,
     Random&            random
 ) {
-    auto ev = SculkSpreadBeforeEvent(pos, region);
+    auto ev = SculkSpreadEvent(pos, region);
     ll::event::EventBus::getInstance().publish(ev);
     if (ev.isCancelled()) {
         return false;
     }
 
-    bool val = origin(target, region, pos, idk, random);
-
-    auto after = SculkSpreadAfterEvent(pos, region);
-    ll::event::EventBus::getInstance().publish(after);
-
-    return val;
+    return origin(target, region, pos, idk, random);
 }
 
 
 static std::unique_ptr<ll::event::EmitterBase> emitterFactory1(ll::event::ListenerBase&);
-class SculkSpreadEventBeforeEmitter : public ll::event::Emitter<emitterFactory1, SculkSpreadBeforeEvent> {
+class SculkSpreadEventEmitter : public ll::event::Emitter<emitterFactory1, SculkSpreadEvent> {
     ll::memory::HookRegistrar<SculkSpreadEventHook> hook;
 };
 
 static std::unique_ptr<ll::event::EmitterBase> emitterFactory1(ll::event::ListenerBase&) {
-    return std::make_unique<SculkSpreadEventBeforeEmitter>();
-}
-
-
-static std::unique_ptr<ll::event::EmitterBase> emitterFactory2(ll::event::ListenerBase&);
-class SculkSpreadEventAfterEmitter : public ll::event::Emitter<emitterFactory2, SculkSpreadAfterEvent> {
-    ll::memory::HookRegistrar<SculkSpreadEventHook> hook;
-};
-
-static std::unique_ptr<ll::event::EmitterBase> emitterFactory2(ll::event::ListenerBase&) {
-    return std::make_unique<SculkSpreadEventAfterEmitter>();
+    return std::make_unique<SculkSpreadEventEmitter>();
 }
 
 

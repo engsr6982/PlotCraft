@@ -113,111 +113,6 @@ namespace plo::event {
 using namespace core;
 
 
-// 玩家攻击方块
-LL_TYPE_INSTANCE_HOOK(
-    PlayerAttackBlockHook,
-    HookPriority::Normal,
-    Block,
-    &Block::attack,
-    bool,
-    Player*         player,
-    BlockPos const& pos
-) {
-    try {
-        if (player->getDimensionId() != getPlotDimensionId()) return origin(player, pos);
-        auto pps = PPos(pos);
-
-        if (!pps.isValid()) return origin(player, pos);
-        if (CheckPerm(nullptr, pps.getPlotID(), player->getUuid().asString())) return origin(player, pos);
-
-        auto const& bl   = player->getDimensionBlockSourceConst().getBlock(pos).getTypeName();
-        auto const  meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
-        if (meta) {
-            if (meta->getPermissionTableConst().allowAttackDragonEgg && bl == "minecraft:dragon_egg")
-                return origin(player, pos);
-        }
-
-        return false;
-    }
-    CATCH_RET(false);
-}
-
-
-// 玩家操作盔甲架
-LL_TYPE_INSTANCE_HOOK(
-    ArmorStandSwapItemHook,
-    HookPriority::Normal,
-    ArmorStand,
-    &ArmorStand::_trySwapItem,
-    bool,
-    Player&                    player,
-    Puv::Legacy::EquipmentSlot slot
-) {
-    try {
-        if (player.getDimensionId() != getPlotDimensionId()) return origin(player, slot);
-        auto pps = PPos(player.getPosition());
-
-        if (!pps.isValid()) return origin(player, slot);
-        if (CheckPerm(nullptr, pps.getPlotID(), player.getUuid().asString())) return origin(player, slot);
-
-        auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
-        if (meta) {
-            if (meta->getPermissionTableConst().useArmorStand) return origin(player, slot);
-        }
-
-        return false;
-    }
-    CATCH_RET(false);
-}
-
-
-// 玩家丢弃物品
-const auto DropItemCallback = [](Player& player) {
-    if (player.getDimensionId() != getPlotDimensionId()) return true;
-    auto pps = PPos(player.getPosition());
-
-    if (!pps.isValid()) return true;
-    if (CheckPerm(nullptr, pps.getPlotID(), player.getUuid().asString())) return true;
-
-    auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
-    if (meta) {
-        if (meta->getPermissionTableConst().allowDropItem) return true;
-    }
-
-    return false;
-};
-LL_TYPE_INSTANCE_HOOK(
-    PlayerDropItemHook1,
-    HookPriority::Normal,
-    Player,
-    "?drop@Player@@UEAA_NAEBVItemStack@@_N@Z",
-    bool,
-    ItemStack const& item,
-    bool             randomly
-) {
-    try {
-        if (DropItemCallback(*this)) return origin(item, randomly);
-        return false;
-    }
-    CATCH_RET(false);
-}
-LL_TYPE_INSTANCE_HOOK(
-    PlayerDropItemHook2,
-    HookPriority::Normal,
-    ComplexInventoryTransaction,
-    "?handle@ComplexInventoryTransaction@@UEBA?AW4InventoryTransactionError@@AEAVPlayer@@_N@Z",
-    InventoryTransactionError,
-    Player& player,
-    bool    isSenderAuthority
-) {
-    try {
-        if (DropItemCallback(player)) return origin(player, isSenderAuthority);
-        return InventoryTransactionError::NoError;
-    }
-    CATCH_RET(InventoryTransactionError::NoError);
-}
-
-
 // 生物受伤
 LL_TYPE_INSTANCE_HOOK(
     MobHurtEffectHook,
@@ -230,8 +125,10 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     try {
         if (this->getDimensionId() != getPlotDimensionId()) return origin(source, damage);
-        auto pps = PPos(this->getPosition());
 
+        debugger("[MobHurt] mob: " << this->getTypeName());
+
+        auto pps = PPos(this->getPosition());
         if (!pps.isValid()) return origin(source, damage);
 
         auto meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
@@ -271,6 +168,8 @@ LL_TYPE_INSTANCE_HOOK(
     try {
         if (region.getDimensionId() != getPlotDimensionId()) return origin(region, pos, actor, fallDistance);
 
+        debugger("[耕地退化] pos: " << pos.toString());
+
         auto pps = PPos(pos);
         if (!pps.isValid()) return origin(region, pos, actor, fallDistance);
 
@@ -286,6 +185,8 @@ LL_TYPE_INSTANCE_HOOK(
 // 玩家操作物品展示框
 const auto UseFrameBlockCallback = [](Player& player, BlockPos const& pos) -> bool {
     if (player.getDimensionId() != getPlotDimensionId()) return false;
+
+    debugger("[物品展示框] pos: " << pos.toString());
 
     auto pps = PPos(pos);
     if (!pps.isValid()) return true;
@@ -335,7 +236,7 @@ LL_TYPE_INSTANCE_HOOK(
 const auto SpawnProjectileCallback = [](Actor* actor, string const& type) -> bool {
     if (actor->getDimensionId() != getPlotDimensionId()) return false;
 
-    debugger("[SpawnProjectile] type: " << type);
+    debugger("[弹射物生成] type: " << type);
 
     auto pps = PPos(actor->getPosition());
     if (!pps.isValid()) return true;
@@ -429,6 +330,8 @@ LL_TYPE_INSTANCE_HOOK(
     try {
         if (region.getDimensionId() != getPlotDimensionId()) return origin(region, pos, entity);
 
+        debugger("[压力板] pos: " << pos.toString() << " entity: " << entity.getTypeName());
+
         auto pps = PPos(pos);
         if (!pps.isValid()) return origin(region, pos, entity);
 
@@ -461,6 +364,8 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     try {
         if (passenger.getDimensionId() != getPlotDimensionId()) return origin(passenger);
+
+        debugger("[生物骑乘] executed!");
 
         if (!passenger.isPlayer()) return origin(passenger);
 
@@ -507,6 +412,8 @@ LL_TYPE_INSTANCE_HOOK(
     try {
         if (region.getDimensionId() != getPlotDimensionId()) return origin(level, bb, region, range, type);
 
+        debugger("[凋零破坏方块] executed!");
+
         Cube  c(bb.min, bb.max);
         auto  land = c.getRangedPlots();
         auto& db   = PlotDBStorage::getInstance();
@@ -551,6 +458,8 @@ LL_TYPE_INSTANCE_HOOK(
         if (region.getDimensionId() != getPlotDimensionId())
             return origin(region, curPos, curBranchFacing, pistonMoveFacing);
 
+        debugger("[活塞推动方块] 目标: " << curPos.toString());
+
         auto sou = PPos(this->getPosition());
         auto tar = PPos(curPos);
 
@@ -574,6 +483,8 @@ LL_TYPE_INSTANCE_HOOK(
 const auto RedStoneUpdateCallback =
     [](BlockSource& bs, BlockPos const& pos, int /* level */, bool /* isActive */) -> bool {
     if (bs.getDimensionId() != getPlotDimensionId()) return true;
+
+    debugger("[RedstoneUpdate] pos: " << pos.toString());
 
     auto pps = PPos(pos);
     if (!pps.isValid()) return true;
@@ -637,6 +548,8 @@ const auto ExplodeCallback = [](Actor* /* source */,
                                 float /* maxResistance */) -> bool {
     if (bs.getDimensionId() != getPlotDimensionId()) return true;
 
+    debugger("[Explode] pos: " << pos.toString());
+
     Radius r(pos, explosionRadius + 1);
     auto   land = r.getRangedPlots();
     auto&  db   = PlotDBStorage::getInstance();
@@ -684,8 +597,6 @@ LL_TYPE_INSTANCE_HOOK(
 // Hook Manager
 auto GetHooks() {
     return ll::memory::HookRegistrar<
-        PlayerAttackBlockHook,    // 玩家攻击方块
-        ArmorStandSwapItemHook,   // 玩家操作盔甲架
         PressurePlateTriggerHook, // 生物踩踏压力板
         ActorRideHook,            // 生物骑乘
         WitherDestroyHook,        // 凋零破坏方块
@@ -693,9 +604,6 @@ auto GetHooks() {
         ExplodeHook,              // 方块/实体 爆炸
         MobHurtEffectHook,        // 生物受伤
         FarmDecayHook,            // 耕地退化
-        // 玩家丢弃物品
-        PlayerDropItemHook1,
-        PlayerDropItemHook2,
         // 玩家操作物品展示框
         PlayerUseFrameHook1,
         PlayerUseFrameHook2,

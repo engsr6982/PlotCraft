@@ -44,8 +44,12 @@
 #include "plotcraft/utils/Debugger.h"
 
 
+#include "plotcraft/event/hook/ArmorStandSwapItemEvent.h"
+#include "plotcraft/event/hook/PlayerAttackBlockEvent.h"
+#include "plotcraft/event/hook/PlayerDropItemEvent.h"
 #include "plotcraft/event/hook/SculkBlockGrowthEvent.h"
 #include "plotcraft/event/hook/SculkSpreadEvent.h"
+
 
 using string         = std::string;
 using PlotPermission = plo::data::PlotPermission;
@@ -66,7 +70,9 @@ ll::event::ListenerPtr mPlayerLeavePlotEvent;     // 玩家离开地皮
 ll::event::ListenerPtr mPlayerEnterPlotEvent;     // 玩家进入地皮
 ll::event::ListenerPtr mSculkBlockGrowthEvent;    // 幽匿方块生长(幽匿[尖啸/感测]体)
 ll::event::ListenerPtr mPlayerUseItemEvent;       // 玩家使用物品
-
+ll::event::ListenerPtr mArmorStandSwapItemEvent;  // 玩家交换盔甲架物品
+ll::event::ListenerPtr mPlayerAttackBlockEvent;   // 玩家攻击方块
+ll::event::ListenerPtr mPlayerDropItemEvent;      // 玩家丢弃物品
 
 namespace plo::event {
 using namespace core;
@@ -369,6 +375,68 @@ bool registerEventListener() {
         return true;
     });
 
+    mPlayerAttackBlockEvent =
+        bus->emplaceListener<more_events::PlayerAttackBlockEvent>([](more_events::PlayerAttackBlockEvent& ev) {
+            optional_ref<Player> pl = ev.getPlayer();
+            if (!pl.has_value()) return true;
+            Player& player = pl.value();
+
+            if (player.getDimensionId() != getPlotDimensionId()) return true;
+
+            debugger("[AttackBlock]: Pos: " << ev.getPos().toString());
+
+            auto pps = PPos(ev.getPos());
+            if (!pps.isValid()) return true;
+            if (CheckPerm(nullptr, pps.getPlotID(), player.getUuid().asString())) return true;
+
+            auto const& bl   = player.getDimensionBlockSourceConst().getBlock(ev.getPos()).getTypeName();
+            auto const  meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
+            if (meta) {
+                if (meta->getPermissionTableConst().allowAttackDragonEgg && bl == "minecraft:dragon_egg") return true;
+            }
+
+            ev.cancel();
+            return true;
+        });
+
+    mArmorStandSwapItemEvent =
+        bus->emplaceListener<more_events::ArmorStandSwapItemEvent>([](more_events::ArmorStandSwapItemEvent& ev) {
+            Player& player = ev.getPlayer();
+            if (player.getDimensionId() != getPlotDimensionId()) return true;
+
+            debugger("[ArmorStandSwapItem]: executed");
+
+            auto pps = PPos(player.getPosition());
+            if (!pps.isValid()) return true;
+            if (CheckPerm(nullptr, pps.getPlotID(), player.getUuid().asString())) return true;
+
+            auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
+            if (meta) {
+                if (meta->getPermissionTableConst().useArmorStand) return true;
+            }
+
+            ev.cancel();
+            return true;
+        });
+
+    mPlayerDropItemEvent =
+        bus->emplaceListener<more_events::PlayerDropItemEvent>([](more_events::PlayerDropItemEvent& ev) {
+            Player& player = ev.getPlayer();
+            if (player.getDimensionId() != getPlotDimensionId()) return true;
+
+            debugger("[PlayerDropItem]: executed");
+
+            auto pps = PPos(player.getPosition());
+            if (!pps.isValid()) return true;
+
+            if (CheckPerm(nullptr, pps.getPlotID(), player.getUuid().asString())) return true;
+
+            auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
+            if (meta) {
+                if (meta->getPermissionTableConst().allowDropItem) return true;
+            }
+            return true;
+        });
 
     // 可开关事件（作用于地皮世界）
     mSpawningMobEvent = bus->emplaceListener<ll::event::SpawningMobEvent>([](ll::event::SpawningMobEvent& e) {
@@ -378,11 +446,6 @@ bool registerEventListener() {
 
         debugger("[SpawningMob]: " << type);
 
-        // TODO: fix this spawn
-        if (type == "minecraft:snowball") return true;       // 雪球
-        if (type == "minecraft:thrown_trident") return true; // 三叉戟
-        if (type == "minecraft:ender_pearl") return true;    // 末影珍珠
-
         if (config::cfg.plotWorld.spawnMob) return true;
 
         e.cancel();
@@ -390,24 +453,22 @@ bool registerEventListener() {
     });
 
     if (config::cfg.plotWorld.eventListener.onSculkSpreadListener) {
-        mSculkSpreadEvent =
-            bus->emplaceListener<more_events::SculkSpreadBeforeEvent>([](more_events::SculkSpreadBeforeEvent& ev) {
+        mSculkSpreadEvent = bus->emplaceListener<more_events::SculkSpreadEvent>([](more_events::SculkSpreadEvent& ev) {
+            auto bs = ev.getBlockSource();
+            if (bs.has_value())
+                if (bs->getDimensionId() == getPlotDimensionId()) ev.cancel(); // 地皮世界
+            return true;
+        });
+    }
+
+    if (config::cfg.plotWorld.eventListener.onSculkBlockGrowthListener) {
+        mSculkBlockGrowthEvent =
+            bus->emplaceListener<more_events::SculkBlockGrowthEvent>([](more_events::SculkBlockGrowthEvent& ev) {
                 auto bs = ev.getBlockSource();
                 if (bs.has_value())
                     if (bs->getDimensionId() == getPlotDimensionId()) ev.cancel(); // 地皮世界
                 return true;
             });
-    }
-
-    if (config::cfg.plotWorld.eventListener.onSculkBlockGrowthListener) {
-        mSculkBlockGrowthEvent = bus->emplaceListener<more_events::SculkBlockGrowthBeforeEvent>(
-            [](more_events::SculkBlockGrowthBeforeEvent& ev) {
-                auto bs = ev.getBlockSource();
-                if (bs.has_value())
-                    if (bs->getDimensionId() == getPlotDimensionId()) ev.cancel(); // 地皮世界
-                return true;
-            }
-        );
     }
     return true;
 }
@@ -427,6 +488,9 @@ bool unRegisterEventListener() {
     bus.removeListener(mSculkSpreadEvent);
     bus.removeListener(mSculkBlockGrowthEvent);
     bus.removeListener(mPlayerUseItemEvent);
+    bus.removeListener(mPlayerAttackBlockEvent);
+    bus.removeListener(mArmorStandSwapItemEvent);
+    bus.removeListener(mPlayerDropItemEvent);
 
     unregisterHook();
 
