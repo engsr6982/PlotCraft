@@ -15,9 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - 重构 EconomicSystem、PlotPos
-- 移除 RemoteCall API
-- 重构 PlotPos 实现
 - Config.moneys 改为 Config.economy
+- GUI 支持地皮管理员操作
+- 地皮世界填充平原群系
+- 重构权限系统（细分权限）
+
+### Removed
+
+- 移除 RemoteCall API
 
 ## [0.6.1] - 2024-07-24
 
