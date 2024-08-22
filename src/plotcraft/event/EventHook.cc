@@ -244,15 +244,15 @@ const auto SpawnProjectileCallback = [](Actor* actor, string const& type) -> boo
     auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
     if (meta) {
         auto const& tab = meta->getPermissionTableConst();
-        if (type == "minecraft:fishing_hook" && tab.useFishingHook) return false;       // 钓鱼竿
-        if (type == "minecraft:splash_potion" && tab.allowThrowPotion) return false;    // 喷溅药水
-        if (type == "minecraft:lingering_potion" && tab.allowThrowPotion) return false; // 滞留药水
-        if (type == "minecraft:thrown_trident" && tab.allowThrowTrident) return false;  // 三叉戟
-        if (type == "minecraft:arrow" && tab.allowShoot) return false;                  // 箭
-        if (type == "minecraft:crossbow" && tab.allowShoot) return false;               // 弩射烟花
-        if (type == "minecraft:snowball" && tab.allowThrowSnowball) return false;       // 雪球
-        if (type == "minecraft:ender_pearl" && tab.allowThrowEnderPearl) return false;  // 末影珍珠
-        if (type == "minecraft:egg" && tab.allowThrowEgg) return false;                 // 鸡蛋
+        if (type == "minecraft:fishing_hook" && tab.useFishingHook) return true;       // 钓鱼竿
+        if (type == "minecraft:splash_potion" && tab.allowThrowPotion) return true;    // 喷溅药水
+        if (type == "minecraft:lingering_potion" && tab.allowThrowPotion) return true; // 滞留药水
+        if (type == "minecraft:thrown_trident" && tab.allowThrowTrident) return true;  // 三叉戟
+        if (type == "minecraft:arrow" && tab.allowShoot) return true;                  // 箭
+        if (type == "minecraft:crossbow" && tab.allowShoot) return true;               // 弩射烟花
+        if (type == "minecraft:snowball" && tab.allowThrowSnowball) return true;       // 雪球
+        if (type == "minecraft:ender_pearl" && tab.allowThrowEnderPearl) return true;  // 末影珍珠
+        if (type == "minecraft:egg" && tab.allowThrowEgg) return true;                 // 鸡蛋
     }
 
     if (actor->isPlayer()) {
