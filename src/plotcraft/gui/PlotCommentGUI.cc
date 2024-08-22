@@ -78,8 +78,9 @@ void _publishComment(Player& player, PlotMetadataPtr pt) {
 
 void _showCommentOperation(Player& player, PlotMetadataPtr pt, CommentID id) {
     auto const ct             = *pt->getComment(id);
-    bool const isOwner        = player.getUuid().asString() == pt->getPlotOwner();
+    bool const isOwner        = pt->isOwner(player.getUuid().asString());
     bool const isCommentOwner = player.getUuid().asString() == ct.mCommentPlayer;
+    bool const isAdmin        = PlotDBStorage::getInstance().isAdmin(player.getUuid().asString());
 
     auto& ndb = PlayerNameDB::getInstance();
 
@@ -93,13 +94,13 @@ void _showCommentOperation(Player& player, PlotMetadataPtr pt, CommentID id) {
         ct.mContent
     ));
 
-    if (isCommentOwner) {
+    if (isCommentOwner || isAdmin) {
         fm.appendButton("编辑评论", "textures/ui/book_edit_default", "path", [pt, id](Player& pl) {
             _editComment(pl, pt, id);
         });
     }
 
-    if (isCommentOwner || isOwner) {
+    if (isCommentOwner || isOwner || isAdmin) {
         fm.appendButton("删除评论", "textures/ui/icon_trash", "path", [pt, id](Player& pl) {
             pev::PlayerDeletePlotComment ev{&pl, pt, id};
             ll::event::EventBus::getInstance().publish(ev);

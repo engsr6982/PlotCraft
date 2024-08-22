@@ -33,6 +33,7 @@ void PlotGUI(Player& player, PlotMetadataPtr pt, bool ret) {
     bool const hasSale        = pt->isSale();                                                  // 是否出售
     bool const isOwner        = hasOwner && player.getUuid().asString() == pt->getPlotOwner(); // 是否是主人
     bool const isSharedMember = pt->isSharedPlayer(player.getUuid().asString()); // 是否是地皮共享成员
+    bool const isAdmin        = PlotDBStorage::getInstance().isAdmin(player.getUuid().asString()); // 是否是管理员
 
     fm.setContent(fmt::format(
         "地皮 {} 的元数据:\n地皮主人: {}\n地皮名称: {}\n是否出售: {}\n出售价格: {}\n  ",
@@ -48,14 +49,14 @@ void PlotGUI(Player& player, PlotMetadataPtr pt, bool ret) {
     if ((!hasOwner || hasSale) && !isOwner)
         fm.appendButton("购买地皮", "textures/ui/confirm", "path", [pt](Player& pl) { _buyPlot(pl, pt); });
 
-    if ((isOwner || isSharedMember) && utils::some(cfg.allowedPlotTeleportDim, player.getDimensionId().id))
+    if (((isOwner || isSharedMember) && utils::some(cfg.allowedPlotTeleportDim, player.getDimensionId().id)) || isAdmin)
         fm.appendButton("传送到此地皮", "textures/ui/move", "path", [pt](Player& pl) {
             auto const v3 = PPos{pt->getX(), pt->getZ()}.getSafestPos();
             pl.teleport(v3, getPlotDimensionId());
             sendText(pl, "传送成功");
         });
 
-    if (isOwner) {
+    if (isOwner || isAdmin) {
         fm.appendButton("权限管理", "textures/ui/gear", "path", [pt](Player& pl) { PlotPermissionGUI(pl, pt); });
 
         fm.appendButton("修改地皮名称", "textures/ui/book_edit_default", "path", [pt](Player& pl) {

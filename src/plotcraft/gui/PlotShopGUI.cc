@@ -71,7 +71,7 @@ void _buyPlot(Player& player, PlotMetadataPtr pt) {
         sendText<LogLevel::Warn>(player, "这个地皮没有出售，无法购买。");
         return;
     }
-    if (pt->getPlotOwner() == player.getUuid().asString()) {
+    if (pt->isOwner(player.getUuid().asString())) {
         sendText<LogLevel::Warn>(player, "你不能购买自己的地皮。");
         return;
     }
