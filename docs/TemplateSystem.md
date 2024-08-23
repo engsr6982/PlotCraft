@@ -117,3 +117,5 @@
 ![](./image/test_template.png)
 
 5. 进入服务器，传送到地皮维度，即可看到生成的模板
+
+![gen](./image/template_generator_test.png)

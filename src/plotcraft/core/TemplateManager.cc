@@ -69,7 +69,7 @@ bool TemplateManager::_parseTemplate() {
     // 遍历区块数据
     for (auto& [key, templateBlocks] : data.template_data) {
         auto& buffer = mBlockBuffer[string(key)];
-        buffer.resize(totalVolume, defBlock); // 调整大小并填充默认方块
+        buffer.resize(totalVolume, airBlock); // 调整大小并填充默认方块
 
         // 遍历区块的 256 个Y轴
         for (int y = 0; y < 256; y++) {
@@ -78,19 +78,16 @@ bool TemplateManager::_parseTemplate() {
             // 读 template_height 个方块数据
             int mapIndex    = y * data.template_height;                // block_map 的索引
             int bufferIndex = (y * fixedHeight) + templateStartHeight; // buffer 的索引
-            for (int r = 0; r < data.template_height; r++) {
-                Block const* bl         = mBlockMap[data.block_map[std::to_string(templateBlocks[mapIndex + r])]];
-                buffer[bufferIndex + r] = bl;
+            int defIndex    = (y * fixedHeight) + 1;                   // 默认方块下标(+1避开基岩)
+            for (int r = 0; r < fixedHeight; r++) {
+                if (r < data.template_height) {
+                    Block const* bl         = mBlockMap[data.block_map[std::to_string(templateBlocks[mapIndex + r])]];
+                    buffer[bufferIndex + r] = bl;
+                }
+                if (r < templateStartHeight - 1) {
+                    buffer[defIndex + r] = defBlock;
+                }
             }
-            // for (int r = 0; r < fixedHeight; r++) {
-            //     if (r < data.template_height) {
-            //         Block const* bl         = mBlockMap[data.block_map[std::to_string(templateBlocks[mapIndex +
-            //         r])]]; buffer[bufferIndex + r] = bl;
-            //     }
-            //     if (r < templateStartHeight) {
-            //         buffer[bufferIndex + r] = defBlock;
-            //     }
-            // }
         }
     }
 

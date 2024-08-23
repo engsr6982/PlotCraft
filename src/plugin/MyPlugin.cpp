@@ -4,11 +4,13 @@
 #include <filesystem>
 #include <memory>
 
+#include "fmt/color.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/server/ServerStartedEvent.h"
 #include "ll/api/i18n/I18n.h"
 #include "ll/api/mod/RegisterHelper.h"
 #include "ll/api/service/Bedrock.h"
+#include "ll/api/utils/SystemUtils.h"
 #include "mc/server/ServerLevel.h"
 #include "mc/server/commands/CommandContext.h"
 #include "mc/server/commands/CommandOutputType.h"
@@ -24,6 +26,7 @@
 #include "plotcraft/event/Event.h"
 #include "plotcraft/utils/EconomySystem.h"
 #include "plotcraft/utils/Mc.h"
+#include <ll/api/utils/SystemUtils.h>
 
 #include "plotcraft/core/TemplateManager.h"
 
@@ -43,6 +46,11 @@ MyPlugin& MyPlugin::getInstance() { return *instance; }
 bool MyPlugin::load() {
     auto& self   = getSelf();
     auto& logger = self.getLogger();
+
+    if (ll::sys_utils::isStdoutSupportAnsi()) {
+        logger.title = fmt::format(fmt::fg(fmt::color::light_green), logger.title);
+    }
+
     logger.info(R"(                                                           )");
     logger.info(R"(         ____   __        __   ______              ____ __ )");
     logger.info(R"(        / __ \ / /____   / /_ / ____/_____ ____ _ / __// /_)");
@@ -84,9 +92,9 @@ bool MyPlugin::enable() {
     if (cfg.generator.type == plo::config::PlotGeneratorType::Template) {
         logger.info("检测到使用模板生成器，加载地皮模板...");
         if (plo::core::TemplateManager::loadTemplate((configDir / cfg.generator.templateFile).string())) {
-            logger.info("加载模板成功");
+            logger.info("模板 \"{}\" 已加载", cfg.generator.templateFile);
         } else {
-            logger.error("加载模板失败，请检查配置文件");
+            logger.error("加载模板 \"{}\" 失败，请检查配置文件", cfg.generator.templateFile);
             return false;
         }
     };
