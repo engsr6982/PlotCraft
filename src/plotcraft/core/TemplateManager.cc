@@ -54,26 +54,43 @@ bool TemplateManager::_parseTemplate() {
 
 
     // 解析 template_data
-    int startHeight = data.template_offset;
-    if (startHeight < 0) startHeight += 64;               // -64 为世界底部高度, +64为了正确指向buffer
-    int totalHeight = startHeight + data.template_height; // 起点 + buffer 高度
-    int totalVolume = totalHeight * 16 * 16;              // buffer = 16 * 16 * totalHeight
+    int templateStartHeight = data.template_offset;         // 模板起始高度(此高度以下的为defBlock)
+    if (templateStartHeight < 0) templateStartHeight += 64; // 起始高度 < 0，则+64，指向正确的buffer位置
 
+    int templateTotalHeight = templateStartHeight + data.template_height; // 起始高度 + 模板数据高度
+
+    // 计算最小的 buffer 高度
+    int remainder = templateTotalHeight % 16; // 取余数
+    int fixedHeight =
+        remainder != 0 ? (templateTotalHeight + 16 - remainder) : templateTotalHeight; // 最小的BlockVolume.y为16
+
+    int totalVolume = fixedHeight * 16 * 16; // 16 * 16 * fixedHeight
+
+    // 遍历区块数据
     for (auto& [key, templateBlocks] : data.template_data) {
         auto& buffer = mBlockBuffer[string(key)];
-        buffer.resize(totalVolume, defBlock); // 直接调整大小并填充默认方块
+        buffer.resize(totalVolume, defBlock); // 调整大小并填充默认方块
 
-        for (int y = 0; y < 256; y++) { // 遍历 256 个Y轴
-            if (data.fill_bedrock) buffer[y * totalHeight] = bedrockBlock;
+        // 遍历区块的 256 个Y轴
+        for (int y = 0; y < 256; y++) {
+            if (data.fill_bedrock) buffer[y * fixedHeight] = bedrockBlock; // 每个y轴的起点设置为基岩
 
-            // 读 template_height 个方块
-            int mapIndex    = y * data.template_height; // block_map 的索引
-            int bufferIndex = y * totalHeight;          // buffer 的索引
+            // 读 template_height 个方块数据
+            int mapIndex    = y * data.template_height;                // block_map 的索引
+            int bufferIndex = (y * fixedHeight) + templateStartHeight; // buffer 的索引
             for (int r = 0; r < data.template_height; r++) {
-                auto bl = mBlockMap[data.block_map[std::to_string(templateBlocks[mapIndex + r])]];
-
+                Block const* bl         = mBlockMap[data.block_map[std::to_string(templateBlocks[mapIndex + r])]];
                 buffer[bufferIndex + r] = bl;
             }
+            // for (int r = 0; r < fixedHeight; r++) {
+            //     if (r < data.template_height) {
+            //         Block const* bl         = mBlockMap[data.block_map[std::to_string(templateBlocks[mapIndex +
+            //         r])]]; buffer[bufferIndex + r] = bl;
+            //     }
+            //     if (r < templateStartHeight) {
+            //         buffer[bufferIndex + r] = defBlock;
+            //     }
+            // }
         }
     }
 
