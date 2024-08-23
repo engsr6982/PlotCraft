@@ -9,12 +9,12 @@ EconomyQueue& EconomyQueue::getInstance() {
     return instance;
 }
 
-bool EconomyQueue::has(UUID const& target) const {
+bool EconomyQueue::has(UUIDs const& target) const {
     return std::find_if(mQueue->begin(), mQueue->end(), [&target](auto const& pair) { return pair->first == target; })
         != mQueue->end();
 }
 
-std::shared_ptr<std::pair<UUID, uint64_t>> EconomyQueue::get(UUID const& target) const {
+std::shared_ptr<std::pair<UUIDs, uint64_t>> EconomyQueue::get(UUIDs const& target) const {
     auto it =
         std::find_if(mQueue->begin(), mQueue->end(), [&target](auto const& pair) { return pair->first == target; });
     if (it == mQueue->end()) {
@@ -23,7 +23,7 @@ std::shared_ptr<std::pair<UUID, uint64_t>> EconomyQueue::get(UUID const& target)
     return *it;
 }
 
-bool EconomyQueue::set(UUID const target, int const val) {
+bool EconomyQueue::set(UUIDs const target, int const val) {
     auto it =
         std::find_if(mQueue->begin(), mQueue->end(), [&target](auto const& pair) { return pair->first == target; });
     if (it != mQueue->end()) {
@@ -31,14 +31,14 @@ bool EconomyQueue::set(UUID const target, int const val) {
         save();
         return true;
     } else {
-        auto ptr = std::make_shared<std::pair<UUID, uint64_t>>(std::make_pair(target, val));
+        auto ptr = std::make_shared<std::pair<UUIDs, uint64_t>>(std::make_pair(target, val));
         mQueue->push_back(ptr);
         save();
         return true;
     }
 }
 
-bool EconomyQueue::del(UUID const& target) {
+bool EconomyQueue::del(UUIDs const& target) {
     auto it =
         std::find_if(mQueue->begin(), mQueue->end(), [&target](auto const& pair) { return pair->first == target; });
     if (it != mQueue->end()) {
@@ -50,12 +50,12 @@ bool EconomyQueue::del(UUID const& target) {
 }
 
 bool EconomyQueue::transfer(Player& target) {
-    UUID uid = target.getUuid().asString();
+    UUIDs uid = target.getUuid().asString();
     if (!has(uid)) return false;
 
-    auto&      ms  = utils::Moneys::getInstance();
+    auto&      ms  = utils::EconomySystem::getInstance();
     auto       ptr = get(uid);
-    bool const ok  = ms.addMoney(target, ptr->second);
+    bool const ok  = ms.add(target, ptr->second);
     if (ok) {
         del(uid);
         return true;
@@ -67,7 +67,7 @@ bool EconomyQueue::save() {
     /*
         [
             [
-                "UUID",
+                "UUIDs",
                 000000000000
             ]
         ]
@@ -87,7 +87,7 @@ bool EconomyQueue::load() {
         throw std::runtime_error("EconomyQueue has already been initialized.");
     }
     mPath  = my_plugin::MyPlugin::getInstance().getSelf().getDataDir() / "EconomyQueue.json";
-    mQueue = std::make_shared<std::vector<std::shared_ptr<std::pair<UUID, uint64_t>>>>();
+    mQueue = std::make_shared<std::vector<std::shared_ptr<std::pair<UUIDs, uint64_t>>>>();
 
     if (!fs::exists(mPath)) {
         // create father directory if not exist
@@ -103,8 +103,7 @@ bool EconomyQueue::load() {
     ifs >> j;
     ifs.close();
     for (auto const& item : j) {
-        mQueue->push_back(std::make_shared<std::pair<UUID, uint64_t>>(std::make_pair(UUID(item[0]), item[1])
-        ));
+        mQueue->push_back(std::make_shared<std::pair<UUIDs, uint64_t>>(std::make_pair(UUIDs(item[0]), item[1])));
     }
     return true;
 }

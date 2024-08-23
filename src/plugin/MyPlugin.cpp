@@ -4,11 +4,13 @@
 #include <filesystem>
 #include <memory>
 
+#include "fmt/color.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/server/ServerStartedEvent.h"
 #include "ll/api/i18n/I18n.h"
 #include "ll/api/mod/RegisterHelper.h"
 #include "ll/api/service/Bedrock.h"
+#include "ll/api/utils/SystemUtils.h"
 #include "mc/server/ServerLevel.h"
 #include "mc/server/commands/CommandContext.h"
 #include "mc/server/commands/CommandOutputType.h"
@@ -20,15 +22,13 @@
 #include "plotcraft/command/Command.h"
 #include "plotcraft/core/PlotDimension.h"
 #include "plotcraft/data/PlayerNameDB.h"
-#include "plotcraft/data/PlotBDStorage.h"
+#include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/event/Event.h"
+#include "plotcraft/utils/EconomySystem.h"
 #include "plotcraft/utils/Mc.h"
-#include "plotcraft/utils/Moneys.h"
+#include <ll/api/utils/SystemUtils.h>
 
-
-#ifdef REMOTE_API
-#include "remote/Remote.h"
-#endif
+#include "plotcraft/core/TemplateManager.h"
 
 #if !defined(OVERWORLD)
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
@@ -44,7 +44,13 @@ static std::unique_ptr<MyPlugin> instance;
 MyPlugin& MyPlugin::getInstance() { return *instance; }
 
 bool MyPlugin::load() {
-    auto& logger = getSelf().getLogger();
+    auto& self   = getSelf();
+    auto& logger = self.getLogger();
+
+    if (ll::sys_utils::isStdoutSupportAnsi()) {
+        logger.title = fmt::format(fmt::fg(fmt::color::light_green), logger.title);
+    }
+
     logger.info(R"(                                                           )");
     logger.info(R"(         ____   __        __   ______              ____ __ )");
     logger.info(R"(        / __ \ / /____   / /_ / ____/_____ ____ _ / __// /_)");
@@ -54,41 +60,45 @@ bool MyPlugin::load() {
     logger.info(R"(                                                           )");
     logger.info(R"(                 ---- Author: engsr6982 ----               )");
     logger.info(R"(                                                           )");
-    logger.info("加载中...");
+    logger.info("Loading...");
+    logger.info("编译参数: {}", BuildVersionInfo);
+    logger.info("创建 data 文件夹...");
 
-    logger.info("编译版本信息: {}", BuildVersionInfo);
+    auto& dataDir = self.getDataDir();
+    auto& langDir = self.getLangDir();
 
-    logger.info("尝试创建必要的文件夹...");
+    if (!fs::exists(dataDir)) fs::create_directories(dataDir);
 
-    if (!fs::exists(getSelf().getDataDir())) {
-        fs::create_directories(getSelf().getDataDir());
-    }
-
-    logger.info("尝试加载数据...");
+    logger.info("加载数据...");
     plo::config::loadConfig();
-    ll::i18n::load(getSelf().getLangDir());
-    plo::data::PlotBDStorage::getInstance().load();
+    ll::i18n::load(langDir);
+    plo::data::PlotDBStorage::getInstance().load();
     plo::data::PlayerNameDB::getInstance().initPlayerNameDB();
     plo::EconomyQueue::getInstance().load();
-
-    plo::utils::Moneys::getInstance().updateConfig(plo::config::cfg.moneys);
-
-
-#ifdef REMOTE_API
-    plo::remote::exportPLAPI();   // 导出PLAPI
-    plo::remote::exportPLEvent(); // 导出PLEvent
-    logger.info("RemoteCall API 已导出。");
-#endif
-
+    plo::utils::EconomySystem::getInstance().updateConfig(plo::config::cfg.economy);
 
     return true;
 }
 
 
 bool MyPlugin::enable() {
-    auto& logger = getSelf().getLogger();
+    auto& self   = getSelf();
+    auto& logger = self.getLogger();
     logger.info("Enabling...");
-    logger.info("尝试注册 命令、维度、事件...");
+    logger.info("注册 命令、事件...");
+
+    auto& cfg       = plo::config::cfg;
+    auto& configDir = self.getConfigDir();
+    if (cfg.generator.type == plo::config::PlotGeneratorType::Template) {
+        logger.info("检测到使用模板生成器，加载地皮模板...");
+        if (plo::core::TemplateManager::loadTemplate((configDir / cfg.generator.templateFile).string())) {
+            logger.info("模板 \"{}\" 已加载", cfg.generator.templateFile);
+        } else {
+            logger.error("加载模板 \"{}\" 失败，请检查配置文件", cfg.generator.templateFile);
+            return false;
+        }
+    };
+
 
 #ifdef DEBUG
     plo::mc::executeCommand("gamerule showcoordinates true");
@@ -100,7 +110,7 @@ bool MyPlugin::enable() {
 
     plo::event::registerEventListener();                          // 注册事件监听器
     plo::command::registerCommand();                              // 注册命令
-    plo::data::PlotBDStorage::getInstance().tryStartSaveThread(); // 尝试启动自动保存线程
+    plo::data::PlotDBStorage::getInstance().tryStartSaveThread(); // 尝试启动自动保存线程
 
     return true;
 }
@@ -110,7 +120,7 @@ bool MyPlugin::disable() {
     logger.info("Disabling...");
 
     logger.warn("正在保存数据，请不要强制关闭进程...");
-    plo::data::PlotBDStorage::getInstance().save();
+    plo::data::PlotDBStorage::getInstance().save();
 
     plo::event::unRegisterEventListener();
 

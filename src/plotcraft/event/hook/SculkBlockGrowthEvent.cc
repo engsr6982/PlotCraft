@@ -9,11 +9,11 @@
 #include "mc/world/level/block/utils/SculkBlockBehavior.h"
 
 
-namespace plo::event::hook {
+namespace more_events {
 
 
-BlockSource*    SculkBlockGrowthEvent::getSource() const { return mSource; }
-BlockPos const& SculkBlockGrowthEvent::getPos() const { return mPos; }
+optional_ref<BlockSource> SculkBlockGrowthEvent::getBlockSource() const { return mBlockSource; }
+BlockPos const&           SculkBlockGrowthEvent::getPos() const { return mPos; }
 
 
 LL_STATIC_HOOK(
@@ -22,30 +22,29 @@ LL_STATIC_HOOK(
     "?_placeGrowthAt@SculkBlockBehavior@@CAXAEAVIBlockWorldGenAPI@@PEAVBlockSource@@AEBVBlockPos@@AEAVRandom@@"
     "AEAVSculkSpreader@@@Z",
     void,
-    IBlockWorldGenAPI& a1, // target
-    BlockSource*       a2, // region
-    BlockPos const&    a3, // pos
-    Random&            a4, // random
+    IBlockWorldGenAPI& target,
+    BlockSource*       region,
+    BlockPos const&    pos,
+    Random&            random,
     SculkSpreader&     a5
 ) {
-    auto ev = SculkBlockGrowthEvent(a2, a3);
+    auto ev = SculkBlockGrowthEvent(region, pos);
     ll::event::EventBus::getInstance().publish(ev);
     if (ev.isCancelled()) {
         return;
     }
 
-    origin(a1, a2, a3, a4, a5);
+    origin(target, region, pos, random, a5);
 }
 
 
-static std::unique_ptr<ll::event::EmitterBase> emitterFactory(ll::event::ListenerBase&);
-class SculkBlockGrowthEventEmitter : public ll::event::Emitter<emitterFactory, SculkBlockGrowthEvent> {
+static std::unique_ptr<ll::event::EmitterBase> emitterFactory1(ll::event::ListenerBase&);
+class SculkBlockGrowthEventEmitter : public ll::event::Emitter<emitterFactory1, SculkBlockGrowthEvent> {
     ll::memory::HookRegistrar<SculkBlockGrowthHook> hook;
 };
-
-static std::unique_ptr<ll::event::EmitterBase> emitterFactory(ll::event::ListenerBase&) {
+static std::unique_ptr<ll::event::EmitterBase> emitterFactory1(ll::event::ListenerBase&) {
     return std::make_unique<SculkBlockGrowthEventEmitter>();
 }
 
 
-} // namespace plo::event::hook
+} // namespace more_events

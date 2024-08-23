@@ -6,7 +6,7 @@ namespace plo::gui {
 void PlayerSettingGUI(Player& player) {
     CustomForm fm{PLUGIN_TITLE};
 
-    auto setting     = data::PlotBDStorage::getInstance().getPlayerSetting(player.getUuid().asString());
+    auto setting     = data::PlotDBStorage::getInstance().getPlayerSetting(player.getUuid().asString());
     auto i18n        = ll::i18n::getInstance().get();
     auto settingJson = JsonHelper::structToJson(setting);
 
@@ -33,7 +33,7 @@ void PlayerSettingGUI(Player& player) {
 
         JsonHelper::jsonToStruct(setj, it);
 
-        data::PlotBDStorage::getInstance().setPlayerSetting(pl.getUuid().asString(), it);
+        data::PlotDBStorage::getInstance().setPlayerSetting(pl.getUuid().asString(), it);
         sendText(pl, "设置成功");
     });
 }

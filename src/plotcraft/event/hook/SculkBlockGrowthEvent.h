@@ -1,26 +1,28 @@
+#pragma once
 #include "ll/api/event/Cancellable.h"
 #include "ll/api/event/Event.h"
+#include "mc/common/wrapper/optional_ref.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 
 
-namespace plo::event::hook {
+namespace more_events {
 
 
 class SculkBlockGrowthEvent final : public ll::event::Cancellable<ll::event::Event> {
 protected:
-    BlockSource*    mSource;
-    BlockPos const& mPos;
+    optional_ref<BlockSource> mBlockSource;
+    BlockPos const&           mPos;
 
 public:
-    constexpr explicit SculkBlockGrowthEvent(BlockSource* source, BlockPos const& pos)
+    constexpr explicit SculkBlockGrowthEvent(optional_ref<BlockSource> source, BlockPos const& pos)
     : Cancellable(),
-      mSource(source),
+      mBlockSource(source),
       mPos(pos) {}
 
-    BlockPos const& getPos() const;
-    BlockSource*    getSource() const;
+    BlockPos const&           getPos() const;
+    optional_ref<BlockSource> getBlockSource() const;
 };
 
 
-} // namespace plo::event::hook
+} // namespace more_events

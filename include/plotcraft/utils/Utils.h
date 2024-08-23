@@ -30,25 +30,6 @@ PLAPI inline bool some(std::vector<T> const& vec, T const& it) {
     return std::find(vec.begin(), vec.end(), it) != vec.end();
 }
 
-
-PLAPI inline string toJson(const std::unordered_map<string, double>& map) {
-    string json = "{";
-    for (const auto& pair : map) {
-        json += "\"" + pair.first + "\":" + std::to_string(pair.second) + ",";
-    }
-    json[json.size() - 1] = '}';
-    return json;
-}
-
-PLAPI inline string toJson(const std::unordered_map<string, int>& map) {
-    string json = "{";
-    for (const auto& pair : map) {
-        json += "\"" + pair.first + "\":" + std::to_string(pair.second) + ",";
-    }
-    json[json.size() - 1] = '}';
-    return json;
-}
-
 PLAPI inline void DebugFormPrint(const ll::form::CustomFormResult& dt) {
 #ifdef DEBUG
     std::cout << "\033[0m\033[1;35m"

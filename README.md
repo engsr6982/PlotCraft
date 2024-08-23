@@ -1,20 +1,24 @@
 # PlotCraft
 
-基于 LeviLamina 开发，适用于 BDS(Bedrock Server)的地皮插件！
+基于 LeviLamina & MoreDimension 开发，适用于 BDS(Bedrock Server)的地皮插件(系统)！
 
-- 地皮维度/主世界维度 自由选择
-- 可自定义地皮大小
-- 可自定义方块类型
-- 玩家地皮出售系统
-- 玩家地皮评论系统
-- 玩家自定义设置
-- ...
+- [x] 独立维度 / 主世界维度 自由选择
+- [x] 可自定义地皮大小
+- [x] 可自定义地皮方块
+- [x] 玩家地皮出售系统
+- [x] 玩家地皮评论系统
+- [x] 玩家自定义设置
+- [x] 地皮传送
+- [x] 地皮平原群系
+- [x] 地皮模板系统
+  - [x] 模板生成器
+    - 按模板生成地皮
+  - [x] 模板记录器
+    - 制作地皮模板
 
-## 安装/使用/开发
+## 安装
 
-### 命令安装
-
-推荐使用 Lip 一键安装（自动处理依赖）
+### Lip
 
 ```bash
 lip install github.com/engsr6982/PlotCraft
@@ -27,14 +31,12 @@ lip install github.com/engsr6982/PlotCraft
 
 - MoreDimension
 - LegacyMoney
-- LegacyRemoteCall
 
 > Tip  
-> 编译目标为 Overwload 时 MoreDimension 无需安装  
-> 未编译 RemoteCall 相关代码时，LegacyRemoteCall 为可选  
+> 编译目标 Overwload 为 true 时 MoreDimension 无需安装  
 > 插件默认版本是依赖上述组件，特殊版本需自行从源编译
 
-### 使用
+## 命令
 
 插件安装完毕后，启动服务器（BDS），进入服务器  
 传送至对应维度，插件将会生成地皮地形
@@ -52,72 +54,84 @@ PlotCraft 注册了以下命令：
 /plo                打开地皮系统主菜单
 /plo db save        立即保存数据到数据库
 /plo buy            购买脚下地皮（出售状态）
+
+地皮模板记录命令(此功能请查看下文 "地皮模板系统")
+/plo template record execute <fileName: string>
+/plo template record pos1
+/plo template record pos2
+/plo template record reset
+/plo template record start <starty: int> <endy: int> <roadwidth: int> <fillBedrock: Boolean> <defaultBlock: Block>
 ```
 
-> [warning]  
-> 插件压缩包内 lse 文件夹中，附带了一个 Js 文件 `PlotCraft-Fixer.js`  
-> 此文件用于修复插件本体未处理的事件，如果需要使用请将其放入`plugins/`目录下, 由 LSE（LegacyScriptEngine） 引擎加载。
+## 地皮模板系统
 
-### 开发 & 扩展 & 贡献
+PlotCraft 提供了地皮模板功能，您可以通过模板生成地皮，也可以将地皮制作成模板。
 
-PlotCraft 提供 SDK 和 RemoteCall API。
+模板系统包括：
 
-#### SDK 开发
+- 模板生成器
+  - 模板生成器可以将模板文件生成地皮，您需要先制作好模板文件，然后使用模板生成器生成地皮
+- 模板记录器
+  - 模板记录器可以将地皮制作成模板，您需要先选择好地皮，然后使用模板记录器制作模板
 
-使用 SDK 的优势在于，您能访问 PlotCraft 几乎全部的 API，使用 C++开发
+详细使用方法请参考 [模板使用文档](./docs/TemplateSystem.md)
 
-SDK 可在 Release 页面下载
+## 开发 & 扩展
 
-#### RemoteCall 开发
+PlotCraft 提供 SDK 包，您可以通过 SDK 包扩展 PlotCraft 的功能
 
-RemoteCall 为 LSE 引擎提供的远程调用 API，提供基础的交互能力。  
-但受限于 RemoteCall，仅能访问 PlotCraft 部分已导出的 API
-
-API 声明、封装文件，可在每个 Release 版本压缩包里找到  
-开发可参考 PlotCraft-Fixer.js
-
-#### 贡献
-
-我们欢迎您 Pr 本插件，为本插件增加更多功能！(＾ ω ＾)ﾉ 🎉
+SDK 包可在 Release 页面下载
 
 ## 配置文件
 
 ```json
 {
-  "version": 3, // 配置文件版本(请勿修改)
+  "version": 7,
   "generator": {
-    // 地皮生成器配置
-    // 生成器不支持动态修改，请一次确定好生成器配置再进入地皮世界
-    // 如果动态修改，则100%导致已生成的区块和未生成区块之间前街错误（地形错误）
+    // 注意:
+    // 请确定好生成器配置再进入地皮世界
+    // 地皮世界生成地形后，请不要再修改生成器配置，否则会出现已生成的区块和未生成区块之间前街错误（地形错误）
+    // 如果修改生成器导致的区块衔接错误，请使用地图编辑器删除错位的区块（Amulet）
+
+    "type": "Default", // 生成器类型 Default 或 Template
+
+    // Default 生成器配置:
     "plotWidth": 64, // 地皮大小（正方形）
     "roadWidth": 5, // 道路宽度
     "subChunkNum": 4, // 子区块数量(生成的子区块数量，4 * 16 = 64 即世界高度为 0 )
     "roadBlock": "minecraft:cherry_planks", // 道路方块
     "fillBlock": "minecraft:grass_block", // 填充方块
-    "borderBlock": "minecraft:stone_block_slab" // 边界方块
+    "borderBlock": "minecraft:stone_block_slab", // 边界方块
+
+    // Template 生成器配置:
+    "templateFile": "TestTemplate.json" // 模板文件名，模板文件必须放置在 config 目录下
   },
-  "moneys": {
-    "Enable": false,
-    "MoneyType": "LLMoney", // LLMonet / ScoreBoard
-    "MoneyName": "money",
-    "ScoreName": ""
-  },
-  "switchDim": {
-    "overWorld": [-89.56292724609375, 72.62001037597656, -164.71534729003906], // 切换维度时传送的坐标 xyz(可在游戏中设置)
-    "plotWorld": [0.7177982926368713, 2.1200098991394043, 0.3800940215587616]
+  "economy": {
+    "enable": false, // 是否启用经济系统
+    "type": "LegacyMoney", // 经济系统类型 LegacyMoney / ScoreBoard
+    "scoreName": "", // 计分板名称
+    "economicName": "金币" // 经济名称
   },
   "plotWorld": {
-    "maxBuyPlotCount": 10, // 最大可购买地皮数量
-    "buyPlotPrice": 10000, // 购买地皮价格
-    "inPlotCanFly": true, // 地皮内可飞行
-    "spawnMob": false, // 是否生成生物
+    "maxBuyPlotCount": 25, // 玩家最大持有地皮数量
+    "buyPlotPrice": 1000, // 购买地皮价格
+    "inPlotCanFly": true, // 是否启用地皮飞行
     "playerSellPlotTax": 0.1, // 玩家出售地皮税率
+    "spawnMob": false, // 地皮世界是否生成实体
+
     "eventListener": {
-      "onSculkSpreadListener": true, // 是否启用SculkSpread事件监听器
-      "onSculkBlockGrowthListener": true, // 是否启用 SculkBlockGrowth事件监听器
-      "onUseItemOnWhiteList": ["minecraft:clock"] // 玩家右键使用物品白名单
+      "onSculkSpreadListener": true, // 禁止幽匿块蔓延（地皮维度）
+      "onSculkBlockGrowthListener": true // 禁止幽匿尖啸体生成（地皮维度）
     }
   },
-  "allowedPlotTeleportDim": [0, 1, 2, 3] // 允许传送的地皮的维度
+  "switchDim": {
+    // 地皮维度和主世界切换传送坐标，此项可在游戏中设置
+    "overWorld": [0.0, 100.0, 0.0],
+    "plotWorld": [0.5, 0.0, 0.5]
+  },
+  "allowedPlotTeleportDim": [
+    // 允许从以下维度传送到地皮
+    0, 1, 2, 3
+  ]
 }
 ```

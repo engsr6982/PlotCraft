@@ -1,3 +1,4 @@
+#pragma once
 #include "ll/api/event/Cancellable.h"
 #include "ll/api/event/Event.h"
 #include "mc/common/wrapper/optional_ref.h"
@@ -5,7 +6,7 @@
 #include "mc/world/level/BlockSource.h"
 
 
-namespace plo::event::hook {
+namespace more_events {
 
 
 class SculkSpreadEvent final : public ll::event::Cancellable<ll::event::Event> {
@@ -24,4 +25,4 @@ public:
 };
 
 
-} // namespace plo::event::hook
+} // namespace more_events

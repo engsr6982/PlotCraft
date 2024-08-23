@@ -21,15 +21,18 @@ void loadConfig() {
 
     bool const ok = ll::config::loadConfig(cfg, path);
 
-    if (!ok) {
-        logger.warn("loadConfig 返回了预期之外的结果，尝试备份并覆写配置文件...");
+    if (cfg.generator.subChunkNum <= 0 && cfg.generator.type == PlotGeneratorType::Default) {
+        cfg.generator.subChunkNum = 1;
+        logger.error("subChunkNum 不能小于等于0，已自动设置为1");
         updateConfig();
     }
 
+    if (cfg.generator.templateFile == "" && cfg.generator.type == PlotGeneratorType::Template) {
+        throw std::runtime_error("初始化失败，templateFile 不能为空!");
+    }
 
-    if (cfg.generator.subChunkNum <= 0) {
-        cfg.generator.subChunkNum = 1;
-        logger.warn("subChunkNum 不能小于等于0，已自动设置为1");
+    if (!ok) {
+        logger.warn("loadConfig 返回了预期之外的结果，尝试备份并覆写配置文件...");
         updateConfig();
     }
 }
@@ -48,6 +51,14 @@ void updateConfig() {
         my_plugin::MyPlugin::getInstance().getSelf().getLogger().error("更新配置文件失败: {}", e.what());
     }
 }
+
+// double calculateMergePlotPrice(int mergeCount) {
+//     if (mergeCount <= 0) {
+//         return cfg.plotWorld.baseMergePlotPrice;
+//     }
+//     double multiplier = std::max(1.0, cfg.plotWorld.mergePriceMultiplier);
+//     return cfg.plotWorld.baseMergePlotPrice * std::pow(multiplier, mergeCount);
+// }
 
 
 } // namespace plo::config

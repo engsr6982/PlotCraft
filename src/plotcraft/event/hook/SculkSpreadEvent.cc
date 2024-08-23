@@ -7,7 +7,7 @@
 #include "mc/world/level/block/utils/SculkVeinBlockBehavior.h"
 
 
-namespace plo::event::hook {
+namespace more_events {
 
 
 BlockPos const&           SculkSpreadEvent::getPos() const { return mPos; }
@@ -15,7 +15,7 @@ optional_ref<BlockSource> SculkSpreadEvent::getBlockSource() const { return mBlo
 
 
 LL_STATIC_HOOK(
-    SculkVeinSpreadEventHook,
+    SculkSpreadEventHook,
     ll::memory::HookPriority::Normal,
     "?_attemptPlaceSculk@SculkVeinBlockBehavior@@CA_NAEAVIBlockWorldGenAPI@@PEAVBlockSource@@AEBVBlockPos@@"
     "AEAVSculkSpreader@@AEAVRandom@@@Z",
@@ -36,14 +36,14 @@ LL_STATIC_HOOK(
 }
 
 
-static std::unique_ptr<ll::event::EmitterBase> emitterFactory(ll::event::ListenerBase&);
-class SculkSpreadEventEmitter : public ll::event::Emitter<emitterFactory, SculkSpreadEvent> {
-    ll::memory::HookRegistrar<SculkVeinSpreadEventHook> hook;
+static std::unique_ptr<ll::event::EmitterBase> emitterFactory1(ll::event::ListenerBase&);
+class SculkSpreadEventEmitter : public ll::event::Emitter<emitterFactory1, SculkSpreadEvent> {
+    ll::memory::HookRegistrar<SculkSpreadEventHook> hook;
 };
 
-static std::unique_ptr<ll::event::EmitterBase> emitterFactory(ll::event::ListenerBase&) {
+static std::unique_ptr<ll::event::EmitterBase> emitterFactory1(ll::event::ListenerBase&) {
     return std::make_unique<SculkSpreadEventEmitter>();
 }
 
 
-} // namespace plo::event::hook
+} // namespace more_events

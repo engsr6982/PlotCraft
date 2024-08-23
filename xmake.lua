@@ -7,7 +7,6 @@ add_repositories("liteldev-repo https://github.com/LiteLDev/xmake-repo.git")
 -- please note that you should add bdslibrary yourself if using dev version
 add_requires(
     "levilamina 0.13.5",
-    "sqlitecpp 3.2.1",
     "legacymoney 0.8.3"
 )
 
@@ -19,20 +18,8 @@ if get_config("overworld") == false then
     add_requires("more-dimensions 0.4.1")
 end 
 
-if get_config("remote") == true then
-    add_requires("legacyremotecall 0.8.3")
-end 
-
-option("gen") -- Generator
-    set_default(1)
-    set_values(1, 2)
-
 option("overworld") -- Overworld
     set_default(false)
-
-option("remote") -- RemoteCall
-    set_default(true)
-
 
 target("PlotCraft")
     add_cxflags(
@@ -54,7 +41,6 @@ target("PlotCraft")
     )
     add_packages(
         "levilamina",
-        "sqlitecpp",
         "legacymoney"
     )
     add_files("src/**.cpp", "src/**.cc")
@@ -68,11 +54,6 @@ target("PlotCraft")
     set_languages("c++20")
     set_symbols("debug")
 
-    -- GEN_1
-    -- GEN_2
-    -- OVERWORLD
-    -- REMOTE_API
-
     if is_mode("debug") then
         add_defines("DEBUG")
     end
@@ -83,18 +64,7 @@ target("PlotCraft")
         add_defines("OVERWORLD")
     end 
 
-    if get_config("remote") == true  then
-        add_packages("legacyremotecall")
-        add_defines("REMOTE_API")
-    end
-
-    if get_config("gen") == 1 then
-        add_defines("GEN_1")
-    else 
-        add_defines("GEN_2")
-    end
-
-    add_defines("BuildVersionInfo=\"PlotGenerator: " .. tostring(get_config("gen")) .. " | Overworld: " .. tostring(get_config("overworld")) .. " | RemoteCall: " .. tostring(get_config("remote")) .. "\"")
+    add_defines("BuildVersionInfo=\"Overworld: " .. tostring(get_config("overworld")) .. "\"")
 
     add_defines("PLUGIN_NAME=\"PlotCraft\"")
     add_defines("PLUGIN_TITLE=\"§6[§aPlotCraft§6]§r \"")
@@ -102,7 +72,7 @@ target("PlotCraft")
     after_build(function (target)
         local plugin_packer = import("scripts.after_build")
 
-        cprint("${bright green}[Build Infomation]: ${reset}PlotGenerator: " .. tostring(get_config("gen")) .. " | Overworld: " .. tostring(get_config("overworld")) .. " | RemoteCall: " .. tostring(get_config("remote")))
+        cprint("${bright green}[Build Infomation]: ${reset}Overworld: " .. tostring(get_config("overworld")))
 
         local tag = os.iorun("git describe --tags --abbrev=0 --always")
         local major, minor, patch, suffix = tag:match("v(%d+)%.(%d+)%.(%d+)(.*)")

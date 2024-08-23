@@ -16,7 +16,7 @@ void PlotShareGUI(Player& player, PlotMetadataPtr pt) {
     fm.appendButton("清除所有共享者", "textures/ui/recap_glyph_color_2x", "path", [pt](Player& pl) {
         bool const ok = pt->resetSharedPlayers();
         if (ok) sendText(pl, "共享信息已清除");
-        else sendText<utils::Level::Error>(pl, "共享信息清除失败");
+        else sendText<LogLevel::Error>(pl, "共享信息清除失败");
     });
 
     fm.appendButton("添加共享者", "textures/ui/color_plus", "path", [pt](Player& pl) { _addSharePlayer(pl, pt); });
@@ -46,7 +46,7 @@ void PlotShareGUI(Player& player, PlotMetadataPtr pt) {
                         bool const ok = pt->delSharedPlayer(si.mSharedPlayer);
                         if (ok) PlotShareGUI(pl, pt);
                         else
-                            sendText<utils::Level::Error>(
+                            sendText<LogLevel::Error>(
                                 pl,
                                 "删除玩家 {} 的共享权限失败",
                                 ndb->getPlayerName(si.mSharedPlayer)
@@ -109,7 +109,7 @@ void _addSharePlayer(Player& player, PlotMetadataPtr pt) {
         }
 
         if (ok) sendText(pl, "共享权限添加成功");
-        else sendText<utils::Level::Error>(pl, "共享权限添加失败");
+        else sendText<LogLevel::Error>(pl, "共享权限添加失败");
     });
 }
 
