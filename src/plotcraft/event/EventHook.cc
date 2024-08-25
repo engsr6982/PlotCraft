@@ -184,7 +184,7 @@ LL_TYPE_INSTANCE_HOOK(
 
 // 玩家操作物品展示框
 const auto UseFrameBlockCallback = [](Player& player, BlockPos const& pos) -> bool {
-    if (player.getDimensionId() != getPlotDimensionId()) return false;
+    if (player.getDimensionId() != getPlotDimensionId()) return true;
 
     debugger("[物品展示框] pos: " << pos.toString());
 
@@ -234,7 +234,7 @@ LL_TYPE_INSTANCE_HOOK(
 
 // 弹射物生成
 const auto SpawnProjectileCallback = [](Actor* actor, string const& type) -> bool {
-    if (actor->getDimensionId() != getPlotDimensionId()) return false;
+    if (actor->getDimensionId() != getPlotDimensionId()) return true;
 
     debugger("[弹射物生成] type: " << type);
 
