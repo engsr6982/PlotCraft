@@ -58,7 +58,7 @@ void _sellPlotAndEditPrice(Player& player, PlotMetadataPtr pt, bool edit) {
 
          // 检查是否超过 int 范围
         if (!std::regex_match(pr, std::regex("^(?:[1-9]\\d{0,8}|0)$"))) {
-            sendText<LogLevel::Error>(player, "价格超出 int 范围");
+            sendText<LogLevel::Error>(pl, "价格超出 int 范围");
             return;
         }
 
