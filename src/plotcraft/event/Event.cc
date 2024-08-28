@@ -269,13 +269,16 @@ bool registerEventListener() {
             if (!pps.isValid()) return true;
             if (pdb->isAdmin(player.getUuid().asString())) return true;
 
-            auto const& et  = e.target().getTypeName();
-            auto const& tab = pdb->getPlot(pps.getPlotID())->getPermissionTableConst();
-            if (et == "minecraft:ender_crystal" && tab.allowAttackEnderCrystal) return true;      // 末影水晶
-            if (et == "minecraft:armor_stand" && tab.allowDestroyArmorStand) return true;         // 盔甲架
-            if (tab.allowAttackPlayer && e.target().isPlayer()) return true;                      // 玩家
-            if (tab.allowAttackAnimal && RuntimeMap::has(MapType::AnimalEntity, et)) return true; // 动物
-            if (tab.allowAttackMob && RuntimeMap::has(MapType::MobEntity, et)) return true;       // 怪物
+            auto const& et   = e.target().getTypeName();
+            auto        meta = pdb->getPlot(pps.getPlotID());
+            if (meta) {
+                auto const& tab = meta->getPermissionTableConst();
+                if (et == "minecraft:ender_crystal" && tab.allowAttackEnderCrystal) return true;      // 末影水晶
+                if (et == "minecraft:armor_stand" && tab.allowDestroyArmorStand) return true;         // 盔甲架
+                if (tab.allowAttackPlayer && e.target().isPlayer()) return true;                      // 玩家
+                if (tab.allowAttackAnimal && RuntimeMap::has(MapType::AnimalEntity, et)) return true; // 动物
+                if (tab.allowAttackMob && RuntimeMap::has(MapType::MobEntity, et)) return true;       // 怪物
+            }
 
             if (CheckPerm(pdb, pps.getPlotID(), player.getUuid().asString(), true)) return true;
 
@@ -296,8 +299,11 @@ bool registerEventListener() {
             if (!pps.isValid()) return true;
             if (pdb->isAdmin(player.getUuid().asString())) return true;
 
-            auto const& tab = pdb->getPlot(pps.getPlotID())->getPermissionTableConst();
-            if (tab.allowPickupItem) return true;
+            auto ptr = pdb->getPlot(pps.getPlotID());
+            if (ptr) {
+                auto const& tab = ptr->getPermissionTableConst();
+                if (tab.allowPickupItem) return true;
+            }
 
             if (CheckPerm(pdb, pps.getPlotID(), player.getUuid().asString(), true)) return true;
 
@@ -320,24 +326,26 @@ bool registerEventListener() {
             if (!RuntimeMap::has(MapType::InteractBlock, bn)) return true;
             if (CheckPerm(pdb, pps.getPlotID(), player.getUuid().asString())) return true;
 
-            auto const& tab = pdb->getPlot(pps.getPlotID())->getPermissionTableConst();
-
-            if (bn == "minecraft:cartography_table" && tab.useCartographyTable) return true; // 制图台
-            if (bn == "minecraft:smithing_table" && tab.useSmithingTable) return true;       // 锻造台
-            if (bn == "minecraft:brewing_stand" && tab.useBrewingStand) return true;         // 酿造台
-            if (bn == "minecraft:anvil" && tab.useAnvil) return true;                        // 铁砧
-            if (bn == "minecraft:grindstone" && tab.useGrindstone) return true;              // 磨石
-            if (bn == "minecraft:enchanting_table" && tab.useEnchantingTable) return true;   // 附魔台
-            if (bn == "minecraft:barrel" && tab.useBarrel) return true;                      // 桶
-            if (bn == "minecraft:beacon" && tab.useBeacon) return true;                      // 信标
-            if (bn == "minecraft:hopper" && tab.useHopper) return true;                      // 漏斗
-            if (bn == "minecraft:dropper" && tab.useDropper) return true;                    // 投掷器
-            if (bn == "minecraft:dispenser" && tab.useDispenser) return true;                // 发射器
-            if (bn == "minecraft:loom" && tab.useLoom) return true;                          // 织布机
-            if (bn == "minecraft:stonecutter_block" && tab.useStonecutter) return true;      // 切石机
-            if (StringFind(bn, "blast_furnace") && tab.useBlastFurnace) return true;         // 高炉
-            if (StringFind(bn, "furnace") && tab.useFurnace) return true;                    // 熔炉
-            if (StringFind(bn, "smoker") && tab.useSmoker) return true;                      // 烟熏炉
+            auto ptr = pdb->getPlot(pps.getPlotID());
+            if (ptr) {
+                auto const& tab = ptr->getPermissionTableConst();
+                if (bn == "minecraft:cartography_table" && tab.useCartographyTable) return true; // 制图台
+                if (bn == "minecraft:smithing_table" && tab.useSmithingTable) return true;       // 锻造台
+                if (bn == "minecraft:brewing_stand" && tab.useBrewingStand) return true;         // 酿造台
+                if (bn == "minecraft:anvil" && tab.useAnvil) return true;                        // 铁砧
+                if (bn == "minecraft:grindstone" && tab.useGrindstone) return true;              // 磨石
+                if (bn == "minecraft:enchanting_table" && tab.useEnchantingTable) return true;   // 附魔台
+                if (bn == "minecraft:barrel" && tab.useBarrel) return true;                      // 桶
+                if (bn == "minecraft:beacon" && tab.useBeacon) return true;                      // 信标
+                if (bn == "minecraft:hopper" && tab.useHopper) return true;                      // 漏斗
+                if (bn == "minecraft:dropper" && tab.useDropper) return true;                    // 投掷器
+                if (bn == "minecraft:dispenser" && tab.useDispenser) return true;                // 发射器
+                if (bn == "minecraft:loom" && tab.useLoom) return true;                          // 织布机
+                if (bn == "minecraft:stonecutter_block" && tab.useStonecutter) return true;      // 切石机
+                if (StringFind(bn, "blast_furnace") && tab.useBlastFurnace) return true;         // 高炉
+                if (StringFind(bn, "furnace") && tab.useFurnace) return true;                    // 熔炉
+                if (StringFind(bn, "smoker") && tab.useSmoker) return true;                      // 烟熏炉
+            }
 
             e.cancel();
             return true;
