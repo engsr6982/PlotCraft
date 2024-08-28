@@ -214,6 +214,9 @@ bool registerEventListener() {
                 if (it == "minecraft:ender_eye" && tab.allowPlace) return true;       // 放置末影之眼
                 if (it == "minecraft:flint_and_steel" && tab.useFiregen) return true; // 使用打火石
                 if (it == "minecraft:bone_meal" && tab.useBoneMeal) return true;      // 使用骨粉
+                if (it == "minecraft:minecart"&& tab.allowPlace) return true; // 放置矿车
+                if (it == "minecraft:armor_stand"&& tab.allowPlace) return true; // 放置矿车
+
 
                 if (StringFind(bt, "button") && tab.useButton) return true;       // 各种按钮
                 if (bt == "minecraft:dragon_egg" && tab.allowAttackDragonEgg) return true; // 右键龙蛋

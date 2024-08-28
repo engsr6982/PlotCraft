@@ -33,6 +33,8 @@ std::unordered_map<MapType, std::vector<std::string>> RuntimeMap::mData = {
          "minecraft:skull",                      // 头颅
          "minecraft:banner",                     // 旗帜
          "minecraft:bone_meal",                  // 骨粉
+         "minecraft:minecart",                   // 矿车
+         "minecraft:armor_stand",                // 盔甲架
 
          "minecraft:axolotl_bucket",       // 美西螈桶
          "minecraft:powder_snow_bucket",   // 细雪桶
