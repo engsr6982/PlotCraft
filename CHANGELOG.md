@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2024-8-28
+
+### Fixed
+
+- 修复地皮出售用户输入价格过大导致崩溃
+- 修复部分获取地皮指针未判空
+- 修复玩家无权限下可放置矿车、盔甲架
+
 ## [1.0.1] - 2024-8-25
 
 ### Fixed
