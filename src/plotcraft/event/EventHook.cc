@@ -234,6 +234,7 @@ LL_TYPE_INSTANCE_HOOK(
 
 // 弹射物生成
 const auto SpawnProjectileCallback = [](Actor* actor, string const& type) -> bool {
+    if (!actor) return true;
     if (actor->getDimensionId() != getPlotDimensionId()) return true;
 
     debugger("[弹射物生成] type: " << type);
@@ -277,6 +278,10 @@ LL_TYPE_INSTANCE_HOOK(
     Vec3 const&                      direction
 ) {
     try {
+        if (!spawner) {
+            if (region.getDimensionId() != getPlotDimensionId()) // fix spawner nullptr
+                return origin(region, id, spawner, position, direction);
+        }
         if (SpawnProjectileCallback(spawner, id.getCanonicalName()))
             return origin(region, id, spawner, position, direction);
         return nullptr;
