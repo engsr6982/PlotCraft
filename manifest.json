@@ -9,9 +9,6 @@
         },
         {
             "name": "LegacyMoney"
-        },
-        {
-            "name": "LegacyRemoteCall"
         }
     ]
 }
