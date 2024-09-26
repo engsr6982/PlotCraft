@@ -82,6 +82,18 @@ PlotCraft 提供 SDK 包，您可以通过 SDK 包扩展 PlotCraft 的功能
 
 SDK 包可在 Release 页面下载
 
+您也可以通过 xmake 来管理依赖
+
+```lua
+add_repositories("engsr6982-repo https://github.com/engsr6982/xmake-repo.git")
+
+add_requires("plotcraft")
+
+package("xxx")
+    -- ...
+    add_packages("plotcraft")
+```
+
 ## 配置文件
 
 ```json
