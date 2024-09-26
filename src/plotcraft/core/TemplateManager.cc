@@ -125,7 +125,7 @@ bool TemplateManager::generatorBlockVolume(BlockVolume& volume) {
 int  TemplateManager::getCurrentTemplateVersion() { return mTemplateData.version; }
 int  TemplateManager::getCurrentTemplateChunkNum() { return mTemplateData.template_chunk_num; }
 int  TemplateManager::getCurrentTemplateRoadWidth() { return mTemplateData.template_road_width; }
-bool TemplateManager::isUseTemplate() { return Config::cfg.generator.type == Config::PlotGeneratorType::Template; }
+bool TemplateManager::isUseTemplate() { return Config::cfg.generator.type == PlotGeneratorType::Template; }
 
 // Tools
 void TemplateManager::toPositive(int& num) {

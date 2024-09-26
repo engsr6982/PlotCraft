@@ -89,7 +89,7 @@ bool MyPlugin::enable() {
 
     auto& cfg       = plo::Config::cfg;
     auto& ConfigDir = self.getConfigDir();
-    if (cfg.generator.type == plo::Config::PlotGeneratorType::Template) {
+    if (cfg.generator.type == plo::PlotGeneratorType::Template) {
         logger.info("检测到使用模板生成器，加载地皮模板...");
         if (plo::core::TemplateManager::loadTemplate((ConfigDir / cfg.generator.templateFile).string())) {
             logger.info("模板 \"{}\" 已加载", cfg.generator.templateFile);

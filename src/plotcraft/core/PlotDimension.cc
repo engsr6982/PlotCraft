@@ -41,7 +41,7 @@ PlotDimension::createGenerator(br::worldgen::StructureSetRegistry const& /* stru
     auto&                           levelData = getLevel().getLevelData();
 
     // 实例化 地皮生成器
-    if (plo::Config::cfg.generator.type == plo::Config::PlotGeneratorType::Default) {
+    if (plo::Config::cfg.generator.type == plo::PlotGeneratorType::Default) {
         worldGenerator =
             std::make_unique<plo::core::DefaultGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
     } else {
