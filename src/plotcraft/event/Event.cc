@@ -26,7 +26,7 @@
 #include "mc/world/phys/HitResult.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/EconomyQueue.h"
-#include "plotcraft/core/Utils.h"
+#include "plotcraft/Global.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
@@ -137,7 +137,7 @@ bool registerEventListener() {
     mPlayerDestroyBlockEvent =
         bus->emplaceListener<ll::event::PlayerDestroyBlockEvent>([pdb](ll::event::PlayerDestroyBlockEvent& ev) {
             auto& player = ev.self();
-            if (player.getDimensionId() != getPlotDimensionId()) return true; // 被破坏的方块不在地皮世界
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true; // 被破坏的方块不在地皮世界
 
             auto const& blockPos = ev.pos();
             auto        pps      = PPos(blockPos);
@@ -161,7 +161,7 @@ bool registerEventListener() {
     mPlayerPlaceingBlockEvent =
         bus->emplaceListener<ll::event::PlayerPlacingBlockEvent>([pdb](ll::event::PlayerPlacingBlockEvent& ev) {
             auto& player = ev.self();
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& blockPos = mc::face2Pos(ev.pos(), ev.face()); // 计算实际放置位置
             auto        pps      = PPos(blockPos);
@@ -184,7 +184,7 @@ bool registerEventListener() {
     mPlayerUseItemOnEvent =
         bus->emplaceListener<ll::event::PlayerInteractBlockEvent>([pdb](ll::event::PlayerInteractBlockEvent& e) {
             auto& player = e.self();
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& vec3 = e.clickPos();
             auto        pps  = PPos(vec3);
@@ -263,7 +263,7 @@ bool registerEventListener() {
     mPlayerAttackEntityEvent =
         bus->emplaceListener<ll::event::PlayerAttackEvent>([pdb](ll::event::PlayerAttackEvent& e) {
             auto& player = e.self();
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& pos = e.target().getPosition();
             auto        pps = PPos(pos);
@@ -293,7 +293,7 @@ bool registerEventListener() {
     mPlayerPickUpItemEvent =
         bus->emplaceListener<ll::event::PlayerPickUpItemEvent>([pdb](ll::event::PlayerPickUpItemEvent& e) {
             auto& player = e.self();
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& pos = e.itemActor().getPosition();
             auto        pps = PPos(pos);
@@ -318,7 +318,7 @@ bool registerEventListener() {
     mPlayerInteractBlockEvent =
         bus->emplaceListener<ll::event::PlayerInteractBlockEvent>([pdb](ll::event::PlayerInteractBlockEvent& e) {
             auto& player = e.self();
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& pos = e.blockPos(); // 交互的方块位置
             auto        pps = PPos(pos);
@@ -356,7 +356,7 @@ bool registerEventListener() {
         });
 
     mPlayerUseItemEvent = bus->emplaceListener<ll::event::PlayerUseItemEvent>([](ll::event::PlayerUseItemEvent& ev) {
-        if (ev.self().getDimensionId() != getPlotDimensionId()) return true;
+        if (ev.self().getDimensionId() != getPlotWorldDimensionId()) return true;
         if (!StringFind(ev.item().getTypeName(), "bucket")) return true;
 
         auto& player = ev.self();
@@ -393,7 +393,7 @@ bool registerEventListener() {
             if (!pl.has_value()) return true;
             Player& player = pl.value();
 
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             debugger("[AttackBlock]: Pos: " << ev.getPos().toString());
 
@@ -414,7 +414,7 @@ bool registerEventListener() {
     mArmorStandSwapItemEvent =
         bus->emplaceListener<more_events::ArmorStandSwapItemEvent>([](more_events::ArmorStandSwapItemEvent& ev) {
             Player& player = ev.getPlayer();
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             debugger("[ArmorStandSwapItem]: executed");
 
@@ -434,7 +434,7 @@ bool registerEventListener() {
     mPlayerDropItemEvent =
         bus->emplaceListener<more_events::PlayerDropItemEvent>([](more_events::PlayerDropItemEvent& ev) {
             Player& player = ev.getPlayer();
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             debugger("[PlayerDropItem]: executed");
 
@@ -452,7 +452,7 @@ bool registerEventListener() {
 
     // 可开关事件（作用于地皮世界）
     mSpawningMobEvent = bus->emplaceListener<ll::event::SpawningMobEvent>([](ll::event::SpawningMobEvent& e) {
-        if (e.blockSource().getDimensionId() != getPlotDimensionId()) return true;
+        if (e.blockSource().getDimensionId() != getPlotWorldDimensionId()) return true;
 
         auto const& type = e.identifier().getFullName();
 
@@ -468,7 +468,7 @@ bool registerEventListener() {
         mSculkSpreadEvent = bus->emplaceListener<more_events::SculkSpreadEvent>([](more_events::SculkSpreadEvent& ev) {
             auto bs = ev.getBlockSource();
             if (bs.has_value())
-                if (bs->getDimensionId() == getPlotDimensionId()) ev.cancel(); // 地皮世界
+                if (bs->getDimensionId() == getPlotWorldDimensionId()) ev.cancel(); // 地皮世界
             return true;
         });
     }
@@ -478,7 +478,7 @@ bool registerEventListener() {
             bus->emplaceListener<more_events::SculkBlockGrowthEvent>([](more_events::SculkBlockGrowthEvent& ev) {
                 auto bs = ev.getBlockSource();
                 if (bs.has_value())
-                    if (bs->getDimensionId() == getPlotDimensionId()) ev.cancel(); // 地皮世界
+                    if (bs->getDimensionId() == getPlotWorldDimensionId()) ev.cancel(); // 地皮世界
                 return true;
             });
     }

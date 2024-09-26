@@ -42,7 +42,7 @@ void _plotShopShowPlot(Player& player, PlotMetadataPtr pt) {
 
     fm.appendButton("传送到此地皮", "textures/ui/send_icon", "path", [pt](Player& pl) {
         PPos pps{pt->getX(), pt->getZ()};
-        pl.teleport(pps.getSafestPos(), getPlotDimensionId());
+        pl.teleport(pps.getSafestPos(), getPlotWorldDimensionId());
     });
 
     fm.appendButton("返回", "textures/ui/icon_import", "path", [](Player& pl) { PlotShopGUI(pl); });

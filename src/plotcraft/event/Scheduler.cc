@@ -11,7 +11,7 @@
 #include "mc/world/gamemode/GameMode.h"
 #include "mc/world/level/Level.h"
 #include "plotcraft/Config.h"
-#include "plotcraft/core/Utils.h"
+#include "plotcraft/Global.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
@@ -22,7 +22,6 @@
 #include "plugin/MyPlugin.h"
 #include <memory>
 #include <string>
-
 
 
 #include "plotcraft/utils/Debugger.h"
@@ -106,7 +105,7 @@ void initPlotEventScheduler() {
             if (p.isSimulatedPlayer() || p.isLoading()) return true; // skip simulated player
 
             int const   playerDimid = p.getDimensionId();
-            int const   plotDimid   = getPlotDimensionId();
+            int const   plotDimid   = getPlotWorldDimensionId();
             auto const  name        = p.getRealName();
             auto const& pair        = helper.get(name);
             PPos const  pps{p.getPosition()};

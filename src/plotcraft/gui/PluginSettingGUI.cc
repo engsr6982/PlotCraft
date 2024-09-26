@@ -29,7 +29,7 @@ void PluginSettingGUI(Player& player) {
     });
 
     fm.appendButton("设置当前位置为地皮世界安全坐标", "textures/ui/Wrenches1", "path", [cfg](Player& pl) {
-        if (pl.getDimensionId() != getPlotDimensionId()) {
+        if (pl.getDimensionId() != getPlotWorldDimensionId()) {
             sendText<LogLevel::Error>(pl, "你必须在地皮世界才能执行此操作");
             return;
         }

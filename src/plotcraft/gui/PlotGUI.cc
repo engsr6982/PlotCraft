@@ -52,7 +52,7 @@ void PlotGUI(Player& player, PlotMetadataPtr pt, bool ret) {
     if (((isOwner || isSharedMember) && utils::some(cfg.allowedPlotTeleportDim, player.getDimensionId().id)) || isAdmin)
         fm.appendButton("传送到此地皮", "textures/ui/move", "path", [pt](Player& pl) {
             auto const v3 = PPos{pt->getX(), pt->getZ()}.getSafestPos();
-            pl.teleport(v3, getPlotDimensionId());
+            pl.teleport(v3, getPlotWorldDimensionId());
             sendText(pl, "传送成功");
         });
 

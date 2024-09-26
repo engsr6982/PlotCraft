@@ -11,7 +11,7 @@
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/EconomyQueue.h"
-#include "plotcraft/core/Utils.h"
+#include "plotcraft/Global.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
@@ -28,7 +28,6 @@
 #include <memory>
 #include <regex>
 #include <string>
-
 
 
 namespace plo::gui {

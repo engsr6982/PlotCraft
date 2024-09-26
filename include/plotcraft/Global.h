@@ -39,4 +39,7 @@ using UUIDs     = string;
 using CommentID = int;
 
 
+int getPlotWorldDimensionId();
+
+
 } // namespace plo

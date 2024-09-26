@@ -17,7 +17,7 @@
 #include "mc/world/level/levelgen/structure/VillageFeature.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 #include "plotcraft/Config.h"
-#include "plotcraft/core/Utils.h"
+#include "plotcraft/Global.h"
 
 
 namespace plo::core {

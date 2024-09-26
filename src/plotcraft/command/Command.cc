@@ -13,13 +13,12 @@
 #include "mc/world/level/chunk/LevelChunk.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "plotcraft/Config.h"
-#include "plotcraft/core/Utils.h"
+#include "plotcraft/Global.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
 #include "plotcraft/gui/Global.h"
 #include <unordered_map>
-
 
 
 namespace plo::command {
@@ -76,7 +75,7 @@ const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, Par
     if (param.dim == ParamGo::overworld) {
         player.teleport(Vec3{sw.overWorld[0], sw.overWorld[1], sw.overWorld[2]}, 0); // 传送到重生点
     } else {
-        player.teleport(Vec3{sw.plotWorld[0], sw.plotWorld[1], sw.plotWorld[2]}, core::getPlotDimensionId());
+        player.teleport(Vec3{sw.plotWorld[0], sw.plotWorld[1], sw.plotWorld[2]}, getPlotWorldDimensionId());
     }
 };
 #endif
@@ -85,7 +84,7 @@ const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, Par
 const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
-    if (player.getDimensionId() != core::getPlotDimensionId()) {
+    if (player.getDimensionId() != getPlotWorldDimensionId()) {
         sendText<LogLevel::Error>(player, "此命令只能在地皮世界使用!");
         return;
     }

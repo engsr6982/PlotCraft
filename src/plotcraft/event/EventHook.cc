@@ -61,7 +61,7 @@
 #include "Scheduler.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/EconomyQueue.h"
-#include "plotcraft/core/Utils.h"
+#include "plotcraft/Global.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
@@ -71,7 +71,6 @@
 #include "plotcraft/utils/Mc.h"
 #include "plotcraft/utils/Utils.h"
 #include "plugin/MyPlugin.h"
-
 
 
 using string         = std::string;
@@ -125,7 +124,7 @@ LL_TYPE_INSTANCE_HOOK(
     float                    damage
 ) {
     try {
-        if (this->getDimensionId() != getPlotDimensionId()) return origin(source, damage);
+        if (this->getDimensionId() != getPlotWorldDimensionId()) return origin(source, damage);
 
         debugger("[MobHurt] mob: " << this->getTypeName());
 
@@ -167,7 +166,7 @@ LL_TYPE_INSTANCE_HOOK(
     float           fallDistance
 ) {
     try {
-        if (region.getDimensionId() != getPlotDimensionId()) return origin(region, pos, actor, fallDistance);
+        if (region.getDimensionId() != getPlotWorldDimensionId()) return origin(region, pos, actor, fallDistance);
 
         debugger("[耕地退化] pos: " << pos.toString());
 
@@ -185,7 +184,7 @@ LL_TYPE_INSTANCE_HOOK(
 
 // 玩家操作物品展示框
 const auto UseFrameBlockCallback = [](Player& player, BlockPos const& pos) -> bool {
-    if (player.getDimensionId() != getPlotDimensionId()) return true;
+    if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
     debugger("[物品展示框] pos: " << pos.toString());
 
@@ -236,7 +235,7 @@ LL_TYPE_INSTANCE_HOOK(
 // 弹射物生成
 const auto SpawnProjectileCallback = [](Actor* actor, string const& type) -> bool {
     if (!actor) return true;
-    if (actor->getDimensionId() != getPlotDimensionId()) return true;
+    if (actor->getDimensionId() != getPlotWorldDimensionId()) return true;
 
     debugger("[弹射物生成] type: " << type);
 
@@ -280,7 +279,7 @@ LL_TYPE_INSTANCE_HOOK(
 ) {
     try {
         if (!spawner) {
-            if (region.getDimensionId() != getPlotDimensionId()) // fix spawner nullptr
+            if (region.getDimensionId() != getPlotWorldDimensionId()) // fix spawner nullptr
                 return origin(region, id, spawner, position, direction);
         }
         if (SpawnProjectileCallback(spawner, id.getCanonicalName()))
@@ -334,7 +333,7 @@ LL_TYPE_INSTANCE_HOOK(
     Actor&          entity
 ) {
     try {
-        if (region.getDimensionId() != getPlotDimensionId()) return origin(region, pos, entity);
+        if (region.getDimensionId() != getPlotWorldDimensionId()) return origin(region, pos, entity);
 
         debugger("[压力板] pos: " << pos.toString() << " entity: " << entity.getTypeName());
 
@@ -369,7 +368,7 @@ LL_TYPE_INSTANCE_HOOK(
     Actor& passenger
 ) {
     try {
-        if (passenger.getDimensionId() != getPlotDimensionId()) return origin(passenger);
+        if (passenger.getDimensionId() != getPlotWorldDimensionId()) return origin(passenger);
 
         debugger("[生物骑乘] executed!");
 
@@ -416,7 +415,7 @@ LL_TYPE_INSTANCE_HOOK(
     WitherBoss::WitherAttackType type
 ) {
     try {
-        if (region.getDimensionId() != getPlotDimensionId()) return origin(level, bb, region, range, type);
+        if (region.getDimensionId() != getPlotWorldDimensionId()) return origin(level, bb, region, range, type);
 
         debugger("[凋零破坏方块] executed!");
 
@@ -461,7 +460,7 @@ LL_TYPE_INSTANCE_HOOK(
     uchar           pistonMoveFacing
 ) {
     try {
-        if (region.getDimensionId() != getPlotDimensionId())
+        if (region.getDimensionId() != getPlotWorldDimensionId())
             return origin(region, curPos, curBranchFacing, pistonMoveFacing);
 
         debugger("[活塞推动方块] 目标: " << curPos.toString());
@@ -488,7 +487,7 @@ LL_TYPE_INSTANCE_HOOK(
 // 红石更新
 const auto RedStoneUpdateCallback =
     [](BlockSource& bs, BlockPos const& pos, int /* level */, bool /* isActive */) -> bool {
-    if (bs.getDimensionId() != getPlotDimensionId()) return true;
+    if (bs.getDimensionId() != getPlotWorldDimensionId()) return true;
 
     debugger("[RedstoneUpdate] pos: " << pos.toString());
 
@@ -552,7 +551,7 @@ const auto ExplodeCallback = [](Actor* /* source */,
                                 bool /* fire */,
                                 bool /* breaksBlocks */,
                                 float /* maxResistance */) -> bool {
-    if (bs.getDimensionId() != getPlotDimensionId()) return true;
+    if (bs.getDimensionId() != getPlotWorldDimensionId()) return true;
 
     debugger("[Explode] pos: " << pos.toString());
 
