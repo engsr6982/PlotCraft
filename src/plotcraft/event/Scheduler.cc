@@ -73,7 +73,7 @@ void buildTipMessage(Player& p, PPos const& pps, PlayerNameDB* ndb, PlotDBStorag
                 owner.empty() ? "无主" : ndb->getPlayerName(owner),
                 plot->getPlotName(),
                 owner.empty() ? "§a✔§r" : plot->isSale() ? "§a✔§r" : "§c✘§r",
-                owner.empty() ? config::cfg.plotWorld.buyPlotPrice : plot->isSale() ? plot->getSalePrice() : 0,
+                owner.empty() ? Config::cfg.plotWorld.buyPlotPrice : plot->isSale() ? plot->getSalePrice() : 0,
                 owner.empty() ? "\n输入：/plo buy 打开购买菜单" : ""
             );
             // clang-format on

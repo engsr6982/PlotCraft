@@ -25,7 +25,7 @@ LL_AUTO_TYPE_INSTANCE_HOOK(
     auto  seed      = getLevel().getSeed();
     auto& levelData = getLevel().getLevelData();
 
-    if (plo::config::cfg.generator.type == plo::config::PlotGeneratorType::Default) {
+    if (plo::Config::cfg.generator.type == plo::Config::PlotGeneratorType::Default) {
         worldGenerator =
             std::make_unique<plo::core::DefaultGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
     } else {

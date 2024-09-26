@@ -13,7 +13,7 @@ using TemplateManager = core::TemplateManager;
 // !Class: PPos
 PPos::PPos() : mX(0), mZ(0) {}
 PPos::PPos(int x, int z) : mX(x), mZ(z) {
-    auto& cfg = config::cfg.generator;
+    auto& cfg = Config::cfg.generator;
 
     Vec3 min, max;
 
@@ -43,7 +43,7 @@ PPos::PPos(int x, int z) : mX(x), mZ(z) {
 }
 
 PPos::PPos(const Vec3& vec3) {
-    auto& cfg = config::cfg.generator;
+    auto& cfg = Config::cfg.generator;
 
     // 计算总长度
     bool const isUseTemplate = TemplateManager::isUseTemplate();
@@ -101,7 +101,7 @@ PPos::PPos(const Vec3& vec3) {
 }
 int PPos::getSurfaceY() const {
     return TemplateManager::isUseTemplate() ? (TemplateManager::mTemplateData.template_offset + 1)
-                                            : -64 + (config::cfg.generator.subChunkNum * 16);
+                                            : -64 + (Config::cfg.generator.subChunkNum * 16);
 }
 bool   PPos::isValid() const { return !mVertexs.empty(); }
 string PPos::getPlotID() const { return fmt::format("({0},{1})", mX, mZ); }
@@ -340,7 +340,7 @@ std::vector<PPos> Cube::getRangedPlots() const {
     std::vector<PPos> rangedPlots;
 
     // 获取配置信息
-    auto& cfg           = config::cfg.generator;
+    auto& cfg           = Config::cfg.generator;
     bool  isUseTemplate = TemplateManager::isUseTemplate();
     int total = isUseTemplate ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
 
@@ -392,7 +392,7 @@ std::vector<PPos> Radius::getRangedPlots() const {
     std::vector<PPos> rangedPlots;
 
     // 获取配置信息
-    auto& cfg           = config::cfg.generator;
+    auto& cfg           = Config::cfg.generator;
     bool  isUseTemplate = TemplateManager::isUseTemplate();
     int total = isUseTemplate ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
 
@@ -432,6 +432,9 @@ bool Radius::operator==(const Radius& other) const {
     return this->mCenter == other.mCenter && this->mRadius == other.mRadius;
 }
 bool Radius::operator!=(const Radius& other) const { return !(*this == other); }
+
+
+// !class: PlotRoadPos
 
 
 } // namespace plo

@@ -70,7 +70,7 @@ const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, Par
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
 
-    auto& sw = config::cfg.switchDim;
+    auto& sw = Config::cfg.switchDim;
 
     if (param.dim == ParamGo::overworld) {
         player.teleport(Vec3{sw.overWorld[0], sw.overWorld[1], sw.overWorld[2]}, 0); // 传送到重生点

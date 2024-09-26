@@ -1,24 +1,13 @@
 #pragma once
-#include "mc/deps/core/mce/UUID.h"
+#include "plotcraft/Global.h"
 #include "plotcraft/Macro.h"
 #include "plotcraft/Version.h"
 #include <memory>
 #include <optional>
-#include <string>
-#include <utility>
 #include <vector>
 
 
-using string = std::string;
-
-
 namespace plo::data {
-
-
-typedef string    PlotID; // PPos::getPlotID()
-typedef mce::UUID UUIDm;
-typedef string    UUIDs;
-typedef int       CommentID;
 
 
 enum class PlotPermission : int { None = 0, Shared = 1, Owner = 2, Admin = 3 };
@@ -129,6 +118,12 @@ public:
     PlotPermissionTable          mPermissionTable; // 权限表
     std::vector<PlotShareItem>   mSharedPlayers;   // 共享者列表
     std::vector<PlotCommentItem> mComments;        // 评论列表
+
+    struct {
+        std::vector<PlotID>  mMergedPlotIDs;  // 合并的地皮ID列表
+        std::vector<RoadID>  mMergedRoadIDs;  // 合并的道路ID列表
+        std::vector<CrossID> mMergedCrossIDs; // 合并的交叉点ID列表
+    } mMergedData;
 
 public:
     // Constructors:

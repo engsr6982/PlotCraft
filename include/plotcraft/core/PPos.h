@@ -1,54 +1,52 @@
 #pragma once
 #include "mc/math/Vec3.h"
 #include "mc/world/level/BlockPos.h"
-#include "plotcraft/Config.h"
+#include "mc/world/level/block/Block.h"
+#include "plotcraft/Global.h"
 #include "plotcraft/Macro.h"
 
 
 namespace plo {
 
-using DiagonPos = std::pair<Vec3, Vec3>;
-using Vertexs   = std::vector<Vec3>;
 
-
-class PlotRoadPos {
+class PlotRoad {
 public:
     int       mX, mZ;        // 道路坐标
     DiagonPos mDiagonPos;    // 对角线坐标
     bool      mIsMergedPlot; // 是否是合并的地皮
 
-    PLAPI PlotRoadPos();
-    PLAPI PlotRoadPos(int x, int z);
-    PLAPI PlotRoadPos(const Vec3& vec3);
-    PLAPI PlotRoadPos(int x, int z, const DiagonPos& diagonPos, bool isMergedPlot);
+    PLAPI PlotRoad();
+    PLAPI PlotRoad(int x, int z);
+    PLAPI PlotRoad(const Vec3& vec3);
+    PLAPI PlotRoad(int x, int z, const DiagonPos& diagonPos, bool isMergedPlot);
 
     PLAPI string toString() const;
-    PLAPI string getRoadID() const;
+    PLAPI RoadID getRoadID() const;
 
     PLAPI bool isOnRoad(BlockPos const& pos) const;
     PLAPI bool fillRoad(Block const& block, bool includeBorder = false);
 
     PLAPI std::vector<class PPos> getAdjacentPlots() const;
-    PLAPI static bool             isAdjacent(const PlotRoadPos& road1, const PlotRoadPos& road2);
+    PLAPI static bool             isAdjacent(const PlotRoad& road1, const PlotRoad& road2);
 };
 
-class PlotCrossPos {
+class PlotCross {
 public:
     int       mX, mZ;
     DiagonPos mDiagonPos;
     bool      mIsMergedPlot; // 是否是合并的地皮
 
-    PLAPI PlotCrossPos();
-    PLAPI PlotCrossPos(int x, int z);
-    PLAPI PlotCrossPos(const Vec3& vec3);
-    PLAPI PlotCrossPos(int x, int z, const DiagonPos& diagonPos, bool isMergedPlot);
+    PLAPI PlotCross();
+    PLAPI PlotCross(int x, int z);
+    PLAPI PlotCross(const Vec3& vec3);
+    PLAPI PlotCross(int x, int z, const DiagonPos& diagonPos, bool isMergedPlot);
 
-    PLAPI string toString() const;
-    PLAPI string getCrossID() const;
+    PLAPI string  toString() const;
+    PLAPI CrossID getCrossID() const;
 
     PLAPI bool isOnCross(BlockPos const& pos) const;
     PLAPI bool fillCross(Block const& block);
-    PLAPI std::vector<PlotRoadPos> getAdjacentRoads() const;
+    PLAPI std::vector<PlotRoad> getAdjacentRoads() const;
 };
 
 
@@ -66,7 +64,7 @@ public:
 
     PLAPI string toString() const; // 转换为字符串
 
-    PLAPI string getPlotID() const; // 获取地皮ID
+    PLAPI PlotID getPlotID() const; // 获取地皮ID
 
     PLAPI int getSurfaceY() const; // 获取地表Y坐标
 
@@ -82,9 +80,9 @@ public:
 
     PLAPI bool canMerge(PPos& other) const; // 判断两个地皮是否可以合并
 
-    PLAPI std::vector<PPos> getRangedPlots() const;           // 获取范围内的地皮
-    PLAPI std::vector<PlotRoadPos> getRangedRoads() const;    // 获取范围内的道路
-    PLAPI std::vector<PlotCrossPos> getRangedCrosses() const; // 获取范围内的路口
+    PLAPI std::vector<PPos> getRangedPlots() const;        // 获取范围内的地皮
+    PLAPI std::vector<PlotRoad> getRangedRoads() const;    // 获取范围内的道路
+    PLAPI std::vector<PlotCross> getRangedCrosses() const; // 获取范围内的路口
 
     PLAPI bool operator==(PPos const& other) const;
     PLAPI bool operator!=(PPos const& other) const;

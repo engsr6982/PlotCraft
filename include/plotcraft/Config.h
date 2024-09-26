@@ -1,4 +1,5 @@
 #pragma once
+#include "Global.h"
 #include "Version.h"
 #include "ll/api/Config.h"
 #include "plotcraft/Macro.h"
@@ -7,15 +8,13 @@
 #include <vector>
 
 
-using string = std::string;
-
-namespace plo::config {
+namespace plo {
 
 enum class PlotGeneratorType : int { Default, Template };
-struct _Config {
+struct Config {
     int version = CONFIG_VERSION;
 
-    struct _Generator {
+    struct {
         PlotGeneratorType type = PlotGeneratorType::Default; // 生成器类型
 
         // Default Generator
@@ -32,7 +31,7 @@ struct _Config {
 
     utils::EconomyConfig economy; // 经济系统配置
 
-    struct PlotWorld {
+    struct {
         int    maxBuyPlotCount   = 25;   // 最大购买地皮数量
         int    buyPlotPrice      = 1000; // 购买地皮价格
         bool   inPlotCanFly      = true; // 地皮内可飞行
@@ -44,27 +43,25 @@ struct _Config {
         int    baseMergePlotPrice   = 1000; // 基础合并地皮价格
         double mergePriceMultiplier = 1.1;  // 合并价格倍率，默认为1.0（保持基础价格不变）
 
-        struct EventListener {
+        struct {
             bool onSculkSpreadListener{true};
             bool onSculkBlockGrowthListener{true};
         } eventListener;
     } plotWorld;
 
-    struct SwitchDim {
+    struct {
         std::vector<float> overWorld = {0, 100, 0}; // 切换维度时传送的坐标
 
         std::vector<float> plotWorld = {0.5, 0, 0.5};
     } switchDim;
 
     std::vector<int> allowedPlotTeleportDim = {0, 1, 2, 3}; // 允许传送到地皮维度的维度列表
+
+
+    PLAPI static Config cfg;
+    PLAPI static void   loadConfig();
+    PLAPI static void   updateConfig();
+    PLAPI static double calculateMergePlotPrice(int mergeCount); // 计算合并地皮价格
 };
 
-PLAPI extern _Config cfg;
-
-PLAPI void loadConfig();
-
-PLAPI void updateConfig();
-
-// PLAPI double calculateMergePlotPrice(int mergeCount);
-
-} // namespace plo::config
+} // namespace plo

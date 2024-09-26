@@ -20,7 +20,6 @@
 #include "plotcraft/core/Utils.h"
 
 
-
 namespace plo::core {
 
 PlotDimension::PlotDimension(std::string const& name, more_dimensions::DimensionFactoryInfo const& info)
@@ -42,7 +41,7 @@ PlotDimension::createGenerator(br::worldgen::StructureSetRegistry const& /* stru
     auto&                           levelData = getLevel().getLevelData();
 
     // 实例化 地皮生成器
-    if (plo::config::cfg.generator.type == plo::config::PlotGeneratorType::Default) {
+    if (plo::Config::cfg.generator.type == plo::Config::PlotGeneratorType::Default) {
         worldGenerator =
             std::make_unique<plo::core::DefaultGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
     } else {

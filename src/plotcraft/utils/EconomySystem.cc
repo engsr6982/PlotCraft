@@ -95,8 +95,8 @@ EconomySystem& EconomySystem::getInstance() {
     return instance;
 }
 
-bool EconomySystem::updateConfig(EconomyConfig config) {
-    this->mEconomyConfig = config;
+bool EconomySystem::updateConfig(EconomyConfig Config) {
+    this->mEconomyConfig = Config;
     return true;
 }
 

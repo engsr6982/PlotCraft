@@ -54,7 +54,7 @@ void _plotShopShowPlot(Player& player, PlotMetadataPtr pt) {
 void _buyPlot(Player& player, PlotMetadataPtr pt) {
 
     auto* impl = &data::PlotDBStorage::getInstance();
-    auto& cfg  = config::cfg.plotWorld;
+    auto& cfg  = Config::cfg.plotWorld;
 
     if (static_cast<int>(impl->getPlots(player.getUuid().asString()).size()) >= cfg.maxBuyPlotCount) {
         sendText<LogLevel::Warn>(player, "你已经购买了太多地皮，无法购买新的地皮。");

@@ -11,7 +11,7 @@ using string = std::string;
 
 namespace plo::core {
 
-typedef string ints;
+typedef string ints; // string int
 struct TemplateData {
     int    version{2};                     // 模板版本
     int    template_chunk_num{2};          // 模板区块数量

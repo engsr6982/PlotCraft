@@ -91,7 +91,7 @@ bool registerEventListener() {
 
     // My events
     initPlotEventScheduler(); // 初始化地皮事件调度器
-    if (config::cfg.plotWorld.inPlotCanFly) {
+    if (Config::cfg.plotWorld.inPlotCanFly) {
         mPlayerEnterPlotEvent = bus->emplaceListener<PlayerEnterPlot>([pdb](PlayerEnterPlot& e) {
             auto pl = e.getPlayer();
             if (pl == nullptr) return;
@@ -457,13 +457,13 @@ bool registerEventListener() {
 
         debugger("[SpawningMob]: " << type);
 
-        if (config::cfg.plotWorld.spawnMob) return true;
+        if (Config::cfg.plotWorld.spawnMob) return true;
 
         e.cancel();
         return true;
     });
 
-    if (config::cfg.plotWorld.eventListener.onSculkSpreadListener) {
+    if (Config::cfg.plotWorld.eventListener.onSculkSpreadListener) {
         mSculkSpreadEvent = bus->emplaceListener<more_events::SculkSpreadEvent>([](more_events::SculkSpreadEvent& ev) {
             auto bs = ev.getBlockSource();
             if (bs.has_value())
@@ -472,7 +472,7 @@ bool registerEventListener() {
         });
     }
 
-    if (config::cfg.plotWorld.eventListener.onSculkBlockGrowthListener) {
+    if (Config::cfg.plotWorld.eventListener.onSculkBlockGrowthListener) {
         mSculkBlockGrowthEvent =
             bus->emplaceListener<more_events::SculkBlockGrowthEvent>([](more_events::SculkBlockGrowthEvent& ev) {
                 auto bs = ev.getBlockSource();
