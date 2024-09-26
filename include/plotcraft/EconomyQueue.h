@@ -1,7 +1,7 @@
 #pragma once
 #include "data/PlotMetadata.h"
 #include "mc/deps/core/mce/UUID.h"
-#include "plotcraft/Macro.h"
+#include "plotcraft/Global.h"
 #include "plotcraft/utils/EconomySystem.h"
 #include "plugin/MyPlugin.h"
 #include <algorithm>

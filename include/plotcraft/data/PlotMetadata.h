@@ -1,7 +1,5 @@
 #pragma once
 #include "plotcraft/Global.h"
-#include "plotcraft/Macro.h"
-#include "plotcraft/Version.h"
 #include <memory>
 #include <optional>
 #include <vector>

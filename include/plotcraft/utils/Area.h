@@ -2,7 +2,7 @@
 #include "Mc.h"
 #include "Utils.h"
 #include "mc/world/level/BlockPos.h"
-#include "plotcraft/Macro.h"
+#include "plotcraft/Global.h"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -306,10 +306,9 @@ PLAPI inline FindResult findSafePos(
                     continue;
                 } else if (currentTraversalY <= stopY || utils::some(dangerousBlocks, bl.getTypeName())) {
                     break;
-                } else if (
-                    !bl.isAir() &&                                   // 落脚方块
-                    getBlock(currentTraversalY + offset1).isAir()    // 玩家身体 下半
-                    && getBlock(currentTraversalY + offset2).isAir() // 玩家身体 上半
+                } else if (!bl.isAir() &&                                   // 落脚方块
+                           getBlock(currentTraversalY + offset1).isAir()    // 玩家身体 下半
+                           && getBlock(currentTraversalY + offset2).isAir() // 玩家身体 上半
                 ) {
                     // 安全位置   落脚点安全、上两格是空气
                     result.y      = currentTraversalY + 1; // 往上跳一格

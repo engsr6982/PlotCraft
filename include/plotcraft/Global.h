@@ -5,6 +5,23 @@
 #include <string>
 
 
+#ifdef PLOT_EXPORTS
+#define PLAPI __declspec(dllexport)
+#else
+#define PLAPI __declspec(dllimport)
+#endif
+
+
+// Config
+#define CONFIG_VERSION 7
+
+// PlotMetadata
+#define METADATA_VERSION 5
+
+// PlayerSetting
+#define SETTING_VERSION 1
+
+
 namespace plo {
 
 

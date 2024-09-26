@@ -2,9 +2,10 @@
 #include "ll/api/event/Cancellable.h"
 #include "ll/api/event/Event.h"
 #include "mc/world/actor/player/Player.h"
-#include "plotcraft/Macro.h"
-#include "plotcraft/core/PPos.h"
+#include "plotcraft/Global.h"
 #include "plotcraft/data/PlotMetadata.h"
+#include "plotcraft/math/PPos.h"
+
 
 namespace plo::event {
 
