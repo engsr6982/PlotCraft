@@ -29,7 +29,6 @@
 
 ll::schedule::GameTickScheduler mTickScheduler; // Tick调度
 
-using string = std::string;
 using ll::chrono_literals::operator""_tick;
 
 
@@ -54,8 +53,6 @@ public:
 
 
 namespace plo::event {
-using namespace core;
-
 
 void buildTipMessage(Player& p, PPos const& pps, PlayerNameDB* ndb, PlotDBStorage* pdb) {
     try {

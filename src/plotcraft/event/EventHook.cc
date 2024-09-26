@@ -110,8 +110,6 @@ using PlotPermission = plo::data::PlotPermission;
 #define Normal High
 
 namespace plo::event {
-using namespace core;
-
 
 // 生物受伤
 LL_TYPE_INSTANCE_HOOK(
@@ -555,7 +553,7 @@ const auto ExplodeCallback = [](Actor* /* source */,
 
     debugger("[Explode] pos: " << pos.toString());
 
-    Radius r(pos, explosionRadius + 1);
+    Radius r(pos, (int)(explosionRadius + 1.0f));
     auto   land = r.getRangedPlots();
     auto&  db   = PlotDBStorage::getInstance();
 

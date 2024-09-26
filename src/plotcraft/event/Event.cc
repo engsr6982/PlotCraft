@@ -76,8 +76,6 @@ ll::event::ListenerPtr mPlayerAttackBlockEvent;   // 玩家攻击方块
 ll::event::ListenerPtr mPlayerDropItemEvent;      // 玩家丢弃物品
 
 namespace plo::event {
-using namespace core;
-
 bool CheckPerm(PlotDBStorage* pdb, PlotID const& id, UUIDs const& uuid, bool ignoreAdmin) {
     PlotDBStorage* db = pdb ? pdb : &PlotDBStorage::getInstance();
     return db->getPlayerPermission(uuid, id, ignoreAdmin) != PlotPermission::None;

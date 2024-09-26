@@ -34,7 +34,6 @@ namespace plo::gui {
 using namespace plo::data;
 using namespace ll::form;
 using namespace plo::utils;
-using namespace plo::core;
 using namespace plo::mc;
 namespace pev = plo::event;
 
