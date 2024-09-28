@@ -37,7 +37,7 @@ const auto start = [](CommandOrigin const& ori, CommandOutput& out, StartData co
         return;
     }
 
-    auto bl = data.defaultBlock.resolveBlock(data.defaultBlock.id).getBlock();
+    auto bl = data.defaultBlock.resolveBlock((int)data.defaultBlock.id).getBlock();
     if (bl == nullptr) {
         sendText<LogLevel::Error>(player, "获取默认方块失败");
         return;

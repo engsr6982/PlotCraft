@@ -214,7 +214,7 @@ bool TemplateManager::_processChunk(const LevelChunk& chunk) {
                 auto& bl   = bs.getBlock(cur).getTypeName();
                 auto  iter = map.find(bl);
                 if (iter == map.end()) {
-                    map[bl] = map.size() + 1;
+                    map[bl] = (int)map.size() + 1;
                     buffer.push_back(map[bl]);
                 } else {
                     buffer.push_back(iter->second);

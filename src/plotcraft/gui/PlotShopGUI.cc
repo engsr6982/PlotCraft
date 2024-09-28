@@ -103,7 +103,7 @@ void _buyPlot(Player& player, PlotMetadataPtr pt) {
                     bool const ok = impl->buyPlotFromSale(pt->getPlotID(), pl.getUuid().asString());
                     if (ok) {
                         // 计算税率
-                        int const tax      = cfg.playerSellPlotTax * price / 100;
+                        int const tax      = (int)(cfg.playerSellPlotTax * (double)price / 100);
                         int       newPrice = price - tax;
                         if (newPrice < 0) newPrice = 0;
                         // 把扣除的经济转移给出售者
