@@ -117,10 +117,14 @@ public:
     std::vector<PlotShareItem>   mSharedPlayers;   // 共享者列表
     std::vector<PlotCommentItem> mComments;        // 评论列表
 
+
+    // v1.1.0
+    bool mMerged{false};
     struct {
-        std::vector<PlotID>  mMergedPlotIDs;  // 合并的地皮ID列表
-        std::vector<RoadID>  mMergedRoadIDs;  // 合并的道路ID列表
-        std::vector<CrossID> mMergedCrossIDs; // 合并的交叉点ID列表
+        std::vector<std::vector<int>> mCurrentVertexs; // 当前顶点列表 [[x,z], [x,z]]
+        std::vector<PlotID>           mMergedPlotIDs;  // 合并的地皮ID列表
+        std::vector<RoadID>           mMergedRoadIDs;  // 合并的道路ID列表
+        std::vector<CrossID>          mMergedCrossIDs; // 合并的交叉点ID列表
     } mMergedData;
 
 public:
@@ -132,6 +136,8 @@ public:
 
 
     // APIs:
+    PLAPI bool isMerged() const;
+
     PLAPI bool isOwner(UUIDs const& uuid) const;
 
     PLAPI bool setPlotName(string const& name);

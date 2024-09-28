@@ -3,49 +3,25 @@
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/block/Block.h"
 #include "plotcraft/Global.h"
+#include <utility>
 
 
 namespace plo {
 
 
-class PlotRoad {
-public:
-    int       mX, mZ;        // 道路坐标
-    DiagonPos mDiagonPos;    // 对角线坐标
-    bool      mIsMergedPlot; // 是否是合并的地皮
+// 预定义
+class PlotRoad;
+class PlotCross;
+class PlotPos;
+class Cube;
+class Radius;
 
-    PLAPI PlotRoad();
-    PLAPI PlotRoad(int x, int z);                                                // todo
-    PLAPI PlotRoad(const Vec3& vec3);                                            // todo
-    PLAPI PlotRoad(int x, int z, const DiagonPos& diagonPos, bool isMergedPlot); // todo
-
-    PLAPI string toString() const;  // todo
-    PLAPI RoadID getRoadID() const; // todo
-
-    PLAPI bool isOnRoad(BlockPos const& pos) const;                      // todo
-    PLAPI bool fillRoad(Block const& block, bool includeBorder = false); // todo
-
-    PLAPI std::vector<class PlotPos> getAdjacentPlots() const;                                 // todo
-    PLAPI static bool                isAdjacent(const PlotRoad& road1, const PlotRoad& road2); // todo
-};
-
-class PlotCross {
-public:
-    int       mX, mZ;
-    DiagonPos mDiagonPos;
-    bool      mIsMergedPlot; // 是否是合并的地皮
-
-    PLAPI PlotCross();                                                            // todo
-    PLAPI PlotCross(int x, int z);                                                // todo
-    PLAPI PlotCross(const Vec3& vec3);                                            // todo
-    PLAPI PlotCross(int x, int z, const DiagonPos& diagonPos, bool isMergedPlot); // todo
-
-    PLAPI string  toString() const;   // todo
-    PLAPI CrossID getCrossID() const; // todo
-
-    PLAPI bool isOnCross(BlockPos const& pos) const;      // todo
-    PLAPI bool fillCross(Block const& block);             // todo
-    PLAPI std::vector<PlotRoad> getAdjacentRoads() const; // todo
+enum class PlotDirection : int {
+    Unknown = -1, // 未知
+    North   = 0,  // 北
+    East    = 1,  // 东
+    South   = 2,  // 南
+    West    = 3   // 西
 };
 
 
@@ -54,10 +30,9 @@ public:
     int     mX, mZ;   // 地皮坐标
     Vertexs mVertexs; // 地皮顶点
 
-    PLAPI PlotPos();
+    PLAPI PlotPos() = default;
     PLAPI PlotPos(int x, int z);
     PLAPI PlotPos(const Vec3& vec3);
-    PLAPI PlotPos(int x, int z, Vertexs const& vertexs);
 
     PLAPI bool isValid() const; // 判断是否有效
 
@@ -71,27 +46,24 @@ public:
 
     PLAPI bool isPosInPlot(const Vec3& vec3) const; // 判断一个点是否在地皮内
 
-    PLAPI bool isPosOnBorder(const Vec3& vec3) const;              // 判断一个点是否在地皮边界上
-    PLAPI bool isCubeOnBorder(class Cube const& cube) const;       // 判断一个立方体是否在地皮边界上
-    PLAPI bool isRadiusOnBorder(class Radius const& radius) const; // 判断一个圆是否在地皮边界上
-
-    PLAPI bool fixVertexs(); // 修正顶点 // todo
-
-    PLAPI bool canMerge(PlotPos& other) const; // 判断两个地皮是否可以合并 // todo
-
-    PLAPI std::vector<PlotPos> getRangedPlots() const;     // 获取范围内的地皮 // todo
-    PLAPI std::vector<PlotRoad> getRangedRoads() const;    // 获取范围内的道路 // todo
-    PLAPI std::vector<PlotCross> getRangedCrosses() const; // 获取范围内的路口 // todo
+    PLAPI bool isPosOnBorder(Vec3 const& vec3) const;        // 判断一个点是否在地皮边界上
+    PLAPI bool isCubeOnBorder(Cube const& cube) const;       // 判断一个立方体是否在地皮边界上
+    PLAPI bool isRadiusOnBorder(Radius const& radius) const; // 判断一个圆是否在地皮边界上
 
     PLAPI bool operator==(PlotPos const& other) const;
     PLAPI bool operator!=(PlotPos const& other) const;
 
     // static
-    PLAPI static bool isAdjacent(PlotPos const& plot1, PlotPos const& plot2); // 判断两个地皮是否相邻
-
+    PLAPI static bool isAdjacent(PlotPos const& plot1, PlotPos const& plot2);      // 判断两个地皮是否相邻
     PLAPI static bool isPointInPolygon(const Vec3& point, Vertexs const& polygon); // 判断一个点是否在多边形内
-};
 
+    // MergeAPI:
+    // PLAPI bool fixVertexs(); // 修正顶点 // todo
+    // PLAPI bool canMerge(PlotPos& other) const; // 判断两个地皮是否可以合并 // todo
+    // PLAPI std::vector<PlotPos> getRangedPlots() const;     // 获取范围内的地皮 // todo
+    // PLAPI std::vector<PlotRoad> getRangedRoads() const;    // 获取范围内的道路 // todo
+    // PLAPI std::vector<PlotCross> getRangedCrosses() const; // 获取范围内的路口 // todo
+};
 
 class Cube {
 public:
@@ -113,7 +85,6 @@ public:
     static bool isCollision(Cube const& cube1, Cube const& cube2); // 判断两个立方体是否碰撞
 };
 
-
 class Radius {
 public:
     BlockPos mCenter; // 中心点
@@ -126,6 +97,45 @@ public:
 
     bool operator==(const Radius& other) const;
     bool operator!=(const Radius& other) const;
+};
+
+
+class PlotRoad {
+public:
+    int       mX, mZ;        // 道路坐标
+    DiagonPos mDiagonPos;    // 对角线坐标
+    bool      mIsMergedPlot; // 是否是合并的地皮
+
+    PLAPI PlotRoad() = default;
+    PLAPI PlotRoad(int x, int z);     // todo
+    PLAPI PlotRoad(const Vec3& vec3); // todo
+
+    // PLAPI string toString() const;  // todo
+    // PLAPI RoadID getRoadID() const; // todo
+
+    // PLAPI bool isOnRoad(BlockPos const& pos) const;                      // todo
+    // PLAPI bool fillRoad(Block const& block, bool includeBorder = false); // todo
+
+    // PLAPI std::vector<class PlotPos> getAdjacentPlots() const;                                 // todo
+    // PLAPI static bool                isAdjacent(const PlotRoad& road1, const PlotRoad& road2); // todo
+};
+
+class PlotCross {
+public:
+    int       mX, mZ;
+    DiagonPos mDiagonPos;
+    bool      mIsMergedPlot; // 是否是合并的地皮
+
+    // PLAPI PlotCross();                                                            // todo
+    // PLAPI PlotCross(int x, int z);                                                // todo
+    // PLAPI PlotCross(const Vec3& vec3);                                            // todo
+
+    // PLAPI string  toString() const;   // todo
+    // PLAPI CrossID getCrossID() const; // todo
+
+    // PLAPI bool isOnCross(BlockPos const& pos) const;      // todo
+    // PLAPI bool fillCross(Block const& block);             // todo
+    // PLAPI std::vector<PlotRoad> getAdjacentRoads() const; // todo
 };
 
 

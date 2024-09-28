@@ -1,18 +1,18 @@
+#include "plotcraft/math/PlotPos.h"
 #include "fmt/format.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/core/TemplateManager.h"
-#include "plotcraft/math/PlotPos.h"
+#include "plotcraft/data/PlotDBStorage.h"
 #include <algorithm>
 #include <cmath>
 #include <utility>
 
 
-
 namespace plo {
 using TemplateManager = core::TemplateManager;
 
+
 // !Class: PlotPos
-PlotPos::PlotPos() : mX(0), mZ(0) {}
 PlotPos::PlotPos(int x, int z) : mX(x), mZ(z) {
     auto& cfg = Config::cfg.generator;
 
@@ -42,7 +42,6 @@ PlotPos::PlotPos(int x, int z) : mX(x), mZ(z) {
         min  // 回到起点，形成闭合多边形
     };
 }
-
 PlotPos::PlotPos(const Vec3& vec3) {
     auto& cfg = Config::cfg.generator;
 
@@ -55,8 +54,8 @@ PlotPos::PlotPos(const Vec3& vec3) {
     int localZ = static_cast<int>(std::floor(vec3.z)) % total;
 
     // 计算地皮坐标
-    mX = std::floor(vec3.x / total);
-    mZ = std::floor(vec3.z / total);
+    mX = (int)std::floor(vec3.x / total);
+    mZ = (int)std::floor(vec3.z / total);
 
     Vec3 min, max;
     bool isValid = true;
@@ -100,20 +99,23 @@ PlotPos::PlotPos(const Vec3& vec3) {
         mZ = 0;
     }
 }
+
 int PlotPos::getSurfaceY() const {
     return TemplateManager::isUseTemplate() ? (TemplateManager::mTemplateData.template_offset + 1)
                                             : -64 + (Config::cfg.generator.subChunkNum * 16);
 }
-bool   PlotPos::isValid() const { return !mVertexs.empty(); }
+
+bool PlotPos::isValid() const { return !mVertexs.empty(); }
+
 string PlotPos::getPlotID() const { return fmt::format("({0},{1})", mX, mZ); }
-Vec3   PlotPos::getSafestPos() const {
+
+Vec3 PlotPos::getSafestPos() const {
     if (isValid()) {
         auto& v3 = mVertexs[0];
         return Vec3{v3.x, getSurfaceY() + 1, v3.z};
     }
     return Vec3{};
 }
-
 
 bool PlotPos::isPosInPlot(const Vec3& vec3) const {
     if (vec3.y < -64 || vec3.y > 320) {
@@ -154,6 +156,7 @@ bool PlotPos::isPosOnBorder(const Vec3& vec3) const {
 
     return false;
 }
+
 bool PlotPos::isCubeOnBorder(Cube const& cube) const {
     if (!isValid()) {
         return false;
@@ -197,6 +200,7 @@ bool PlotPos::isCubeOnBorder(Cube const& cube) const {
 
     return false;
 }
+
 bool PlotPos::isRadiusOnBorder(class Radius const& radius) const {
     if (!isValid()) {
         return false;
@@ -270,7 +274,6 @@ bool PlotPos::isRadiusOnBorder(class Radius const& radius) const {
     return false;
 }
 
-
 string PlotPos::toString() const {
 #if !defined(DEBUG)
     return fmt::format("{0} | Vertex: {1}", getPlotID(), mVertexs.size());
@@ -284,10 +287,8 @@ string PlotPos::toString() const {
 #endif
 }
 
-
 bool PlotPos::operator!=(PlotPos const& other) const { return !(*this == other); }
 bool PlotPos::operator==(PlotPos const& other) const { return other.mVertexs == this->mVertexs; }
-
 
 // static
 bool PlotPos::isAdjacent(const PlotPos& plot1, const PlotPos& plot2) {
@@ -303,7 +304,7 @@ bool PlotPos::isAdjacent(const PlotPos& plot1, const PlotPos& plot2) {
 // 判断点是否在多边形内部（射线法）
 bool PlotPos::isPointInPolygon(const Vec3& point, Vertexs const& polygon) {
     bool inside = false;
-    int  n      = polygon.size();
+    int  n      = (int)polygon.size();
     for (int i = 0, j = n - 1; i < n; j = i++) {
         if (((polygon[i].z <= point.z && point.z < polygon[j].z) || (polygon[j].z <= point.z && point.z < polygon[i].z))
             && (point.x < (polygon[j].x - polygon[i].x) * (point.z - polygon[i].z) / (polygon[j].z - polygon[i].z)
@@ -346,10 +347,10 @@ std::vector<PlotPos> Cube::getRangedPlots() const {
     int total = isUseTemplate ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
 
     // 计算可能涉及的地皮范围
-    int minPlotX = std::floor(static_cast<double>(mMin.x) / total);
-    int maxPlotX = std::ceil(static_cast<double>(mMax.x) / total);
-    int minPlotZ = std::floor(static_cast<double>(mMin.z) / total);
-    int maxPlotZ = std::ceil(static_cast<double>(mMax.z) / total);
+    int minPlotX = (int)std::floor(static_cast<double>(mMin.x) / total);
+    int maxPlotX = (int)std::ceil(static_cast<double>(mMax.x) / total);
+    int minPlotZ = (int)std::floor(static_cast<double>(mMin.z) / total);
+    int maxPlotZ = (int)std::ceil(static_cast<double>(mMax.z) / total);
 
     // 遍历可能的地皮
     for (int x = minPlotX; x <= maxPlotX; ++x) {
@@ -398,10 +399,10 @@ std::vector<PlotPos> Radius::getRangedPlots() const {
     int total = isUseTemplate ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
 
     // 计算可能涉及的地皮范围
-    int minPlotX = std::floor((mCenter.x - mRadius) / static_cast<double>(total));
-    int maxPlotX = std::ceil((mCenter.x + mRadius) / static_cast<double>(total));
-    int minPlotZ = std::floor((mCenter.z - mRadius) / static_cast<double>(total));
-    int maxPlotZ = std::ceil((mCenter.z + mRadius) / static_cast<double>(total));
+    int minPlotX = (int)std::floor((mCenter.x - mRadius) / static_cast<double>(total));
+    int maxPlotX = (int)std::ceil((mCenter.x + mRadius) / static_cast<double>(total));
+    int minPlotZ = (int)std::floor((mCenter.z - mRadius) / static_cast<double>(total));
+    int maxPlotZ = (int)std::ceil((mCenter.z + mRadius) / static_cast<double>(total));
 
     // 遍历可能的地皮
     for (int x = minPlotX; x <= maxPlotX; ++x) {
@@ -435,7 +436,11 @@ bool Radius::operator==(const Radius& other) const {
 bool Radius::operator!=(const Radius& other) const { return !(*this == other); }
 
 
-// !class: PlotRoadPos
+// !class: PlotRoad
+PlotRoad::PlotRoad(int x, int z) : mX(x), mZ(z) {
+    data::PlotDBStorage::getInstance().initClass(*this);
+    //
+}
 
 
 } // namespace plo

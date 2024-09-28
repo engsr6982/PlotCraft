@@ -108,9 +108,9 @@ bool MyPlugin::enable() {
     more_dimensions::CustomDimensionManager::getInstance().addDimension<plo::core::PlotDimension>("plot");
 #endif
 
-    plo::event::registerEventListener();                          // 注册事件监听器
-    plo::command::registerCommand();                              // 注册命令
-    plo::data::PlotDBStorage::getInstance().tryStartSaveThread(); // 尝试启动自动保存线程
+    plo::event::registerEventListener();                      // 注册事件监听器
+    plo::command::registerCommand();                          // 注册命令
+    plo::data::PlotDBStorage::getInstance().initSaveThread(); // 尝试启动自动保存线程
 
     return true;
 }
