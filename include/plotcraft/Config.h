@@ -7,7 +7,6 @@
 #include <vector>
 
 
-
 namespace plo {
 
 enum class PlotGeneratorType : int { Default, Template };
@@ -61,6 +60,11 @@ struct Config {
     PLAPI static Config cfg;
     PLAPI static void   loadConfig();
     PLAPI static void   updateConfig();
+
+    /**
+     * @brief 计算合并地皮价格
+     * @param mergeCount 合并计数（地皮合并次数）
+     */
     PLAPI static double calculateMergePlotPrice(int mergeCount); // 计算合并地皮价格
 };
 
