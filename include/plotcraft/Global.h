@@ -30,7 +30,7 @@ using json      = nlohmann::json;
 using DiagonPos = std::pair<Vec3, Vec3>;
 using Vertexs   = std::vector<Vec3>;
 
-using PlotID  = string; // PPos::getPlotID()
+using PlotID  = string; // PlotPos::getPlotID()
 using RoadID  = string; // PlotRoad::getRoadID()
 using CrossID = string; // PlotCross::getCrossID()
 

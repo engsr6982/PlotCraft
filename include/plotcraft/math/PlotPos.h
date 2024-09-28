@@ -25,8 +25,8 @@ public:
     PLAPI bool isOnRoad(BlockPos const& pos) const;                      // todo
     PLAPI bool fillRoad(Block const& block, bool includeBorder = false); // todo
 
-    PLAPI std::vector<class PPos> getAdjacentPlots() const;                                 // todo
-    PLAPI static bool             isAdjacent(const PlotRoad& road1, const PlotRoad& road2); // todo
+    PLAPI std::vector<class PlotPos> getAdjacentPlots() const;                                 // todo
+    PLAPI static bool                isAdjacent(const PlotRoad& road1, const PlotRoad& road2); // todo
 };
 
 class PlotCross {
@@ -49,15 +49,15 @@ public:
 };
 
 
-class PPos {
+class PlotPos {
 public:
     int     mX, mZ;   // 地皮坐标
     Vertexs mVertexs; // 地皮顶点
 
-    PLAPI PPos();
-    PLAPI PPos(int x, int z);
-    PLAPI PPos(const Vec3& vec3);
-    PLAPI PPos(int x, int z, Vertexs const& vertexs);
+    PLAPI PlotPos();
+    PLAPI PlotPos(int x, int z);
+    PLAPI PlotPos(const Vec3& vec3);
+    PLAPI PlotPos(int x, int z, Vertexs const& vertexs);
 
     PLAPI bool isValid() const; // 判断是否有效
 
@@ -77,17 +77,17 @@ public:
 
     PLAPI bool fixVertexs(); // 修正顶点 // todo
 
-    PLAPI bool canMerge(PPos& other) const; // 判断两个地皮是否可以合并 // todo
+    PLAPI bool canMerge(PlotPos& other) const; // 判断两个地皮是否可以合并 // todo
 
-    PLAPI std::vector<PPos> getRangedPlots() const;        // 获取范围内的地皮 // todo
+    PLAPI std::vector<PlotPos> getRangedPlots() const;     // 获取范围内的地皮 // todo
     PLAPI std::vector<PlotRoad> getRangedRoads() const;    // 获取范围内的道路 // todo
     PLAPI std::vector<PlotCross> getRangedCrosses() const; // 获取范围内的路口 // todo
 
-    PLAPI bool operator==(PPos const& other) const;
-    PLAPI bool operator!=(PPos const& other) const;
+    PLAPI bool operator==(PlotPos const& other) const;
+    PLAPI bool operator!=(PlotPos const& other) const;
 
     // static
-    PLAPI static bool isAdjacent(PPos const& plot1, PPos const& plot2); // 判断两个地皮是否相邻
+    PLAPI static bool isAdjacent(PlotPos const& plot1, PlotPos const& plot2); // 判断两个地皮是否相邻
 
     PLAPI static bool isPointInPolygon(const Vec3& point, Vertexs const& polygon); // 判断一个点是否在多边形内
 };
@@ -104,7 +104,7 @@ public:
 
     bool hasPos(BlockPos const& pos) const; // 判断一个点是否在立方体内
 
-    std::vector<PPos> getRangedPlots() const; // 获取范围内的地皮
+    std::vector<PlotPos> getRangedPlots() const; // 获取范围内的地皮
 
     bool operator==(const Cube& other) const;
     bool operator!=(const Cube& other) const;
@@ -122,7 +122,7 @@ public:
     Radius() = delete;
     Radius(BlockPos const& center, int radius) : mCenter(center), mRadius(radius){};
 
-    std::vector<PPos> getRangedPlots() const; // 获取范围内的地皮
+    std::vector<PlotPos> getRangedPlots() const; // 获取范围内的地皮
 
     bool operator==(const Radius& other) const;
     bool operator!=(const Radius& other) const;

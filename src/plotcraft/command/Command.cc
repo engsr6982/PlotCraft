@@ -89,7 +89,7 @@ const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output) {
         return;
     }
 
-    PPos pos = PPos{player.getPosition()};
+    PlotPos pos = PlotPos{player.getPosition()};
     if (pos.isValid()) {
         std::shared_ptr<data::PlotMetadata> plot = data::PlotDBStorage::getInstance().getPlot(pos.getPlotID());
         if (plot == nullptr) {
@@ -130,7 +130,7 @@ const auto LambdaSetting = [](CommandOrigin const& origin, CommandOutput& output
 /*
 namespace PlotMergeBindData {
 
-std::unordered_map<string, std::pair<PPos, PPos>> mBindData; // key: realName
+std::unordered_map<string, std::pair<PlotPos, PlotPos>> mBindData; // key: realName
 
 bool isStarted(Player& player) { return mBindData.find(player.getRealName()) != mBindData.end(); }
 
@@ -147,8 +147,8 @@ const auto start = [](CommandOrigin const& origin, CommandOutput& output) {
         sendText<LogLevel::Error>(output, "请先完成当前操作!");
         return;
     }
-    auto sou                                = PPos(player.getPosition());
-    mBindData[string(player.getRealName())] = std::make_pair(sou, PPos());
+    auto sou                                = PlotPos(player.getPosition());
+    mBindData[string(player.getRealName())] = std::make_pair(sou, PlotPos());
 
     sendText(player, "地皮合并已开启，前往目标地皮使用命令 /plo merge target 选择目标地皮");
     sendText(player, "已自动选择当前位置为源地皮，如需修改使用 /plo merge source");
@@ -161,7 +161,7 @@ const auto source = [](CommandOrigin const& origin, CommandOutput& output) {
         sendText<LogLevel::Error>(output, "请先使用 /plo merge start 开启地皮合并功能!");
         return;
     }
-    auto sou = PPos(player.getPosition());
+    auto sou = PlotPos(player.getPosition());
 
     mBindData[player.getRealName()].first = sou;
 
@@ -177,7 +177,7 @@ const auto target = [](CommandOrigin const& origin, CommandOutput& output) {
     }
     auto& dt = mBindData[player.getRealName()];
 
-    dt.second = PPos(player.getPosition());
+    dt.second = PlotPos(player.getPosition());
 
     sendText(player, "已选择目标地皮: {}", dt.second.toString());
     sendText(player, "使用 /plo merge confirm 确认合并");
@@ -200,7 +200,7 @@ const auto confirm = [](CommandOrigin const& origin, CommandOutput& output) {
     auto firID = dt.first.getPlotID();
     auto secID = dt.second.getPlotID();
 
-    if (!PPos::isAdjacent(dt.first, dt.second)) {
+    if (!PlotPos::isAdjacent(dt.first, dt.second)) {
         sendText<LogLevel::Error>(output, "{} 和 {} 不是相邻地皮", firID, secID);
         return;
     }

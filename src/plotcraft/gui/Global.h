@@ -16,7 +16,7 @@
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
 #include "plotcraft/event/PlotEvents.h"
-#include "plotcraft/math/PPos.h"
+#include "plotcraft/math/PlotPos.h"
 #include "plotcraft/utils/Date.h"
 #include "plotcraft/utils/EconomySystem.h"
 #include "plotcraft/utils/JsonHelper.h"

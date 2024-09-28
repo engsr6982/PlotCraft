@@ -66,7 +66,7 @@
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
 #include "plotcraft/event/PlotEvents.h"
-#include "plotcraft/math/PPos.h"
+#include "plotcraft/math/PlotPos.h"
 #include "plotcraft/utils/Debugger.h"
 #include "plotcraft/utils/Mc.h"
 #include "plotcraft/utils/Utils.h"
@@ -126,7 +126,7 @@ LL_TYPE_INSTANCE_HOOK(
 
         debugger("[MobHurt] mob: " << this->getTypeName());
 
-        auto pps = PPos(this->getPosition());
+        auto pps = PlotPos(this->getPosition());
         if (!pps.isValid()) return origin(source, damage);
 
         auto meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
@@ -168,7 +168,7 @@ LL_TYPE_INSTANCE_HOOK(
 
         debugger("[耕地退化] pos: " << pos.toString());
 
-        auto pps = PPos(pos);
+        auto pps = PlotPos(pos);
         if (!pps.isValid()) return origin(region, pos, actor, fallDistance);
 
         auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
@@ -186,7 +186,7 @@ const auto UseFrameBlockCallback = [](Player& player, BlockPos const& pos) -> bo
 
     debugger("[物品展示框] pos: " << pos.toString());
 
-    auto pps = PPos(pos);
+    auto pps = PlotPos(pos);
     if (!pps.isValid()) return true;
 
     auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
@@ -237,7 +237,7 @@ const auto SpawnProjectileCallback = [](Actor* actor, string const& type) -> boo
 
     debugger("[弹射物生成] type: " << type);
 
-    auto pps = PPos(actor->getPosition());
+    auto pps = PlotPos(actor->getPosition());
     if (!pps.isValid()) return true;
 
     auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
@@ -335,7 +335,7 @@ LL_TYPE_INSTANCE_HOOK(
 
         debugger("[压力板] pos: " << pos.toString() << " entity: " << entity.getTypeName());
 
-        auto pps = PPos(pos);
+        auto pps = PlotPos(pos);
         if (!pps.isValid()) return origin(region, pos, entity);
 
         auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
@@ -372,7 +372,7 @@ LL_TYPE_INSTANCE_HOOK(
 
         if (!passenger.isPlayer()) return origin(passenger);
 
-        auto pps = PPos(passenger.getPosition());
+        auto pps = PlotPos(passenger.getPosition());
         if (!pps.isValid()) return origin(passenger);
 
         auto const& type = this->getTypeName();
@@ -463,8 +463,8 @@ LL_TYPE_INSTANCE_HOOK(
 
         debugger("[活塞推动方块] 目标: " << curPos.toString());
 
-        auto sou = PPos(this->getPosition());
-        auto tar = PPos(curPos);
+        auto sou = PlotPos(this->getPosition());
+        auto tar = PlotPos(curPos);
 
         if (sou.isValid() && tar.isValid() && sou == tar) {
             if (!sou.isPosOnBorder(curPos) && !tar.isPosOnBorder(curPos)) {
@@ -489,7 +489,7 @@ const auto RedStoneUpdateCallback =
 
     debugger("[RedstoneUpdate] pos: " << pos.toString());
 
-    auto pps = PPos(pos);
+    auto pps = PlotPos(pos);
     if (!pps.isValid()) return true;
 
     auto meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());

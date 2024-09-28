@@ -16,7 +16,7 @@
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
 #include "plotcraft/event/PlotEvents.h"
-#include "plotcraft/math/PPos.h"
+#include "plotcraft/math/PlotPos.h"
 #include "plotcraft/utils/Mc.h"
 #include "plotcraft/utils/Utils.h"
 #include "plugin/MyPlugin.h"
@@ -34,17 +34,17 @@ using ll::chrono_literals::operator""_tick;
 
 class CustomEventHelper {
 public:
-    //               player           PPos     Dimension
-    std::unordered_map<string, std::pair<plo::PPos, int>> mPlayerPos; // 玩家位置缓存
+    //               player           PlotPos     Dimension
+    std::unordered_map<string, std::pair<plo::PlotPos, int>> mPlayerPos; // 玩家位置缓存
 
     bool has(string const& uid) { return mPlayerPos.find(uid) != mPlayerPos.end(); }
 
-    void set(string uid, plo::PPos pps, int dim) { mPlayerPos[uid] = std::make_pair(pps, dim); }
+    void set(string uid, plo::PlotPos pps, int dim) { mPlayerPos[uid] = std::make_pair(pps, dim); }
 
-    std::pair<plo::PPos, int> const& get(string const& uid) {
+    std::pair<plo::PlotPos, int> const& get(string const& uid) {
         auto it = mPlayerPos.find(uid);
         if (it == mPlayerPos.end()) {
-            mPlayerPos[uid] = std::make_pair(plo::PPos{}, -1);
+            mPlayerPos[uid] = std::make_pair(plo::PlotPos{}, -1);
             return mPlayerPos[uid];
         }
         return it->second;
@@ -54,7 +54,7 @@ public:
 
 namespace plo::event {
 
-void buildTipMessage(Player& p, PPos const& pps, PlayerNameDB* ndb, PlotDBStorage* pdb) {
+void buildTipMessage(Player& p, PlotPos const& pps, PlayerNameDB* ndb, PlotDBStorage* pdb) {
     try {
         PlotMetadataPtr plot = pdb->getPlot(pps.getPlotID());
         if (plot == nullptr) plot = PlotMetadata::make(pps.getPlotID(), pps.mX, pps.mZ);
@@ -101,11 +101,11 @@ void initPlotEventScheduler() {
         lv->forEachPlayer([bus, pdb, ndb](Player& p) {
             if (p.isSimulatedPlayer() || p.isLoading()) return true; // skip simulated player
 
-            int const   playerDimid = p.getDimensionId();
-            int const   plotDimid   = getPlotWorldDimensionId();
-            auto const  name        = p.getRealName();
-            auto const& pair        = helper.get(name);
-            PPos const  pps{p.getPosition()};
+            int const     playerDimid = p.getDimensionId();
+            int const     plotDimid   = getPlotWorldDimensionId();
+            auto const    name        = p.getRealName();
+            auto const&   pair        = helper.get(name);
+            PlotPos const pps{p.getPosition()};
 
             if (playerDimid != plotDimid) {
                 // 玩家通过传送离开地皮维度

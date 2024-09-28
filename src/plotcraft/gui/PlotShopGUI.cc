@@ -41,7 +41,7 @@ void _plotShopShowPlot(Player& player, PlotMetadataPtr pt) {
     fm.appendButton("购买地皮", "textures/ui/confirm", "path", [pt](Player& pl) { _buyPlot(pl, pt); });
 
     fm.appendButton("传送到此地皮", "textures/ui/send_icon", "path", [pt](Player& pl) {
-        PPos pps{pt->getX(), pt->getZ()};
+        PlotPos pps{pt->getX(), pt->getZ()};
         pl.teleport(pps.getSafestPos(), getPlotWorldDimensionId());
     });
 
@@ -125,7 +125,7 @@ void _buyPlot(Player& player, PlotMetadataPtr pt) {
                         sendText(pl, "地皮购买成功");
                     } else sendText<LogLevel::Error>(pl, "地皮购买失败");
                 } else {
-                    PPos       ps{pt->getX(), pt->getZ()};
+                    PlotPos    ps{pt->getX(), pt->getZ()};
                     bool const ok = impl->addPlot(ps.getPlotID(), pl.getUuid().asString(), pt->getX(), pt->getZ());
                     if (ok) {
                         bus.publish(ev);

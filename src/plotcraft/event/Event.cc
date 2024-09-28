@@ -31,7 +31,7 @@
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
 #include "plotcraft/event/PlotEvents.h"
-#include "plotcraft/math/PPos.h"
+#include "plotcraft/math/PlotPos.h"
 #include "plotcraft/utils/Mc.h"
 #include "plotcraft/utils/Utils.h"
 #include "plugin/MyPlugin.h"
@@ -98,7 +98,7 @@ bool registerEventListener() {
             auto const gamemode = pl->getPlayerGameType();
             if (gamemode == GameType::Creative || gamemode == GameType::Spectator) return; // 不处理创造模式和旁观模式
 
-            auto pps   = PPos(pl->getPosition());
+            auto pps   = PlotPos(pl->getPosition());
             auto level = pdb->getPlayerPermission(pl->getUuid().asString(), pps.toString(), true);
 
             if (level == PlotPermission::Owner || level == PlotPermission::Shared) {
@@ -138,7 +138,7 @@ bool registerEventListener() {
             if (player.getDimensionId() != getPlotWorldDimensionId()) return true; // 被破坏的方块不在地皮世界
 
             auto const& blockPos = ev.pos();
-            auto        pps      = PPos(blockPos);
+            auto        pps      = PlotPos(blockPos);
 
             debugger("[DestroyBlock]: " << blockPos.toString());
 
@@ -162,7 +162,7 @@ bool registerEventListener() {
             if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& blockPos = mc::face2Pos(ev.pos(), ev.face()); // 计算实际放置位置
-            auto        pps      = PPos(blockPos);
+            auto        pps      = PlotPos(blockPos);
 
             debugger("[PlaceingBlock]: " << blockPos.toString());
 
@@ -185,7 +185,7 @@ bool registerEventListener() {
             if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& vec3 = e.clickPos();
-            auto        pps  = PPos(vec3);
+            auto        pps  = PlotPos(vec3);
 
             debugger("[UseItemOn]: " << e.item().getTypeName() << ", 位置: " << vec3.toString());
 
@@ -247,7 +247,7 @@ bool registerEventListener() {
 
     mFireSpreadEvent = bus->emplaceListener<ll::event::FireSpreadEvent>([pdb](ll::event::FireSpreadEvent& e) {
         auto const& pos  = e.pos();
-        auto        pps  = PPos(pos);
+        auto        pps  = PlotPos(pos);
         auto const  meta = pdb->getPlot(pps.getPlotID());
 
         if (meta) {
@@ -264,7 +264,7 @@ bool registerEventListener() {
             if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& pos = e.target().getPosition();
-            auto        pps = PPos(pos);
+            auto        pps = PlotPos(pos);
 
             debugger("[AttackEntity]: " << e.target().getTypeName() << ", 位置: " << pos.toString());
 
@@ -294,7 +294,7 @@ bool registerEventListener() {
             if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& pos = e.itemActor().getPosition();
-            auto        pps = PPos(pos);
+            auto        pps = PlotPos(pos);
 
             debugger("[PickUpItem]: " << e.itemActor().getTypeName() << ", 位置: " << pos.toString());
 
@@ -319,7 +319,7 @@ bool registerEventListener() {
             if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& pos = e.blockPos(); // 交互的方块位置
-            auto        pps = PPos(pos);
+            auto        pps = PlotPos(pos);
             auto const& bn  = e.block()->getTypeName();
 
             debugger("[InteractBlock]: " << pos.toString());
@@ -370,7 +370,7 @@ bool registerEventListener() {
 
         debugger("[UseItem]: " << item.getTypeName() << ", 位置: " << pos.toString() << ", 方块: " << bl.getTypeName());
 
-        auto pps = PPos(pos);
+        auto pps = PlotPos(pos);
         if (pps.isValid() && pps.isPosOnBorder(pos)) {
             ev.cancel();
             UpdateBlockPacket(
@@ -395,7 +395,7 @@ bool registerEventListener() {
 
             debugger("[AttackBlock]: Pos: " << ev.getPos().toString());
 
-            auto pps = PPos(ev.getPos());
+            auto pps = PlotPos(ev.getPos());
             if (!pps.isValid()) return true;
             if (CheckPerm(nullptr, pps.getPlotID(), player.getUuid().asString())) return true;
 
@@ -416,7 +416,7 @@ bool registerEventListener() {
 
             debugger("[ArmorStandSwapItem]: executed");
 
-            auto pps = PPos(player.getPosition());
+            auto pps = PlotPos(player.getPosition());
             if (!pps.isValid()) return true;
             if (CheckPerm(nullptr, pps.getPlotID(), player.getUuid().asString())) return true;
 
@@ -436,7 +436,7 @@ bool registerEventListener() {
 
             debugger("[PlayerDropItem]: executed");
 
-            auto pps = PPos(player.getPosition());
+            auto pps = PlotPos(player.getPosition());
             if (!pps.isValid()) return true;
 
             if (CheckPerm(nullptr, pps.getPlotID(), player.getUuid().asString())) return true;
