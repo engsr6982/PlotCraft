@@ -2,6 +2,7 @@
 #include "fmt/core.h"
 #include "fmt/format.h"
 #include "ll/api/service/Bedrock.h"
+#include "mc/enums/BlockUpdateFlag.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/block/registry/BlockTypeRegistry.h"
@@ -482,11 +483,12 @@ PlotCross::PlotCross(int x, int z) : mX(x), mZ(z) {
     min.x = mX * width + width - road;
     min.z = mZ * width + width - road;
 
-    max.x = min.x + road;
-    max.z = min.z + road;
+    max.x = min.x + road - 1;
+    max.z = min.z + road - 1;
 
-    min.y = -64;
-    max.y = 320;
+    min.y  = -64;
+    max.y  = 320;
+    mValid = true;
 }
 PlotCross::PlotCross(Vec3 const& vec3) {
     data::PlotDBStorage::getInstance()._initClass(*this);
@@ -522,8 +524,8 @@ PlotCross::PlotCross(Vec3 const& vec3) {
         min.x = mX * width + width - road;
         min.z = mZ * width + width - road;
 
-        max.x = min.x + road;
-        max.z = min.z + road;
+        max.x = min.x + road - 1;
+        max.z = min.z + road - 1;
 
         min.y = -64;
         max.y = 320;
@@ -533,8 +535,10 @@ PlotCross::PlotCross(Vec3 const& vec3) {
         min = Vec3{0, 0, 0};
         max = Vec3{0, 0, 0};
     }
+    mValid = isValid;
 }
 
+bool    PlotCross::isValid() const { return mValid; }
 CrossID PlotCross::getCrossID() const { return fmt::format("({}, {})", mX, mZ); }
 string  PlotCross::toString() const {
     return fmt::format("{} | {} => {}", getCrossID(), mDiagonPos.first.toString(), mDiagonPos.second.toString());
@@ -546,37 +550,36 @@ bool PlotCross::hasPoint(BlockPos const& pos) const {
     auto const& max = mDiagonPos.second;
     return x >= min.x && x <= max.x && z >= min.z && z <= max.z;
 }
-bool PlotCross::fill(Block const& block, bool includeBorder) {
+void PlotCross::fill(Block const& block, bool includeBorder) {
     auto min = includeBorder ? mDiagonPos.first - 1 : mDiagonPos.first;
     auto max = includeBorder ? mDiagonPos.second + 1 : mDiagonPos.second;
 
     auto dim = ll::service::getLevel()->getDimension(getPlotWorldDimensionId());
     if (!dim) {
-        return false;
+        return;
     }
 
-    auto&       bs  = dim->getBlockSourceFromMainChunkSource();
-    Block const air = *Block::tryGetFromRegistry("minecraft:air");
-    int const   y   = PlotPos::getSurfaceYStatic();
+    auto&        bs  = dim->getBlockSourceFromMainChunkSource();
+    Block const& air = Block::tryGetFromRegistry("minecraft:air").value();
+    int const    y   = PlotPos::getSurfaceYStatic() - 1;
 
     for (int x = min.x; x <= max.x; x++) {
         for (int z = min.z; z <= max.z; z++) {
-            auto bl = bs.getBlock(x, y, z);
+            auto& bl = bs.getBlock(x, y, z);
 
             if (bl.isAir()) {
                 continue;
             }
 
-            bs.setBlockNoUpdate(x, y, z, block);
+            bs.setBlock(x, y, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
 
             if (includeBorder
                 && ((x == min.x && z == min.z) || (x == min.x && z == max.z) || (x == max.x && z == min.z)
                     || (x == max.x && z == max.z))) {
-                bs.setBlockNoUpdate(x, y, z, air); // 替换四个角的方块为空气
+                bs.setBlock(x, y + 1, z, air, (int)BlockUpdateFlag::AllPriority, nullptr); // 替换四个角的方块为空气
             }
         }
     }
-    return true;
 }
 
 

@@ -263,6 +263,11 @@ bool registerCommand() {
 
     _setupTemplateCommand();
 
+#ifdef DEBUG
+    extern void SetupDebugCommand();
+    SetupDebugCommand();
+#endif
+
 #ifndef OVERWORLD
     cmd.overload<ParamGo>().text("go").required("dim").execute(LambdaGo); // plo go <overworld|plot>
 #endif

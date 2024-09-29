@@ -34,7 +34,7 @@ public:
     int     mX, mZ;   // 地皮坐标
     Vertexs mVertexs; // 地皮顶点
 
-    PlotPos() = delete;
+    PlotPos() = default;
     PLAPI PlotPos(int x, int z);
     PLAPI PlotPos(const Vec3& vec3);
 
@@ -130,16 +130,19 @@ public:
     int       mX, mZ;
     DiagonPos mDiagonPos;
     bool      mIsMergedPlot; // 是否是合并的地皮
+    bool      mValid;        // 是否有效
 
     PlotCross() = delete;
     PLAPI PlotCross(int x, int z);
     PLAPI PlotCross(const Vec3& vec3);
 
+    PLAPI bool isValid() const; // 判断是否有效
+
     PLAPI string  toString() const;
     PLAPI CrossID getCrossID() const;
 
     PLAPI bool hasPoint(BlockPos const& pos) const;                  // 判断一个点是否在路口内
-    PLAPI bool fill(Block const& block, bool includeBorder = false); // 填充路口
+    PLAPI void fill(Block const& block, bool includeBorder = false); // 填充路口
 
     // PLAPI std::vector<PlotRoad> getAdjacentRoads() const; // todo
 };
