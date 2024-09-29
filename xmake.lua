@@ -66,12 +66,17 @@ target("PlotCraft")
         add_packages("more-dimensions")
     else
         add_defines("OVERWORLD")
-    end 
+    end
 
     add_defines("BuildVersionInfo=\"Overworld: " .. tostring(get_config("overworld")) .. "\"")
 
     add_defines("PLUGIN_NAME=\"PlotCraft\"")
     add_defines("PLUGIN_TITLE=\"§6[§aPlotCraft§6]§r \"")
+
+    -- Release 模式下开启最大性能优化
+    if is_mode("release") then
+        add_cxflags("/O2")
+    end
 
     after_build(function (target)
         local plugin_packer = import("scripts.after_build")

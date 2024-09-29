@@ -54,35 +54,39 @@ public:
 
 namespace plo::event {
 
-void buildTipMessage(Player& p, PlotPos const& pps, PlayerNameDB* ndb, PlotDBStorage* pdb) {
+void buildTipMessage(Player& player, PlotPos const& pps, PlayerNameDB* ndb, PlotDBStorage* pdb) {
     try {
         PlotMetadataPtr plot = pdb->getPlot(pps.getPlotID());
-        if (plot == nullptr) plot = PlotMetadata::make(pps.getPlotID(), pps.mX, pps.mZ);
+        // if (!plot) plot = PlotMetadata::make(pps.getPlotID(), pps.mX, pps.mZ);
 
         TextPacket pkt = TextPacket();
         pkt.mType      = TextPacketType::Tip;
+
         if (pps.isValid()) {
-            auto owner = plot->getPlotOwner();
+            bool const noValue = plot == nullptr;
+            bool const noOwner = noValue ? true : plot->getPlotOwner().empty();
+            bool const saleing = !noValue ? plot->isSale() : false;
             // clang-format off
             pkt.mMessage = fmt::format(
                 "地皮: {0}\n主人: {1}  |  名称: {2}\n出售: {3}  |  价格: {4}{5}",
                 pps.toString(),
-                owner.empty() ? "无主" : ndb->getPlayerName(owner),
-                plot->getPlotName(),
-                owner.empty() ? "§a✔§r" : plot->isSale() ? "§a✔§r" : "§c✘§r",
-                owner.empty() ? Config::cfg.plotWorld.buyPlotPrice : plot->isSale() ? plot->getSalePrice() : 0,
-                owner.empty() ? "\n输入：/plo buy 打开购买菜单" : ""
+                noOwner ? "无主" : ndb->getPlayerName(plot->getPlotOwner()),
+                noOwner ? "未命名" : plot->getPlotName(),
+                noOwner ? "§a✔§r" :saleing ? "§a✔§r" : "§c✘§r",
+                noOwner ? Config::cfg.plotWorld.buyPlotPrice : saleing ? plot->getSalePrice() : 0,
+                noOwner ? "\n输入：/plo buy 打开购买菜单" : ""
             );
             // clang-format on
-        } else pkt.mMessage = fmt::format("{0} | 地皮世界\n输入: /plo 打开地皮菜单", PLUGIN_TITLE); // Tip3
+        } else {
+            pkt.mMessage = fmt::format(
+                "{0} | 地皮世界\n输入: /plo 打开地皮菜单\n\nRoad: {1}\nCross: {2}",
+                PLUGIN_TITLE,
+                PlotRoad(player.getPosition()).toString(),
+                PlotCross(player.getPosition()).toString()
+            ); // Tip3
+        }
 
-        p.sendNetworkPacket(pkt);
-    } catch (std::exception const& e) {
-        my_plugin::MyPlugin::getInstance().getSelf().getLogger().error(
-            "Fail in {}\nstd::exception: {}",
-            __FUNCTION__,
-            e.what()
-        );
+        pkt.sendTo(player);
     } catch (...) {
         my_plugin::MyPlugin::getInstance().getSelf().getLogger().error("Fail in {}\nunknown exception", __FUNCTION__);
     }

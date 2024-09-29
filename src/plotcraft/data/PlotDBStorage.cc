@@ -1,6 +1,7 @@
 #include "plotcraft/data/PlotDBStorage.h"
 #include "ll/api/data/KeyValueDB.h"
 #include "nlohmann/json_fwd.hpp"
+#include "plotcraft/math/PlotPos.h"
 #include "plotcraft/utils/JsonHelper.h"
 #include "plugin/MyPlugin.h"
 #include <memory>
@@ -93,6 +94,30 @@ void PlotDBStorage::load() {
     logger->info("已加载 {}条 地皮数据", mPlotList.size());
     logger->info("已加载 {}位 管理员数据", mAdminList.size());
     logger->info("已加载 {}位 玩家设置数据", mPlayerSettingList.size());
+
+    // Init Map
+    logger->info("初始化运行时必要的表...");
+    for (auto const& [id, ptr] : mPlotList) {
+        if (!ptr->isMerged()) {
+            continue;
+        }
+        mMergedPlots.emplace(id); // self
+
+        auto& data = ptr->mMergedData;
+        for (auto const& p : data.mMergedPlotIDs) {
+            mMergedPlots.emplace(p);
+        }
+        for (auto const& r : data.mMergedRoadIDs) {
+            mMergeRoadMap.emplace(id, r);
+        }
+        for (auto const& c : data.mMergedCrossIDs) {
+            mMergeCrossMap.emplace(id, c);
+        }
+    }
+    logger->info("初始化完成");
+    logger->debug("mMergedPlots: {}", mMergedPlots.size());
+    logger->debug("mMergeRoadMap: {}", mMergeRoadMap.size());
+    logger->debug("mMergeCrossMap: {}", mMergeCrossMap.size());
 }
 
 void PlotDBStorage::save(PlotMetadata const& plot) {
@@ -246,6 +271,12 @@ PlotPermission PlotDBStorage::getPlayerPermission(UUIDs const& uuid, PlotID cons
     if (!ptr) return PlotPermission::None;
 
     return ptr->getPlayerInThisPlotPermission(uuid);
+}
+
+
+void PlotDBStorage::_initClass(PlotRoad& road) { road.mIsMergedPlot = this->mMergeRoadMap.contains(road.getRoadID()); }
+void PlotDBStorage::_initClass(PlotCross& cross) {
+    cross.mIsMergedPlot = this->mMergeCrossMap.contains(cross.getCrossID());
 }
 
 

@@ -45,9 +45,9 @@ public:
     PlotDBStorage& operator=(const PlotDBStorage&) = delete;
 
     // Merge API:
-    PLAPI void initClass(PlotRoad& road);
-    // PLAPI void initClass(PlotCross& cross); // todo
-    // PLAPI void initClass(PlotPos& pos);     // todo
+    PLAPI void _initClass(PlotRoad& road);
+    PLAPI void _initClass(PlotCross& cross);
+    // PLAPI void _initClass(PlotPos& pos);     // todo
 
     // Instance API:
     PLAPI ll::data::KeyValueDB& getDB();
@@ -71,9 +71,10 @@ public:
 
     // Plot API:
     PLAPI bool hasPlot(const PlotID& id) const;
-    PLAPI bool delPlot(const PlotID& id);
     PLAPI bool addPlot(PlotID const& id, UUIDs const& owner, int x, int z);
     PLAPI bool addPlot(PlotMetadataPtr plot);
+
+    [[deprecated("This function is not recommended unless it is necessary")]] PLAPI bool delPlot(const PlotID& id);
 
     PLAPI PlotMetadataPtr getPlot(PlotID const& id) const;
     PLAPI std::vector<PlotMetadataPtr> getPlots() const;

@@ -107,11 +107,11 @@ public:
     bool      mIsMergedPlot; // 是否是合并的地皮
 
     PLAPI PlotRoad() = default;
-    PLAPI PlotRoad(int x, int z);     // todo
-    PLAPI PlotRoad(const Vec3& vec3); // todo
+    PLAPI PlotRoad(int x, int z);
+    PLAPI PlotRoad(Vec3 const& vec3);
 
-    // PLAPI string toString() const;  // todo
-    // PLAPI RoadID getRoadID() const; // todo
+    PLAPI string toString() const;
+    PLAPI RoadID getRoadID() const;
 
     // PLAPI bool isOnRoad(BlockPos const& pos) const;                      // todo
     // PLAPI bool fillRoad(Block const& block, bool includeBorder = false); // todo
@@ -126,12 +126,12 @@ public:
     DiagonPos mDiagonPos;
     bool      mIsMergedPlot; // 是否是合并的地皮
 
-    // PLAPI PlotCross();                                                            // todo
-    // PLAPI PlotCross(int x, int z);                                                // todo
-    // PLAPI PlotCross(const Vec3& vec3);                                            // todo
+    PLAPI PlotCross() = default;
+    PLAPI PlotCross(int x, int z);
+    PLAPI PlotCross(const Vec3& vec3);
 
-    // PLAPI string  toString() const;   // todo
-    // PLAPI CrossID getCrossID() const; // todo
+    PLAPI string  toString() const;
+    PLAPI CrossID getCrossID() const;
 
     // PLAPI bool isOnCross(BlockPos const& pos) const;      // todo
     // PLAPI bool fillCross(Block const& block);             // todo

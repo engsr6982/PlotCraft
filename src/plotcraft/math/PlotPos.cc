@@ -1,10 +1,14 @@
 #include "plotcraft/math/PlotPos.h"
+#include "fmt/core.h"
 #include "fmt/format.h"
+#include "mc/world/level/BlockPos.h"
 #include "plotcraft/Config.h"
+#include "plotcraft/Global.h"
 #include "plotcraft/core/TemplateManager.h"
 #include "plotcraft/data/PlotDBStorage.h"
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
 #include <utility>
 
 
@@ -435,11 +439,113 @@ bool Radius::operator==(const Radius& other) const {
 }
 bool Radius::operator!=(const Radius& other) const { return !(*this == other); }
 
-
-// !class: PlotRoad
+// !Class: PlotRoad
 PlotRoad::PlotRoad(int x, int z) : mX(x), mZ(z) {
-    data::PlotDBStorage::getInstance().initClass(*this);
-    //
+    data::PlotDBStorage::getInstance()._initClass(*this);
+    auto const& cfg = Config::cfg.generator;
+
+    auto& min = mDiagonPos.first;
+    auto& max = mDiagonPos.second;
+
+    // min.x = x*
+}
+
+PlotRoad::PlotRoad(Vec3 const& vec3) {
+    data::PlotDBStorage::getInstance()._initClass(*this);
+    auto const& cfg = Config::cfg.generator;
+}
+
+
+RoadID PlotRoad::getRoadID() const { return fmt::format("({}, {})", mX, mZ); }
+string PlotRoad::toString() const {
+    return fmt::format("{} | {} => {}", getRoadID(), mDiagonPos.first.toString(), mDiagonPos.second.toString());
+}
+
+
+// !Class: PlotCross
+PlotCross::PlotCross(int x, int z) : mX(x), mZ(z) {
+    data::PlotDBStorage::getInstance()._initClass(*this);
+    auto const& cfg = Config::cfg.generator;
+
+    auto& min = mDiagonPos.first;
+    auto& max = mDiagonPos.second;
+
+    bool const temp  = TemplateManager::isUseTemplate();
+    int        road  = temp ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
+    int        width = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) - (road * 2) : cfg.plotWidth;
+
+
+    min.x = (x * width) + width - 1;
+    min.z = (z * width) + width - 1;
+
+    max.x = min.x + road + 1;
+    max.z = min.z + road + 1;
+
+    min.y = -64;
+    max.y = 320;
+}
+PlotCross::PlotCross(Vec3 const& vec3) {
+    data::PlotDBStorage::getInstance()._initClass(*this);
+    auto const& cfg = Config::cfg.generator;
+
+    auto& min = mDiagonPos.first;
+    auto& max = mDiagonPos.second;
+
+    bool const temp  = TemplateManager::isUseTemplate();
+    int        road  = temp ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
+    int        width = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) - (road * 2) : cfg.plotWidth;
+    int        total = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
+
+    // 计算路口坐标
+    mX = (int)std::floor(std::floor(vec3.x) / total);
+    mZ = (int)std::floor(std::floor(vec3.z) / total);
+
+    bool isValid = true;                                         // Vec3 = 66, ?, 69
+    int  localX  = static_cast<int>(std::floor(vec3.x)) % total; // 66
+    int  localZ  = static_cast<int>(std::floor(vec3.z)) % total; // 0
+
+    if (localX <= 0) localX += total;
+    if (localZ <= 0) localZ += total;
+
+    if (!temp) {
+        // DefaultGenerator
+        // 范围: 63,63 ~ 69,69
+        int crossStart = width - 1;             // 63
+        int crossEnd   = crossStart + road + 1; // 69
+
+        //  66 < 63 = false        66 > 69 = false      0 < 63 = true          0 > 69 = false
+        if (localX < crossStart || localX > crossEnd || localZ < crossStart || localZ > crossEnd) {
+            isValid = false;
+        }
+
+    } else {
+        // TemplateGenerator
+        int crossStart = width;
+        int crossEnd   = crossStart + (road * 2) + 1;
+
+        if (localX < crossStart || localX > crossEnd || localZ < crossStart || localZ > crossEnd) {
+            isValid = false;
+        }
+    }
+
+    if (!isValid) {
+        mX = 0;
+        mZ = 0;
+    } else {
+        min.x = (mX * width) + width - 1;
+        min.z = (mZ * width) + width - 1;
+
+        max.x = min.x + road + 1;
+        max.z = min.z + road + 1;
+
+        min.y = -64;
+        max.y = 320;
+    }
+}
+
+CrossID PlotCross::getCrossID() const { return fmt::format("({}, {})", mX, mZ); }
+string  PlotCross::toString() const {
+    return fmt::format("{} | {} => {}", getCrossID(), mDiagonPos.first.toString(), mDiagonPos.second.toString());
 }
 
 
