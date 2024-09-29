@@ -1,7 +1,11 @@
 #include "plotcraft/math/PlotPos.h"
 #include "fmt/core.h"
 #include "fmt/format.h"
+#include "ll/api/service/Bedrock.h"
 #include "mc/world/level/BlockPos.h"
+#include "mc/world/level/BlockSource.h"
+#include "mc/world/level/block/registry/BlockTypeRegistry.h"
+#include "mc/world/level/dimension/Dimension.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/Global.h"
 #include "plotcraft/core/TemplateManager.h"
@@ -104,10 +108,7 @@ PlotPos::PlotPos(const Vec3& vec3) {
     }
 }
 
-int PlotPos::getSurfaceY() const {
-    return TemplateManager::isUseTemplate() ? (TemplateManager::mTemplateData.template_offset + 1)
-                                            : -64 + (Config::cfg.generator.subChunkNum * 16);
-}
+int PlotPos::getSurfaceY() const { return PlotPos::getSurfaceYStatic(); }
 
 bool PlotPos::isValid() const { return !mVertexs.empty(); }
 
@@ -318,6 +319,10 @@ bool PlotPos::isPointInPolygon(const Vec3& point, Vertexs const& polygon) {
     }
     return inside;
 }
+int PlotPos::getSurfaceYStatic() {
+    return TemplateManager::isUseTemplate() ? (TemplateManager::mTemplateData.template_offset + 1)
+                                            : -64 + (Config::cfg.generator.subChunkNum * 16);
+}
 
 
 // !Class: Cube
@@ -471,15 +476,14 @@ PlotCross::PlotCross(int x, int z) : mX(x), mZ(z) {
     auto& max = mDiagonPos.second;
 
     bool const temp  = TemplateManager::isUseTemplate();
-    int        road  = temp ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
-    int        width = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) - (road * 2) : cfg.plotWidth;
+    int const  road  = temp ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
+    int const  width = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
 
+    min.x = mX * width + width - road;
+    min.z = mZ * width + width - road;
 
-    min.x = (x * width) + width - 1;
-    min.z = (z * width) + width - 1;
-
-    max.x = min.x + road + 1;
-    max.z = min.z + road + 1;
+    max.x = min.x + road;
+    max.z = min.z + road;
 
     min.y = -64;
     max.y = 320;
@@ -492,60 +496,87 @@ PlotCross::PlotCross(Vec3 const& vec3) {
     auto& max = mDiagonPos.second;
 
     bool const temp  = TemplateManager::isUseTemplate();
-    int        road  = temp ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
-    int        width = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) - (road * 2) : cfg.plotWidth;
-    int        total = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
+    int const  road  = temp ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
+    int const  width = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
 
-    // 计算路口坐标
-    mX = (int)std::floor(std::floor(vec3.x) / total);
-    mZ = (int)std::floor(std::floor(vec3.z) / total);
+    // 计算全局坐标在哪个大区域内
+    mX = (int)std::floor(vec3.x / width);
+    mZ = (int)std::floor(vec3.z / width);
 
-    bool isValid = true;                                         // Vec3 = 66, ?, 69
-    int  localX  = static_cast<int>(std::floor(vec3.x)) % total; // 66
-    int  localZ  = static_cast<int>(std::floor(vec3.z)) % total; // 0
+    // 计算在大区域内的局部坐标
+    int localX = (int)std::floor(vec3.x) - (mX * width);
+    int localZ = (int)std::floor(vec3.z) - (mZ * width);
 
-    if (localX <= 0) localX += total;
-    if (localZ <= 0) localZ += total;
-
+    bool isValid = true;
     if (!temp) {
         // DefaultGenerator
-        // 范围: 63,63 ~ 69,69
-        int crossStart = width - 1;             // 63
-        int crossEnd   = crossStart + road + 1; // 69
-
-        //  66 < 63 = false        66 > 69 = false      0 < 63 = true          0 > 69 = false
-        if (localX < crossStart || localX > crossEnd || localZ < crossStart || localZ > crossEnd) {
+        if (localX < cfg.plotWidth || localX > width - 1 || localZ < cfg.plotWidth || localZ > width - 1) {
             isValid = false;
         }
-
     } else {
         // TemplateGenerator
-        int crossStart = width;
-        int crossEnd   = crossStart + (road * 2) + 1;
-
-        if (localX < crossStart || localX > crossEnd || localZ < crossStart || localZ > crossEnd) {
-            isValid = false;
-        }
+        throw std::runtime_error("TemplateGenerator not implemented yet");
     }
 
-    if (!isValid) {
-        mX = 0;
-        mZ = 0;
-    } else {
-        min.x = (mX * width) + width - 1;
-        min.z = (mZ * width) + width - 1;
+    if (isValid) {
+        min.x = mX * width + width - road;
+        min.z = mZ * width + width - road;
 
-        max.x = min.x + road + 1;
-        max.z = min.z + road + 1;
+        max.x = min.x + road;
+        max.z = min.z + road;
 
         min.y = -64;
         max.y = 320;
+    } else {
+        mX  = 0;
+        mZ  = 0;
+        min = Vec3{0, 0, 0};
+        max = Vec3{0, 0, 0};
     }
 }
 
 CrossID PlotCross::getCrossID() const { return fmt::format("({}, {})", mX, mZ); }
 string  PlotCross::toString() const {
     return fmt::format("{} | {} => {}", getCrossID(), mDiagonPos.first.toString(), mDiagonPos.second.toString());
+}
+bool PlotCross::hasPoint(BlockPos const& pos) const {
+    int const&  x   = pos.x;
+    int const&  z   = pos.z;
+    auto const& min = mDiagonPos.first;
+    auto const& max = mDiagonPos.second;
+    return x >= min.x && x <= max.x && z >= min.z && z <= max.z;
+}
+bool PlotCross::fill(Block const& block, bool includeBorder) {
+    auto min = includeBorder ? mDiagonPos.first - 1 : mDiagonPos.first;
+    auto max = includeBorder ? mDiagonPos.second + 1 : mDiagonPos.second;
+
+    auto dim = ll::service::getLevel()->getDimension(getPlotWorldDimensionId());
+    if (!dim) {
+        return false;
+    }
+
+    auto&       bs  = dim->getBlockSourceFromMainChunkSource();
+    Block const air = *Block::tryGetFromRegistry("minecraft:air");
+    int const   y   = PlotPos::getSurfaceYStatic();
+
+    for (int x = min.x; x <= max.x; x++) {
+        for (int z = min.z; z <= max.z; z++) {
+            auto bl = bs.getBlock(x, y, z);
+
+            if (bl.isAir()) {
+                continue;
+            }
+
+            bs.setBlockNoUpdate(x, y, z, block);
+
+            if (includeBorder
+                && ((x == min.x && z == min.z) || (x == min.x && z == max.z) || (x == max.x && z == min.z)
+                    || (x == max.x && z == max.z))) {
+                bs.setBlockNoUpdate(x, y, z, air); // 替换四个角的方块为空气
+            }
+        }
+    }
+    return true;
 }
 
 

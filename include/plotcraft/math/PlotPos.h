@@ -21,7 +21,11 @@ enum class PlotDirection : int {
     North   = 0,  // 北
     East    = 1,  // 东
     South   = 2,  // 南
-    West    = 3   // 西
+    West    = 3,  // 西
+    NE      = 4,  // 东北
+    SE      = 5,  // 东南
+    SW      = 6,  // 西南
+    NW      = 7,  // 西北
 };
 
 
@@ -30,7 +34,7 @@ public:
     int     mX, mZ;   // 地皮坐标
     Vertexs mVertexs; // 地皮顶点
 
-    PLAPI PlotPos() = default;
+    PlotPos() = delete;
     PLAPI PlotPos(int x, int z);
     PLAPI PlotPos(const Vec3& vec3);
 
@@ -54,6 +58,7 @@ public:
     PLAPI bool operator!=(PlotPos const& other) const;
 
     // static
+    PLAPI static int  getSurfaceYStatic();
     PLAPI static bool isAdjacent(PlotPos const& plot1, PlotPos const& plot2);      // 判断两个地皮是否相邻
     PLAPI static bool isPointInPolygon(const Vec3& point, Vertexs const& polygon); // 判断一个点是否在多边形内
 
@@ -106,7 +111,7 @@ public:
     DiagonPos mDiagonPos;    // 对角线坐标
     bool      mIsMergedPlot; // 是否是合并的地皮
 
-    PLAPI PlotRoad() = default;
+    PlotRoad() = delete;
     PLAPI PlotRoad(int x, int z);
     PLAPI PlotRoad(Vec3 const& vec3);
 
@@ -126,15 +131,16 @@ public:
     DiagonPos mDiagonPos;
     bool      mIsMergedPlot; // 是否是合并的地皮
 
-    PLAPI PlotCross() = default;
+    PlotCross() = delete;
     PLAPI PlotCross(int x, int z);
     PLAPI PlotCross(const Vec3& vec3);
 
     PLAPI string  toString() const;
     PLAPI CrossID getCrossID() const;
 
-    // PLAPI bool isOnCross(BlockPos const& pos) const;      // todo
-    // PLAPI bool fillCross(Block const& block);             // todo
+    PLAPI bool hasPoint(BlockPos const& pos) const;                  // 判断一个点是否在路口内
+    PLAPI bool fill(Block const& block, bool includeBorder = false); // 填充路口
+
     // PLAPI std::vector<PlotRoad> getAdjacentRoads() const; // todo
 };
 
