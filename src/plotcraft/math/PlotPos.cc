@@ -585,13 +585,17 @@ PlotRoad::PlotRoad(Vec3 const& vec3) {
     int const  road  = temp ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
     int const  width = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
 
-    mX = (int)std::floor(vec3.x / width);
-    mZ = (int)std::floor(vec3.z / width);
+    int plot_size = width - road;
 
-    int localX = (int)vec3.x - mX * width;
-    int localZ = (int)vec3.z - mZ * width;
+    // 使用 floor 来处理负坐标
+    mX = (int)std::floor(vec3.x / (double)width);
+    mZ = (int)std::floor(vec3.z / (double)width);
 
-    int plot_size = width - road; // 64
+    // 使用 fmod 来正确处理负坐标的本地坐标
+    double localX = std::fmod(vec3.x, width);
+    double localZ = std::fmod(vec3.z, width);
+    if (localX < 0) localX += width;
+    if (localZ < 0) localZ += width;
 
     mValid = true;
 
@@ -602,27 +606,22 @@ PlotRoad::PlotRoad(Vec3 const& vec3) {
         max.x = min.x + road - 1;
         min.z = mZ * width;
         max.z = min.z + plot_size - 1;
-
     } else if (localZ >= plot_size && localZ < width && localX < plot_size) {
         // 横向道路
         min.x = mX * width;
         max.x = min.x + plot_size - 1;
         min.z = mZ * width + plot_size;
         max.z = min.z + road - 1;
-
     } else {
         mValid = false; // 不在道路上
-    }
-
-    if (!mValid) {
-        min = Vec3{0, 0, 0};
-        max = Vec3{0, 0, 0};
-        mX  = 0;
-        mZ  = 0;
+        min    = Vec3{0, 0, 0};
+        max    = Vec3{0, 0, 0};
+        mX     = 0;
+        mZ     = 0;
     }
 }
 
-
+bool   PlotRoad::isValid() const { return mValid; }
 RoadID PlotRoad::getRoadID() const { return fmt::format("({}, {})", mX, mZ); }
 string PlotRoad::toString() const {
     return fmt::format("{} | {} => {}", getRoadID(), mDiagonPos.first.toString(), mDiagonPos.second.toString());
