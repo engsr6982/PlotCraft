@@ -445,28 +445,6 @@ bool Radius::operator==(const Radius& other) const {
 }
 bool Radius::operator!=(const Radius& other) const { return !(*this == other); }
 
-// !Class: PlotRoad
-PlotRoad::PlotRoad(int x, int z) : mX(x), mZ(z) {
-    data::PlotDBStorage::getInstance()._initClass(*this);
-    auto const& cfg = Config::cfg.generator;
-
-    auto& min = mDiagonPos.first;
-    auto& max = mDiagonPos.second;
-
-    // min.x = x*
-}
-
-PlotRoad::PlotRoad(Vec3 const& vec3) {
-    data::PlotDBStorage::getInstance()._initClass(*this);
-    auto const& cfg = Config::cfg.generator;
-}
-
-
-RoadID PlotRoad::getRoadID() const { return fmt::format("({}, {})", mX, mZ); }
-string PlotRoad::toString() const {
-    return fmt::format("{} | {} => {}", getRoadID(), mDiagonPos.first.toString(), mDiagonPos.second.toString());
-}
-
 
 // !Class: PlotCross
 PlotCross::PlotCross(int x, int z) : mX(x), mZ(z) {
@@ -580,6 +558,74 @@ void PlotCross::fill(Block const& block, bool includeBorder) {
             }
         }
     }
+}
+
+
+// !Class: PlotRoad
+PlotRoad::PlotRoad(int x, int z) : mX(x), mZ(z) {
+    data::PlotDBStorage::getInstance()._initClass(*this);
+    auto const& cfg = Config::cfg.generator;
+
+    auto& min = mDiagonPos.first;
+    auto& max = mDiagonPos.second;
+
+    // todo
+}
+
+PlotRoad::PlotRoad(Vec3 const& vec3) {
+    data::PlotDBStorage::getInstance()._initClass(*this);
+    auto const& cfg = Config::cfg.generator;
+
+    auto& min = mDiagonPos.first;
+    auto& max = mDiagonPos.second;
+    min.y     = -64;
+    max.y     = 320;
+
+    bool const temp  = TemplateManager::isUseTemplate();
+    int const  road  = temp ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
+    int const  width = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
+
+    mX = (int)std::floor(vec3.x / width);
+    mZ = (int)std::floor(vec3.z / width);
+
+    int localX = (int)vec3.x - mX * width;
+    int localZ = (int)vec3.z - mZ * width;
+
+    int plot_size = width - road; // 64
+
+    mValid = true;
+
+    // 判断是纵向道路还是横向道路
+    if (localX >= plot_size && localX < width && localZ < plot_size) {
+        // 纵向道路
+        min.x = mX * width + plot_size;
+        max.x = min.x + road - 1;
+        min.z = mZ * width;
+        max.z = min.z + plot_size - 1;
+
+    } else if (localZ >= plot_size && localZ < width && localX < plot_size) {
+        // 横向道路
+        min.x = mX * width;
+        max.x = min.x + plot_size - 1;
+        min.z = mZ * width + plot_size;
+        max.z = min.z + road - 1;
+
+    } else {
+        mValid = false; // 不在道路上
+    }
+
+    if (!mValid) {
+        min = Vec3{0, 0, 0};
+        max = Vec3{0, 0, 0};
+        mX  = 0;
+        mZ  = 0;
+    }
+}
+
+
+RoadID PlotRoad::getRoadID() const { return fmt::format("({}, {})", mX, mZ); }
+string PlotRoad::toString() const {
+    return fmt::format("{} | {} => {}", getRoadID(), mDiagonPos.first.toString(), mDiagonPos.second.toString());
 }
 
 

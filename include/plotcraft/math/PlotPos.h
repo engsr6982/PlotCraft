@@ -110,10 +110,13 @@ public:
     int       mX, mZ;        // 道路坐标
     DiagonPos mDiagonPos;    // 对角线坐标
     bool      mIsMergedPlot; // 是否是合并的地皮
+    bool      mValid;        // 是否有效
 
     PlotRoad() = delete;
     PLAPI PlotRoad(int x, int z);
     PLAPI PlotRoad(Vec3 const& vec3);
+
+    PLAPI bool isValid() const; // 判断是否有效
 
     PLAPI string toString() const;
     PLAPI RoadID getRoadID() const;
