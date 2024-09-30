@@ -2,6 +2,7 @@
 #include "fmt/core.h"
 #include "fmt/format.h"
 #include "ll/api/service/Bedrock.h"
+#include "magic_enum.hpp"
 #include "mc/enums/BlockUpdateFlag.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
@@ -562,14 +563,36 @@ void PlotCross::fill(Block const& block, bool includeBorder) {
 
 
 // !Class: PlotRoad
-PlotRoad::PlotRoad(int x, int z) : mX(x), mZ(z) {
+PlotRoad::PlotRoad(int x, int z, PlotDirection direction) : mX(x), mZ(z) {
+    if (direction != PlotDirection::East && direction != PlotDirection::South) {
+        throw std::runtime_error("PlotRoad::PlotRoad: Invalid direction");
+    }
+
     data::PlotDBStorage::getInstance()._initClass(*this);
     auto const& cfg = Config::cfg.generator;
 
-    auto& min = mDiagonPos.first;
-    auto& max = mDiagonPos.second;
+    auto&      min   = mDiagonPos.first;
+    auto&      max   = mDiagonPos.second;
+    bool const temp  = TemplateManager::isUseTemplate();
+    int const  road  = temp ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
+    int const  width = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
+    int        plot_size = width - road;
 
-    // todo
+    if (direction == PlotDirection::East) {
+        // x+
+        min.x = mX * width + plot_size;
+        max.x = min.x + road - 1;
+        min.z = mZ * width;
+        max.z = min.z + plot_size - 1;
+
+    } else {
+        // z+
+        min.x = mX * width;
+        max.x = min.x + plot_size - 1;
+        min.z = mZ * width + plot_size;
+        max.z = min.z + road - 1;
+    }
+    mDirection = direction;
 }
 
 PlotRoad::PlotRoad(Vec3 const& vec3) {
@@ -602,16 +625,20 @@ PlotRoad::PlotRoad(Vec3 const& vec3) {
     // 判断是纵向道路还是横向道路
     if (localX >= plot_size && localX < width && localZ < plot_size) {
         // 纵向道路
-        min.x = mX * width + plot_size;
-        max.x = min.x + road - 1;
-        min.z = mZ * width;
-        max.z = min.z + plot_size - 1;
+        min.x      = mX * width + plot_size;
+        max.x      = min.x + road - 1;
+        min.z      = mZ * width;
+        max.z      = min.z + plot_size - 1;
+        mDirection = PlotDirection::East;
+
     } else if (localZ >= plot_size && localZ < width && localX < plot_size) {
         // 横向道路
-        min.x = mX * width;
-        max.x = min.x + plot_size - 1;
-        min.z = mZ * width + plot_size;
-        max.z = min.z + road - 1;
+        min.x      = mX * width;
+        max.x      = min.x + plot_size - 1;
+        min.z      = mZ * width + plot_size;
+        max.z      = min.z + road - 1;
+        mDirection = PlotDirection::South;
+
     } else {
         mValid = false; // 不在道路上
         min    = Vec3{0, 0, 0};
@@ -622,10 +649,44 @@ PlotRoad::PlotRoad(Vec3 const& vec3) {
 }
 
 bool   PlotRoad::isValid() const { return mValid; }
-RoadID PlotRoad::getRoadID() const { return fmt::format("({}, {})", mX, mZ); }
+RoadID PlotRoad::getRoadID() const { return fmt::format("{}({}, {})", magic_enum::enum_name(mDirection), mX, mZ); }
 string PlotRoad::toString() const {
     return fmt::format("{} | {} => {}", getRoadID(), mDiagonPos.first.toString(), mDiagonPos.second.toString());
 }
+bool PlotRoad::hasPoint(BlockPos const& pos) const {
+    return pos.x >= mDiagonPos.first.x && pos.x <= mDiagonPos.second.x && pos.z >= mDiagonPos.first.z
+        && pos.z <= mDiagonPos.second.z;
+}
+void PlotRoad::fill(Block const& block, bool includeBorder) {
+    auto min = includeBorder ? mDiagonPos.first - 1 : mDiagonPos.first;
+    auto max = includeBorder ? mDiagonPos.second + 1 : mDiagonPos.second;
 
+    auto dim = ll::service::getLevel()->getDimension(getPlotWorldDimensionId());
+    if (!dim) {
+        return;
+    }
+
+    auto&        bs  = dim->getBlockSourceFromMainChunkSource();
+    Block const& air = Block::tryGetFromRegistry("minecraft:air").value();
+    int const    y   = PlotPos::getSurfaceYStatic() - 1;
+
+    for (int x = min.x; x <= max.x; x++) {
+        for (int z = min.z; z <= max.z; z++) {
+            auto& bl = bs.getBlock(x, y, z);
+
+            if (bl.isAir()) {
+                continue;
+            }
+
+            bs.setBlock(x, y, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
+
+            if (includeBorder
+                && ((x == min.x && z == min.z) || (x == min.x && z == max.z) || (x == max.x && z == min.z)
+                    || (x == max.x && z == max.z))) {
+                bs.setBlock(x, y + 1, z, air, (int)BlockUpdateFlag::AllPriority, nullptr); // 替换四个角的方块为空气
+            }
+        }
+    }
+}
 
 } // namespace plo
