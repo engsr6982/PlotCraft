@@ -417,12 +417,12 @@ LL_TYPE_INSTANCE_HOOK(
 
         debugger("[凋零破坏方块] executed!");
 
-        Cube  c(bb.min, bb.max);
-        auto  land = c.getRangedPlots();
+        // Cube  c(bb.min, bb.max);
+        auto  land = PlotPos::getPlotPosAt(bb.min, bb.max);
         auto& db   = PlotDBStorage::getInstance();
 
         for (auto const& p : land) {
-            if (p.isCubeOnBorder(c)) {
+            if (p.isAABBOnBorder(bb.min, bb.max)) {
                 my_plugin::MyPlugin::getInstance().getSelf().getLogger().warn(
                     "Wither try to destroy block on border of plot {} at {}",
                     p.getPlotID(),
@@ -553,12 +553,12 @@ const auto ExplodeCallback = [](Actor* /* source */,
 
     debugger("[Explode] pos: " << pos.toString());
 
-    Radius r(pos, (int)(explosionRadius + 1.0f));
-    auto   land = r.getRangedPlots();
-    auto&  db   = PlotDBStorage::getInstance();
+    int   r    = (int)(explosionRadius + 1.0f);
+    auto  land = PlotPos::getPlotPosAt(pos, r);
+    auto& db   = PlotDBStorage::getInstance();
 
     for (auto& p : land) {
-        if (p.isRadiusOnBorder(r)) {
+        if (p.isRadiusOnBorder(pos, r)) {
             return false; // 禁止破坏边框
         }
 

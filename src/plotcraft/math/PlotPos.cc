@@ -16,6 +16,7 @@
 #include <cmath>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 
 namespace plo {
@@ -164,7 +165,7 @@ bool PlotPos::isPosOnBorder(const Vec3& vec3) const {
     return false;
 }
 
-bool PlotPos::isCubeOnBorder(Cube const& cube) const {
+bool PlotPos::isAABBOnBorder(BlockPos const& min, BlockPos const& max) const {
     if (!isValid()) {
         return false;
     }
@@ -172,7 +173,7 @@ bool PlotPos::isCubeOnBorder(Cube const& cube) const {
     // 检查Cube是否完全在地皮外部或内部
     bool allInside  = true;
     bool allOutside = true;
-    for (const auto& corner : cube.get2DVertexs()) {
+    for (const auto& corner : PlotPos::getAABBVertexs(min, max)) {
         bool inside  = isPosInPlot(corner);
         allInside   &= inside;
         allOutside  &= !inside;
@@ -191,15 +192,15 @@ bool PlotPos::isCubeOnBorder(Cube const& cube) const {
 
         // 检查水平边
         if (v1.z == v2.z) {
-            if (cube.mMin.z <= v1.z && cube.mMax.z >= v1.z
-                && std::max(cube.mMin.x, std::min(v1.x, v2.x)) <= std::min(cube.mMax.x, std::max(v1.x, v2.x))) {
+            if (min.z <= v1.z && max.z >= v1.z
+                && std::max(min.x, std::min(v1.x, v2.x)) <= std::min(max.x, std::max(v1.x, v2.x))) {
                 return true;
             }
         }
         // 检查垂直边
         else if (v1.x == v2.x) {
-            if (cube.mMin.x <= v1.x && cube.mMax.x >= v1.x
-                && std::max(cube.mMin.z, std::min(v1.z, v2.z)) <= std::min(cube.mMax.z, std::max(v1.z, v2.z))) {
+            if (min.x <= v1.x && max.x >= v1.x
+                && std::max(min.z, std::min(v1.z, v2.z)) <= std::min(max.z, std::max(v1.z, v2.z))) {
                 return true;
             }
         }
@@ -208,18 +209,18 @@ bool PlotPos::isCubeOnBorder(Cube const& cube) const {
     return false;
 }
 
-bool PlotPos::isRadiusOnBorder(class Radius const& radius) const {
+bool PlotPos::isRadiusOnBorder(BlockPos const& center, int radius) const {
     if (!isValid()) {
         return false;
     }
 
     // 快速检查：如果圆心到地皮中心的距离大于半径加上地皮对角线的一半，则一定不相交
     Vec3   plotCenter = (mVertexs[0] + mVertexs[2]) * 0.5;
-    double dx         = radius.mCenter.x - plotCenter.x;
-    double dz         = radius.mCenter.z - plotCenter.z;
+    double dx         = center.x - plotCenter.x;
+    double dz         = center.z - plotCenter.z;
     double centerDist = std::sqrt(dx * dx + dz * dz);
     double plotRadius = (mVertexs[2] - mVertexs[0]).length() * 0.5;
-    if (centerDist > radius.mRadius + plotRadius) {
+    if (centerDist > radius + plotRadius) {
         return false;
     }
 
@@ -227,10 +228,10 @@ bool PlotPos::isRadiusOnBorder(class Radius const& radius) const {
     bool allInside  = true;
     bool allOutside = true;
     for (const auto& vertex : mVertexs) {
-        dx                 = vertex.x - radius.mCenter.x;
-        dz                 = vertex.z - radius.mCenter.z;
+        dx                 = vertex.x - center.x;
+        dz                 = vertex.z - center.z;
         double distSquared = dx * dx + dz * dz;
-        if (distSquared <= radius.mRadius * radius.mRadius) {
+        if (distSquared <= radius * radius) {
             allOutside = false;
         } else {
             allInside = false;
@@ -253,8 +254,8 @@ bool PlotPos::isRadiusOnBorder(class Radius const& radius) const {
         double edgeZ = v2.z - v1.z;
 
         // 计算从圆心到边起点的向量
-        double vecX = radius.mCenter.x - v1.x;
-        double vecZ = radius.mCenter.z - v1.z;
+        double vecX = center.x - v1.x;
+        double vecZ = center.z - v1.z;
 
         // 计算边的长度的平方
         double edgeLengthSquared = edgeX * edgeX + edgeZ * edgeZ;
@@ -268,12 +269,12 @@ bool PlotPos::isRadiusOnBorder(class Radius const& radius) const {
         double nearestZ = v1.z + t * edgeZ;
 
         // 计算圆心到最近点的距离
-        double distX       = radius.mCenter.x - nearestX;
-        double distZ       = radius.mCenter.z - nearestZ;
+        double distX       = center.x - nearestX;
+        double distZ       = center.z - nearestZ;
         double distSquared = distX * distX + distZ * distZ;
 
         // 如果距离小于等于半径，则相交
-        if (distSquared <= radius.mRadius * radius.mRadius) {
+        if (distSquared <= radius * radius) {
             return true;
         }
     }
@@ -308,8 +309,8 @@ bool PlotPos::isAdjacent(const PlotPos& plot1, const PlotPos& plot2) {
     // 3. 两个地皮都是有效的
     return ((dx == 0 && dz == 1) || (dx == 1 && dz == 0)) && (plot1.isValid() && plot2.isValid());
 }
-// 判断点是否在多边形内部（射线法）
 bool PlotPos::isPointInPolygon(const Vec3& point, Vertexs const& polygon) {
+    // 判断点是否在多边形内部（射线法）
     bool inside = false;
     int  n      = (int)polygon.size();
     for (int i = 0, j = n - 1; i < n; j = i++) {
@@ -325,31 +326,16 @@ int PlotPos::getSurfaceYStatic() {
     return TemplateManager::isUseTemplate() ? (TemplateManager::mTemplateData.template_offset + 1)
                                             : -64 + (Config::cfg.generator.subChunkNum * 16);
 }
-
-
-// !Class: Cube
-Cube::Cube(BlockPos const& min, BlockPos const& max) : mMin(min), mMax(max) {
-    if (mMin.x > mMax.x) std::swap(mMin.x, mMax.x);
-    if (mMin.y > mMax.y) std::swap(mMin.y, mMax.y);
-    if (mMin.z > mMax.z) std::swap(mMin.z, mMax.z);
-}
-
-Vertexs Cube::get2DVertexs() const {
+Vertexs PlotPos::getAABBVertexs(BlockPos const& min, BlockPos const& max) {
     return {
-        Vec3{mMin.x, 0, mMin.z}, // 左下
-        Vec3{mMax.x, 0, mMin.z}, // 右下
-        Vec3{mMax.x, 0, mMax.z}, // 右上
-        Vec3{mMin.x, 0, mMax.z}, // 左上
-        Vec3{mMin.x, 0, mMin.z}  // 回到起点，形成闭合多边形
+        Vec3{min.x, 0, min.z}, // 左下
+        Vec3{max.x, 0, min.z}, // 右下
+        Vec3{max.x, 0, max.z}, // 右上
+        Vec3{min.x, 0, max.z}, // 左上
+        Vec3{min.x, 0, min.z}  // 回到起点，形成闭合多边形
     };
 }
-
-bool Cube::hasPos(BlockPos const& pos) const {
-    return pos.x >= mMin.x && pos.x <= mMax.x && pos.y >= mMin.y && pos.y <= mMax.y && pos.z >= mMin.z
-        && pos.z <= mMax.z;
-}
-
-std::vector<PlotPos> Cube::getRangedPlots() const {
+std::vector<PlotPos> PlotPos::getPlotPosAt(BlockPos const& min, BlockPos const& max) {
     std::vector<PlotPos> rangedPlots;
 
     // 获取配置信息
@@ -358,10 +344,10 @@ std::vector<PlotPos> Cube::getRangedPlots() const {
     int total = isUseTemplate ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
 
     // 计算可能涉及的地皮范围
-    int minPlotX = (int)std::floor(static_cast<double>(mMin.x) / total);
-    int maxPlotX = (int)std::ceil(static_cast<double>(mMax.x) / total);
-    int minPlotZ = (int)std::floor(static_cast<double>(mMin.z) / total);
-    int maxPlotZ = (int)std::ceil(static_cast<double>(mMax.z) / total);
+    int minPlotX = (int)std::floor(static_cast<double>(min.x) / total);
+    int maxPlotX = (int)std::ceil(static_cast<double>(max.x) / total);
+    int minPlotZ = (int)std::floor(static_cast<double>(min.z) / total);
+    int maxPlotZ = (int)std::ceil(static_cast<double>(max.z) / total);
 
     // 遍历可能的地皮
     for (int x = minPlotX; x <= maxPlotX; ++x) {
@@ -372,8 +358,8 @@ std::vector<PlotPos> Cube::getRangedPlots() const {
             if (plot.isValid()) {
                 bool hasIntersection = false;
                 for (const auto& vertex : plot.mVertexs) {
-                    if (vertex.x >= mMin.x && vertex.x <= mMax.x && vertex.z >= mMin.z && vertex.z <= mMax.z
-                        && mMin.y <= 320 && mMax.y >= -64) {
+                    if (vertex.x >= min.x && vertex.x <= max.x && vertex.z >= min.z && vertex.z <= max.z && min.y <= 320
+                        && max.y >= -64) {
                         hasIntersection = true;
                         break;
                     }
@@ -388,20 +374,7 @@ std::vector<PlotPos> Cube::getRangedPlots() const {
 
     return rangedPlots;
 }
-bool Cube::operator==(const Cube& other) const { return mMin == other.mMin && mMax == other.mMax; };
-bool Cube::operator!=(const Cube& other) const { return !(*this == other); };
-
-// static
-bool Cube::isCollision(Cube const& cube1, Cube const& cube2) {
-    return !(
-        cube1.mMax.x < cube2.mMin.x || cube1.mMin.x > cube2.mMax.x || cube1.mMax.y < cube2.mMin.y
-        || cube1.mMin.y > cube2.mMax.y || cube1.mMax.z < cube2.mMin.z || cube1.mMin.z > cube2.mMax.z
-    );
-}
-
-
-// !Class: Radius
-std::vector<PlotPos> Radius::getRangedPlots() const {
+std::vector<PlotPos> PlotPos::getPlotPosAt(BlockPos const& center, int radius) {
     std::vector<PlotPos> rangedPlots;
 
     // 获取配置信息
@@ -410,10 +383,10 @@ std::vector<PlotPos> Radius::getRangedPlots() const {
     int total = isUseTemplate ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
 
     // 计算可能涉及的地皮范围
-    int minPlotX = (int)std::floor((mCenter.x - mRadius) / static_cast<double>(total));
-    int maxPlotX = (int)std::ceil((mCenter.x + mRadius) / static_cast<double>(total));
-    int minPlotZ = (int)std::floor((mCenter.z - mRadius) / static_cast<double>(total));
-    int maxPlotZ = (int)std::ceil((mCenter.z + mRadius) / static_cast<double>(total));
+    int minPlotX = (int)std::floor((center.x - radius) / static_cast<double>(total));
+    int maxPlotX = (int)std::ceil((center.x + radius) / static_cast<double>(total));
+    int minPlotZ = (int)std::floor((center.z - radius) / static_cast<double>(total));
+    int maxPlotZ = (int)std::ceil((center.z + radius) / static_cast<double>(total));
 
     // 遍历可能的地皮
     for (int x = minPlotX; x <= maxPlotX; ++x) {
@@ -424,9 +397,9 @@ std::vector<PlotPos> Radius::getRangedPlots() const {
             if (plot.isValid()) {
                 bool hasIntersection = false;
                 for (const auto& vertex : plot.mVertexs) {
-                    double dx = vertex.x - mCenter.x;
-                    double dz = vertex.z - mCenter.z;
-                    if (dx * dx + dz * dz <= mRadius * mRadius) {
+                    double dx = vertex.x - center.x;
+                    double dz = vertex.z - center.z;
+                    if (dx * dx + dz * dz <= radius * radius) {
                         hasIntersection = true;
                         break;
                     }
@@ -441,10 +414,26 @@ std::vector<PlotPos> Radius::getRangedPlots() const {
 
     return rangedPlots;
 }
-bool Radius::operator==(const Radius& other) const {
-    return this->mCenter == other.mCenter && this->mRadius == other.mRadius;
+bool PlotPos::isAABBCollision(BlockPos const& min1, BlockPos const& max1, BlockPos const& min2, BlockPos const& max2) {
+    return !(
+        max1.x < min2.x || min1.x > max2.x || max1.y < min2.y || min1.y > max2.y || max1.z < min2.z || min1.z > max2.z
+    );
 }
-bool Radius::operator!=(const Radius& other) const { return !(*this == other); }
+
+
+void PlotPos::fillBorder(Block const& block, PlotDirection direction) {
+    if (direction == PlotDirection::NE || direction == PlotDirection::NW || direction == PlotDirection::SE
+        || direction == PlotDirection::SW || direction == PlotDirection::Unknown) {
+        throw std::runtime_error("PlotPos::fillBorder: Invalid direction");
+    }
+    if (!isValid()) {
+        throw std::runtime_error("PlotPos::fillBorder: Invalid plot");
+    }
+}
+void PlotPos::fixBorder(PlotDirection direction) {
+    Block const& block = Block::tryGetFromRegistry(Config::cfg.generator.borderBlock);
+    fillBorder(block, direction);
+}
 
 
 // !Class: PlotCross
@@ -529,9 +518,9 @@ bool PlotCross::hasPoint(BlockPos const& pos) const {
     auto const& max = mDiagonPos.second;
     return x >= min.x && x <= max.x && z >= min.z && z <= max.z;
 }
-void PlotCross::fill(Block const& block, bool includeBorder) {
-    auto min = includeBorder ? mDiagonPos.first - 1 : mDiagonPos.first;
-    auto max = includeBorder ? mDiagonPos.second + 1 : mDiagonPos.second;
+void PlotCross::fill(Block const& block, bool removeBorder) {
+    auto min = removeBorder ? mDiagonPos.first - 1 : mDiagonPos.first;
+    auto max = removeBorder ? mDiagonPos.second + 1 : mDiagonPos.second;
 
     auto dim = ll::service::getLevel()->getDimension(getPlotWorldDimensionId());
     if (!dim) {
@@ -550,7 +539,7 @@ void PlotCross::fill(Block const& block, bool includeBorder) {
                 bs.setBlock(x, y, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
             }
 
-            if (includeBorder
+            if (removeBorder
                 && ((x == min.x && z == min.z) || (x == min.x && z == max.z) || (x == max.x && z == min.z)
                     || (x == max.x && z == max.z))) {
                 bs.setBlock(x, y + 1, z, air, (int)BlockUpdateFlag::AllPriority, nullptr); // 替换四个角的方块为空气
@@ -655,7 +644,7 @@ bool PlotRoad::hasPoint(BlockPos const& pos) const {
     return pos.x >= mDiagonPos.first.x && pos.x <= mDiagonPos.second.x && pos.z >= mDiagonPos.first.z
         && pos.z <= mDiagonPos.second.z;
 }
-void PlotRoad::fill(Block const& block, bool includeBorder) {
+void PlotRoad::fill(Block const& block, bool removeBorder) {
     bool const isX = mDirection == PlotDirection::East;
 
     auto const& min = mDiagonPos.first;
@@ -685,7 +674,7 @@ void PlotRoad::fill(Block const& block, bool includeBorder) {
                 bs.setBlock(x, y_road, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
             }
 
-            if (includeBorder) {
+            if (removeBorder) {
                 if (isX && x - 1 == min_x) {
                     bs.setBlock(x - 1, y_border, z, air, (int)BlockUpdateFlag::AllPriority, nullptr);
 
@@ -700,6 +689,15 @@ void PlotRoad::fill(Block const& block, bool includeBorder) {
                 }
             }
         }
+    }
+}
+std::vector<PlotDirection> PlotRoad::getAfterFillingNeedFixBorderDirections() const {
+    bool const isX = mDirection == PlotDirection::East;
+
+    if (isX) {
+        return {PlotDirection::East, PlotDirection::West};
+    } else {
+        return {PlotDirection::South, PlotDirection::North};
     }
 }
 

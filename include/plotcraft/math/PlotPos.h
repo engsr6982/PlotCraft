@@ -4,6 +4,7 @@
 #include "mc/world/level/block/Block.h"
 #include "plotcraft/Global.h"
 #include <utility>
+#include <vector>
 
 
 namespace plo {
@@ -13,8 +14,7 @@ namespace plo {
 class PlotRoad;
 class PlotCross;
 class PlotPos;
-class Cube;
-class Radius;
+
 
 enum class PlotDirection : int {
     Unknown = -1, // 未知
@@ -50,9 +50,9 @@ public:
 
     PLAPI bool isPosInPlot(const Vec3& vec3) const; // 判断一个点是否在地皮内
 
-    PLAPI bool isPosOnBorder(Vec3 const& vec3) const;        // 判断一个点是否在地皮边界上
-    PLAPI bool isCubeOnBorder(Cube const& cube) const;       // 判断一个立方体是否在地皮边界上
-    PLAPI bool isRadiusOnBorder(Radius const& radius) const; // 判断一个圆是否在地皮边界上
+    PLAPI bool isPosOnBorder(Vec3 const& vec3) const; // 判断一个点是否在地皮边界上
+    PLAPI bool isAABBOnBorder(BlockPos const& min, BlockPos const& max) const; // 判断一个立方体是否在地皮边界上
+    PLAPI bool isRadiusOnBorder(BlockPos const& center, int radius) const; // 判断一个圆是否在地皮边界上
 
     PLAPI bool operator==(PlotPos const& other) const;
     PLAPI bool operator!=(PlotPos const& other) const;
@@ -62,6 +62,12 @@ public:
     PLAPI static bool isAdjacent(PlotPos const& plot1, PlotPos const& plot2);      // 判断两个地皮是否相邻
     PLAPI static bool isPointInPolygon(const Vec3& point, Vertexs const& polygon); // 判断一个点是否在多边形内
 
+    PLAPI static Vertexs              getAABBVertexs(BlockPos const& min, BlockPos const& max);
+    PLAPI static std::vector<PlotPos> getPlotPosAt(BlockPos const& min, BlockPos const& max);
+    PLAPI static std::vector<PlotPos> getPlotPosAt(BlockPos const& center, int radius);
+    PLAPI static bool
+    isAABBCollision(BlockPos const& min1, BlockPos const& max1, BlockPos const& min2, BlockPos const& max2);
+
     // MergeAPI:
     // PLAPI bool fixVertexs(); // 修正顶点 // todo
     // PLAPI bool canMerge(PlotPos& other) const; // 判断两个地皮是否可以合并 // todo
@@ -70,40 +76,8 @@ public:
     // PLAPI std::vector<PlotCross> getRangedCrosses() const; // 获取范围内的路口 // todo
     // PLAPI bool isAdjacent(PlotRoad const& road) const; // 判断道路和地皮是否相邻 // todo
     // PLAPI bool isCorner(PlotCross const& cross) const; // 检查路口是否是地皮的角落 // todo
-};
-
-class Cube {
-public:
-    BlockPos mMin, mMax; // 最小最大坐标
-
-    Cube() = delete;
-    Cube(BlockPos const& min, BlockPos const& max);
-
-    Vertexs get2DVertexs() const; // 获取2D顶点
-
-    bool hasPos(BlockPos const& pos) const; // 判断一个点是否在立方体内
-
-    std::vector<PlotPos> getRangedPlots() const; // 获取范围内的地皮
-
-    bool operator==(const Cube& other) const;
-    bool operator!=(const Cube& other) const;
-
-    // static
-    static bool isCollision(Cube const& cube1, Cube const& cube2); // 判断两个立方体是否碰撞
-};
-
-class Radius {
-public:
-    BlockPos mCenter; // 中心点
-    int      mRadius; // 半径
-
-    Radius() = delete;
-    Radius(BlockPos const& center, int radius) : mCenter(center), mRadius(radius){};
-
-    std::vector<PlotPos> getRangedPlots() const; // 获取范围内的地皮
-
-    bool operator==(const Radius& other) const;
-    bool operator!=(const Radius& other) const;
+    PLAPI void fillBorder(Block const& block, PlotDirection direction);
+    PLAPI void fixBorder(PlotDirection direction);
 };
 
 
@@ -131,11 +105,12 @@ public:
     PLAPI string toString() const;
     PLAPI RoadID getRoadID() const;
 
-    PLAPI bool hasPoint(BlockPos const& pos) const;                  // 判断一个点是否在道路内
-    PLAPI void fill(Block const& block, bool includeBorder = false); // 填充道路
+    PLAPI bool hasPoint(BlockPos const& pos) const;                 // 判断一个点是否在道路内
+    PLAPI void fill(Block const& block, bool removeBorder = false); // 填充道路
 
     // PLAPI std::vector<class PlotPos> getAdjacentPlots() const; // todo
     // PLAPI bool isAdjacent(PlotCross const& cross) const; // todo
+    PLAPI std::vector<PlotDirection> getAfterFillingNeedFixBorderDirections() const;
 };
 
 class PlotCross {
@@ -154,8 +129,8 @@ public:
     PLAPI string  toString() const;
     PLAPI CrossID getCrossID() const;
 
-    PLAPI bool hasPoint(BlockPos const& pos) const;                  // 判断一个点是否在路口内
-    PLAPI void fill(Block const& block, bool includeBorder = false); // 填充路口
+    PLAPI bool hasPoint(BlockPos const& pos) const;                 // 判断一个点是否在路口内
+    PLAPI void fill(Block const& block, bool removeBorder = false); // 填充路口
 
     // PLAPI std::vector<PlotRoad> getAdjacentRoads() const; // todo
     // PLAPI bool isAdjacent(PlotRoad const& road) const; // todo
