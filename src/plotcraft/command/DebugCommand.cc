@@ -9,7 +9,7 @@ namespace plo::command {
 
 struct DParam {
     CommandBlockName name;
-    bool             include_border;
+    bool             remove_border;
 };
 
 void SetupDebugCommand() {
@@ -18,7 +18,7 @@ void SetupDebugCommand() {
     cmd.overload<DParam>()
         .text("debug_fill_cross")
         .required("name")
-        .required("include_border")
+        .required("remove_border")
         .execute([](CommandOrigin const& ori, CommandOutput& out, DParam const& param) {
             auto ent = ori.getEntity();
             if (!ent || !ent->isPlayer()) {
@@ -34,7 +34,7 @@ void SetupDebugCommand() {
 
             PlotCross cross = PlotCross(ent->getPosition());
             if (cross.isValid()) {
-                cross.fill(*bl, param.include_border);
+                cross.fill(*bl, param.remove_border);
             } else {
                 out.error("Invalid cross");
             }
@@ -43,7 +43,7 @@ void SetupDebugCommand() {
     cmd.overload<DParam>()
         .text("debug_fill_road")
         .required("name")
-        .required("include_border")
+        .required("remove_border")
         .execute([](CommandOrigin const& ori, CommandOutput& out, DParam const& param) {
             auto ent = ori.getEntity();
             if (!ent || !ent->isPlayer()) {
@@ -57,13 +57,28 @@ void SetupDebugCommand() {
                 return;
             }
 
-            PlotRoad cross = PlotRoad(ent->getPosition());
-            if (cross.isValid()) {
-                cross.fill(*bl, param.include_border);
+            PlotRoad road = PlotRoad(ent->getPosition());
+            if (road.isValid()) {
+                road.fill(*bl, param.remove_border);
             } else {
-                out.error("Invalid cross");
+                out.error("Invalid road");
             }
         });
+
+    cmd.overload().text("debug_fix_border").execute([](CommandOrigin const& ori, CommandOutput& out) {
+        auto ent = ori.getEntity();
+        if (!ent || !ent->isPlayer()) {
+            out.error("Must be a player");
+            return;
+        }
+
+        PlotPos pos = PlotPos(ent->getPosition());
+        if (pos.isValid()) {
+            pos.fixBorder();
+        } else {
+            out.error("Invalid PlotPos");
+        }
+    });
 }
 
 

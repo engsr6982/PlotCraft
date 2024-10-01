@@ -14,6 +14,7 @@
 #include "plotcraft/data/PlotDBStorage.h"
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -419,20 +420,54 @@ bool PlotPos::isAABBCollision(BlockPos const& min1, BlockPos const& max1, BlockP
         max1.x < min2.x || min1.x > max2.x || max1.y < min2.y || min1.y > max2.y || max1.z < min2.z || min1.z > max2.z
     );
 }
+void PlotPos::fillAABB(const BlockPos& min, const BlockPos& max, const Block& block) {
+    auto& bs = ll::service::getLevel()->getDimension(getPlotWorldDimensionId())->getBlockSourceFromMainChunkSource();
 
+    BlockPos start = min;
+    BlockPos end   = max;
 
-void PlotPos::fillBorder(Block const& block, PlotDirection direction) {
-    if (direction == PlotDirection::NE || direction == PlotDirection::NW || direction == PlotDirection::SE
-        || direction == PlotDirection::SW || direction == PlotDirection::Unknown) {
-        throw std::runtime_error("PlotPos::fillBorder: Invalid direction");
+    if (start.x > end.x) {
+        std::swap(start.x, end.x);
     }
-    if (!isValid()) {
-        throw std::runtime_error("PlotPos::fillBorder: Invalid plot");
+    if (start.y > end.y) {
+        std::swap(start.y, end.y);
+    }
+    if (start.z > end.z) {
+        std::swap(start.z, end.z);
+    }
+
+    for (int x = start.x; x <= end.x; ++x) {
+        for (int z = start.z; z <= end.z; ++z) {
+            for (int y = start.y; y <= end.y; ++y) {
+                bs.setBlock(x, y, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
+            }
+        }
     }
 }
-void PlotPos::fixBorder(PlotDirection direction) {
+
+void PlotPos::fixBorder() {
+    if (!isValid()) {
+        return;
+    }
     Block const& block = Block::tryGetFromRegistry(Config::cfg.generator.borderBlock);
-    fillBorder(block, direction);
+    int          y     = getSurfaceY();
+
+    size_t   next = 0;
+    BlockPos tmp1, tmp2;
+    for (auto const& i : mVertexs) {
+        next++;
+        if (next == mVertexs.size()) {
+            next = 0;
+        }
+
+        tmp1 = i;
+        tmp2 = mVertexs[next];
+
+        tmp1.y = y;
+        tmp2.y = y;
+
+        fillAABB(tmp1, tmp2, block);
+    }
 }
 
 

@@ -68,6 +68,8 @@ public:
     PLAPI static bool
     isAABBCollision(BlockPos const& min1, BlockPos const& max1, BlockPos const& min2, BlockPos const& max2);
 
+    PLAPI static void fillAABB(BlockPos const& min, BlockPos const& max, Block const& block);
+
     // MergeAPI:
     // PLAPI bool fixVertexs(); // 修正顶点 // todo
     // PLAPI bool canMerge(PlotPos& other) const; // 判断两个地皮是否可以合并 // todo
@@ -76,8 +78,7 @@ public:
     // PLAPI std::vector<PlotCross> getRangedCrosses() const; // 获取范围内的路口 // todo
     // PLAPI bool isAdjacent(PlotRoad const& road) const; // 判断道路和地皮是否相邻 // todo
     // PLAPI bool isCorner(PlotCross const& cross) const; // 检查路口是否是地皮的角落 // todo
-    PLAPI void fillBorder(Block const& block, PlotDirection direction);
-    PLAPI void fixBorder(PlotDirection direction);
+    PLAPI void fixBorder();
 };
 
 
