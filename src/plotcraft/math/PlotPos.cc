@@ -547,10 +547,8 @@ void PlotCross::fill(Block const& block, bool includeBorder) {
             auto& bl = bs.getBlock(x, y, z);
 
             if (bl.isAir()) {
-                continue;
+                bs.setBlock(x, y, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
             }
-
-            bs.setBlock(x, y, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
 
             if (includeBorder
                 && ((x == min.x && z == min.z) || (x == min.x && z == max.z) || (x == max.x && z == min.z)
@@ -658,32 +656,48 @@ bool PlotRoad::hasPoint(BlockPos const& pos) const {
         && pos.z <= mDiagonPos.second.z;
 }
 void PlotRoad::fill(Block const& block, bool includeBorder) {
-    auto min = includeBorder ? mDiagonPos.first - 1 : mDiagonPos.first;
-    auto max = includeBorder ? mDiagonPos.second + 1 : mDiagonPos.second;
+    bool const isX = mDirection == PlotDirection::East;
+
+    auto const& min = mDiagonPos.first;
+    auto const& max = mDiagonPos.second;
 
     auto dim = ll::service::getLevel()->getDimension(getPlotWorldDimensionId());
     if (!dim) {
         return;
     }
 
-    auto&        bs  = dim->getBlockSourceFromMainChunkSource();
-    Block const& air = Block::tryGetFromRegistry("minecraft:air").value();
-    int const    y   = PlotPos::getSurfaceYStatic() - 1;
+    auto& bs  = dim->getBlockSourceFromMainChunkSource();
+    auto& air = Block::tryGetFromRegistry("minecraft:air").value();
+
+    int const y_border = PlotPos::getSurfaceYStatic();
+    int const y_road   = y_border - 1;
+
+    int min_x = min.x - 1;
+    int max_x = max.x + 1;
+    int min_z = min.z - 1;
+    int max_z = max.z + 1;
 
     for (int x = min.x; x <= max.x; x++) {
         for (int z = min.z; z <= max.z; z++) {
-            auto& bl = bs.getBlock(x, y, z);
+            auto& bl = bs.getBlock(x, y_road, z);
 
-            if (bl.isAir()) {
-                continue;
+            if (!bl.isAir()) {
+                bs.setBlock(x, y_road, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
             }
 
-            bs.setBlock(x, y, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
+            if (includeBorder) {
+                if (isX && x - 1 == min_x) {
+                    bs.setBlock(x - 1, y_border, z, air, (int)BlockUpdateFlag::AllPriority, nullptr);
 
-            if (includeBorder
-                && ((x == min.x && z == min.z) || (x == min.x && z == max.z) || (x == max.x && z == min.z)
-                    || (x == max.x && z == max.z))) {
-                bs.setBlock(x, y + 1, z, air, (int)BlockUpdateFlag::AllPriority, nullptr); // 替换四个角的方块为空气
+                } else if (isX && x + 1 == max_x) {
+                    bs.setBlock(x + 1, y_border, z, air, (int)BlockUpdateFlag::AllPriority, nullptr);
+
+                } else if (!isX && z - 1 == min_z) {
+                    bs.setBlock(x, y_border, z - 1, air, (int)BlockUpdateFlag::AllPriority, nullptr);
+
+                } else if (!isX && z + 1 == max_z) {
+                    bs.setBlock(x, y_border, z + 1, air, (int)BlockUpdateFlag::AllPriority, nullptr);
+                }
             }
         }
     }
