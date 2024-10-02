@@ -112,10 +112,8 @@ PlotPos::PlotPos(const Vec3& vec3) {
     }
 }
 
-int PlotPos::getSurfaceY() const { return PlotPos::getSurfaceYStatic(); }
-
-bool PlotPos::isValid() const { return !mVertexs.empty(); }
-
+int    PlotPos::getSurfaceY() const { return PlotPos::getSurfaceYStatic(); }
+bool   PlotPos::isValid() const { return !mVertexs.empty(); }
 string PlotPos::getPlotID() const { return fmt::format("({0},{1})", mX, mZ); }
 
 Vec3 PlotPos::getSafestPos() const {
@@ -125,14 +123,12 @@ Vec3 PlotPos::getSafestPos() const {
     }
     return Vec3{};
 }
-
 bool PlotPos::isPosInPlot(const Vec3& vec3) const {
     if (vec3.y < -64 || vec3.y > 320) {
         return false;
     }
     return isPointInPolygon(vec3, mVertexs);
 }
-
 bool PlotPos::isPosOnBorder(const Vec3& vec3) const {
     if (vec3.y < -64 || vec3.y > 320) {
         return false;
@@ -165,7 +161,6 @@ bool PlotPos::isPosOnBorder(const Vec3& vec3) const {
 
     return false;
 }
-
 bool PlotPos::isAABBOnBorder(BlockPos const& min, BlockPos const& max) const {
     if (!isValid()) {
         return false;
@@ -209,7 +204,6 @@ bool PlotPos::isAABBOnBorder(BlockPos const& min, BlockPos const& max) const {
 
     return false;
 }
-
 bool PlotPos::isRadiusOnBorder(BlockPos const& center, int radius) const {
     if (!isValid()) {
         return false;
@@ -282,7 +276,6 @@ bool PlotPos::isRadiusOnBorder(BlockPos const& center, int radius) const {
 
     return false;
 }
-
 string PlotPos::toString() const {
 #if !defined(DEBUG)
     return fmt::format("{0} | Vertex: {1}", getPlotID(), mVertexs.size());
@@ -295,6 +288,56 @@ string PlotPos::toString() const {
     return fmt::format("{0} | Vertex: {1}\n{2}", getPlotID(), mVertexs.size(), dbg);
 #endif
 }
+
+void PlotPos::fixBorder() {
+    if (!isValid()) {
+        return;
+    }
+    Block const& block = Block::tryGetFromRegistry(Config::cfg.generator.borderBlock);
+    int          y     = getSurfaceY();
+
+    size_t   next = 0;
+    BlockPos tmp1, tmp2;
+    for (auto const& i : mVertexs) {
+        next++;
+        if (next == mVertexs.size()) {
+            next = 0;
+        }
+
+        tmp1 = i;
+        tmp2 = mVertexs[next];
+
+        tmp1.y = y;
+        tmp2.y = y;
+
+        fillAABB(tmp1, tmp2, block);
+    }
+}
+bool PlotPos::isAdjacent(PlotRoad const& road) const {
+    if (!road.isValid()) {
+        return false;
+    }
+    if (road.mDirection == PlotDirection::East) {
+        return (road.mX == this->mX && road.mZ == this->mZ) || (road.mX + 1 == this->mX && road.mZ == this->mZ);
+    } else {
+        return (road.mX == this->mX && road.mZ == this->mZ) || (road.mX == this->mX && road.mZ + 1 == this->mZ);
+    }
+}
+bool PlotPos::isCorner(PlotCross const& cross) const {
+    if (!cross.isValid()) {
+        return false;
+    }
+    return (cross.mX == this->mX && cross.mZ == this->mZ) ||         // 右上角 (0,0)
+           (cross.mX == this->mX && cross.mZ + 1 == this->mZ) ||     // 左上角 (0,-1)
+           (cross.mX + 1 == this->mX && cross.mZ + 1 == this->mZ) || // 左下角 (-1,-1)
+           (cross.mX + 1 == this->mX && cross.mZ == this->mZ);       // 右下角 (-1,0)
+}
+bool                   PlotPos::fixVertexs() {}
+std::vector<PlotPos>   PlotPos::getRangedPlots() const {}
+std::vector<PlotRoad>  PlotPos::getRangedRoads() const {}
+std::vector<PlotCross> PlotPos::getRangedCrosses() const {}
+std::optional<PlotPos> PlotPos::tryMerge(PlotPos const& other) {}
+
 
 bool PlotPos::operator!=(PlotPos const& other) const { return !(*this == other); }
 bool PlotPos::operator==(PlotPos const& other) const { return other.mVertexs == this->mVertexs; }
@@ -445,31 +488,6 @@ void PlotPos::fillAABB(const BlockPos& min, const BlockPos& max, const Block& bl
     }
 }
 
-void PlotPos::fixBorder() {
-    if (!isValid()) {
-        return;
-    }
-    Block const& block = Block::tryGetFromRegistry(Config::cfg.generator.borderBlock);
-    int          y     = getSurfaceY();
-
-    size_t   next = 0;
-    BlockPos tmp1, tmp2;
-    for (auto const& i : mVertexs) {
-        next++;
-        if (next == mVertexs.size()) {
-            next = 0;
-        }
-
-        tmp1 = i;
-        tmp2 = mVertexs[next];
-
-        tmp1.y = y;
-        tmp2.y = y;
-
-        fillAABB(tmp1, tmp2, block);
-    }
-}
-
 
 // !Class: PlotCross
 PlotCross::PlotCross(int x, int z) : mX(x), mZ(z) {
@@ -615,6 +633,7 @@ std::vector<PlotRoad> PlotCross::getAdjacentRoads() const {
 
     return roads;
 }
+
 
 // !Class: PlotRoad
 PlotRoad::PlotRoad(int x, int z, PlotDirection direction) : mX(x), mZ(z) {
@@ -780,7 +799,7 @@ bool PlotRoad::isAdjacent(PlotCross const& cross) const {
     }
 }
 
-std::vector<PlotCross> PlotRoad::getAdjacentCross() const {
+std::vector<PlotCross> PlotRoad::getAdjacentCrosses() const {
     std::vector<PlotCross> crosses;
     if (!isValid()) {
         return crosses;

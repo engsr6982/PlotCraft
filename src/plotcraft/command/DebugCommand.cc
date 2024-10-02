@@ -119,7 +119,7 @@ void SetupDebugCommand() {
 
         PlotRoad road = PlotRoad(ent->getPosition());
         if (road.isValid()) {
-            auto   crosses = road.getAdjacentCross();
+            auto   crosses = road.getAdjacentCrosses();
             string out_str = "Adjacent crosses: \n";
             for (auto const& cross : crosses) {
                 out_str += cross.toString() + "\n";

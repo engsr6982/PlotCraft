@@ -3,6 +3,7 @@
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/block/Block.h"
 #include "plotcraft/Global.h"
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -71,14 +72,14 @@ public:
     PLAPI static void fillAABB(BlockPos const& min, BlockPos const& max, Block const& block);
 
     // MergeAPI:
-    // PLAPI bool fixVertexs(); // 修正顶点 // todo
-    // PLAPI bool canMerge(PlotPos& other) const; // 判断两个地皮是否可以合并 // todo
-    // PLAPI std::vector<PlotPos> getRangedPlots() const;     // 获取范围内的地皮 // todo
-    // PLAPI std::vector<PlotRoad> getRangedRoads() const;    // 获取范围内的道路 // todo
-    // PLAPI std::vector<PlotCross> getRangedCrosses() const; // 获取范围内的路口 // todo
-    // PLAPI bool isAdjacent(PlotRoad const& road) const; // 判断道路和地皮是否相邻 // todo
-    // PLAPI bool isCorner(PlotCross const& cross) const; // 检查路口是否是地皮的角落 // todo
+    PLAPI bool isAdjacent(PlotRoad const& road) const;
+    PLAPI bool isCorner(PlotCross const& cross) const;
     PLAPI void fixBorder();
+    PLAPI bool fixVertexs();                               // todo
+    PLAPI std::vector<PlotPos> getRangedPlots() const;     // todo
+    PLAPI std::vector<PlotRoad> getRangedRoads() const;    // todo
+    PLAPI std::vector<PlotCross> getRangedCrosses() const; // todo
+    PLAPI std::optional<PlotPos> tryMerge(PlotPos const& other); // 尝试合并两个多边形，如果没有值则合并失败 // todo
 };
 
 
@@ -109,7 +110,7 @@ public:
     PLAPI bool hasPoint(BlockPos const& pos) const;                 // 判断一个点是否在道路内
     PLAPI void fill(Block const& block, bool removeBorder = false); // 填充道路
 
-    PLAPI std::vector<PlotCross> getAdjacentCross() const;
+    PLAPI std::vector<PlotCross> getAdjacentCrosses() const;
     PLAPI bool                   isAdjacent(PlotCross const& cross) const;
     PLAPI std::vector<PlotDirection> getAfterFillingNeedFixBorderDirections() const;
 };
