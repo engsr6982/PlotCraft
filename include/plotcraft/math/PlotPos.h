@@ -112,7 +112,6 @@ public:
 
     PLAPI std::vector<PlotCross> getAdjacentCrosses() const;
     PLAPI bool                   isAdjacent(PlotCross const& cross) const;
-    PLAPI std::vector<PlotDirection> getAfterFillingNeedFixBorderDirections() const;
 };
 
 class PlotCross {

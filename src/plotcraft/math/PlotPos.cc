@@ -1020,15 +1020,6 @@ void PlotRoad::fill(Block const& block, bool removeBorder) {
         }
     }
 }
-std::vector<PlotDirection> PlotRoad::getAfterFillingNeedFixBorderDirections() const {
-    bool const isX = mDirection == PlotDirection::East;
-
-    if (isX) {
-        return {PlotDirection::East, PlotDirection::West};
-    } else {
-        return {PlotDirection::South, PlotDirection::North};
-    }
-}
 bool PlotRoad::isAdjacent(PlotCross const& cross) const {
     if (!isValid() || !cross.isValid()) {
         return false;
