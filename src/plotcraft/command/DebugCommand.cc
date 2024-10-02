@@ -23,7 +23,7 @@ struct DTestClass2 {
 };
 
 void SetupDebugCommand() {
-    auto& cmd = ll::command::CommandRegistrar::getInstance().getOrCreateCommand("plo");
+    auto& cmd = ll::command::CommandRegistrar::getInstance().getOrCreateCommand(COMMAND_NAME);
 
     cmd.overload<DParam>()
         .text("debug_fill_cross")

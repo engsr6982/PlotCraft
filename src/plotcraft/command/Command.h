@@ -66,6 +66,8 @@ using ll::command::CommandRegistrar;
 
 namespace plo::command {
 
+#define COMMAND_NAME "plot"
+
 bool registerCommand();
 void _setupTemplateCommand();
 

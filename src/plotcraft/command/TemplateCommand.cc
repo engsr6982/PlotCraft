@@ -158,7 +158,7 @@ const auto reset = [](CommandOrigin const& ori, CommandOutput& out) {
 
 
 void _setupTemplateCommand() {
-    auto& cmd = ll::command::CommandRegistrar::getInstance().getOrCreateCommand("plo");
+    auto& cmd = ll::command::CommandRegistrar::getInstance().getOrCreateCommand(COMMAND_NAME);
 
     // plo template record start <int start> <int end> <int road> <bool fillBedrock> <Block defaultBlock>
     cmd.overload<StartData>()
