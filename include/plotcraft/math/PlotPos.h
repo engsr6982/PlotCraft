@@ -88,7 +88,7 @@ public:
     DiagonPos     mDiagonPos;    // 对角线坐标
     bool          mIsMergedPlot; // 是否是合并的地皮
     bool          mValid;        // 是否有效
-    PlotDirection mDirection;    // 道路方向
+    PlotDirection mDirection;    // 道路方向 (East: x+ 道路横向, South: z+ 道路纵向 (方向以x+为基准))
 
     PlotRoad() = delete;
     PLAPI PlotRoad(Vec3 const& vec3);
@@ -109,8 +109,8 @@ public:
     PLAPI bool hasPoint(BlockPos const& pos) const;                 // 判断一个点是否在道路内
     PLAPI void fill(Block const& block, bool removeBorder = false); // 填充道路
 
-    // PLAPI std::vector<class PlotPos> getAdjacentPlots() const; // todo
-    // PLAPI bool isAdjacent(PlotCross const& cross) const; // todo
+    PLAPI std::vector<PlotCross> getAdjacentCross() const;
+    PLAPI bool                   isAdjacent(PlotCross const& cross) const;
     PLAPI std::vector<PlotDirection> getAfterFillingNeedFixBorderDirections() const;
 };
 
@@ -133,8 +133,8 @@ public:
     PLAPI bool hasPoint(BlockPos const& pos) const;                 // 判断一个点是否在路口内
     PLAPI void fill(Block const& block, bool removeBorder = false); // 填充路口
 
-    // PLAPI std::vector<PlotRoad> getAdjacentRoads() const; // todo
-    // PLAPI bool isAdjacent(PlotRoad const& road) const; // todo
+    PLAPI std::vector<PlotRoad> getAdjacentRoads() const;
+    PLAPI bool                  isAdjacent(PlotRoad const& road) const;
 };
 
 

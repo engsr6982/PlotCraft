@@ -3,13 +3,23 @@
 #include "mc/server/commands/CommandBlockName.h"
 #include "mc/server/commands/CommandOrigin.h"
 #include "mc/server/commands/CommandOutput.h"
+#include "mc/server/commands/CommandPositionFloat.h"
+#include "mc/server/commands/CommandVersion.h"
+#include "mc/world/actor/Actor.h"
 #include "plotcraft/math/PlotPos.h"
+#include <sstream>
 
 namespace plo::command {
 
 struct DParam {
     CommandBlockName name;
     bool             remove_border;
+};
+
+
+struct DTestClass2 {
+    CommandPositionFloat road_pos;
+    CommandPositionFloat cross_pos;
 };
 
 void SetupDebugCommand() {
@@ -79,6 +89,74 @@ void SetupDebugCommand() {
             out.error("Invalid PlotPos");
         }
     });
+
+    cmd.overload().text("debug_get_adjacent_road").execute([](CommandOrigin const& ori, CommandOutput& out) {
+        Actor* ent = ori.getEntity();
+        if (!ent || !ent->isPlayer()) {
+            out.error("Must be a player");
+            return;
+        }
+
+        PlotCross cross = PlotCross(ent->getPosition());
+        if (cross.isValid()) {
+            auto   roads   = cross.getAdjacentRoads();
+            string out_str = "Adjacent roads: \n";
+            for (auto const& road : roads) {
+                out_str += road.toString() + "\n";
+            }
+            out.success(out_str);
+        } else {
+            out.error("Invalid cross");
+        }
+    });
+
+    cmd.overload().text("debug_get_adjacent_cross").execute([](CommandOrigin const& ori, CommandOutput& out) {
+        Actor* ent = ori.getEntity();
+        if (!ent || !ent->isPlayer()) {
+            out.error("Must be a player");
+            return;
+        }
+
+        PlotRoad road = PlotRoad(ent->getPosition());
+        if (road.isValid()) {
+            auto   crosses = road.getAdjacentCross();
+            string out_str = "Adjacent crosses: \n";
+            for (auto const& cross : crosses) {
+                out_str += cross.toString() + "\n";
+            }
+            out.success(out_str);
+        } else {
+            out.error("Invalid road");
+        }
+    });
+
+    cmd.overload<DTestClass2>()
+        .text("debug_is_adjacent")
+        .required("road_pos")
+        .required("cross_pos")
+        .execute([](CommandOrigin const& ori, CommandOutput& out, DTestClass2 const& param) {
+            Actor* ent = ori.getEntity();
+            if (!ent || !ent->isPlayer()) {
+                out.error("Must be a player");
+                return;
+            }
+
+            auto road_pos  = param.road_pos.getBlockPos(CommandVersion::CurrentVersion, ori);
+            auto cross_pos = param.cross_pos.getBlockPos(CommandVersion::CurrentVersion, ori);
+
+            PlotRoad  road(road_pos);
+            PlotCross cross(cross_pos);
+
+            if (!road.isValid() || !cross.isValid()) {
+                out.error("Invalid road or cross");
+                return;
+            }
+
+            std::ostringstream out_str;
+            out_str << "Road => Cross: " << road.isAdjacent(cross) << "\n";
+            out_str << "Cross => Road: " << cross.isAdjacent(road) << "\n";
+            out.success(out_str.str());
+        });
 }
 
 

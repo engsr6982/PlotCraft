@@ -582,7 +582,39 @@ void PlotCross::fill(Block const& block, bool removeBorder) {
         }
     }
 }
+bool PlotCross::isAdjacent(PlotRoad const& road) const {
+    if (!isValid() || !road.isValid()) {
+        return false;
+    }
 
+    // 检查道路是否与路口相邻
+    if (road.mDirection == PlotDirection::East) {
+        return (road.mX == mX && road.mZ == mZ) || (road.mX == mX && road.mZ == mZ + 1);
+    } else { // South
+        return (road.mX == mX && road.mZ == mZ) || (road.mX == mX + 1 && road.mZ == mZ);
+    }
+}
+
+std::vector<PlotRoad> PlotCross::getAdjacentRoads() const {
+    std::vector<PlotRoad> roads;
+    if (!isValid()) {
+        return roads;
+    }
+
+    // 添加四个相邻道路
+    roads.push_back(PlotRoad(mX, mZ, PlotDirection::East));
+    roads.push_back(PlotRoad(mX, mZ + 1, PlotDirection::East));
+    roads.push_back(PlotRoad(mX, mZ, PlotDirection::South));
+    roads.push_back(PlotRoad(mX + 1, mZ, PlotDirection::South));
+
+    // 移除无效的道路
+    roads.erase(
+        std::remove_if(roads.begin(), roads.end(), [](const PlotRoad& road) { return !road.isValid(); }),
+        roads.end()
+    );
+
+    return roads;
+}
 
 // !Class: PlotRoad
 PlotRoad::PlotRoad(int x, int z, PlotDirection direction) : mX(x), mZ(z) {
@@ -735,5 +767,42 @@ std::vector<PlotDirection> PlotRoad::getAfterFillingNeedFixBorderDirections() co
         return {PlotDirection::South, PlotDirection::North};
     }
 }
+bool PlotRoad::isAdjacent(PlotCross const& cross) const {
+    if (!isValid() || !cross.isValid()) {
+        return false;
+    }
+
+    // 检查路口是否与道路相邻
+    if (mDirection == PlotDirection::East) {
+        return (cross.mX == mX && cross.mZ + 1 == mZ) || (cross.mX == mX && cross.mZ == mZ);
+    } else { // South
+        return (cross.mX + 1 == mX && cross.mZ == mZ) || (cross.mX == mX && cross.mZ == mZ);
+    }
+}
+
+std::vector<PlotCross> PlotRoad::getAdjacentCross() const {
+    std::vector<PlotCross> crosses;
+    if (!isValid()) {
+        return crosses;
+    }
+
+    // 添加两个相邻路口
+    if (mDirection == PlotDirection::East) {
+        crosses.push_back(PlotCross(mX, mZ - 1));
+        crosses.push_back(PlotCross(mX, mZ));
+    } else { // South
+        crosses.push_back(PlotCross(mX - 1, mZ));
+        crosses.push_back(PlotCross(mX, mZ));
+    }
+
+    // 移除无效的路口
+    crosses.erase(
+        std::remove_if(crosses.begin(), crosses.end(), [](const PlotCross& cross) { return !cross.isValid(); }),
+        crosses.end()
+    );
+
+    return crosses;
+}
+
 
 } // namespace plo
