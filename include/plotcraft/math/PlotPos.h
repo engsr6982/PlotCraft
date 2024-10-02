@@ -75,11 +75,11 @@ public:
     PLAPI bool isAdjacent(PlotRoad const& road) const;
     PLAPI bool isCorner(PlotCross const& cross) const;
     PLAPI void fixBorder();
-    PLAPI bool fixVertexs();                               // todo
-    PLAPI std::vector<PlotPos> getRangedPlots() const;     // todo
-    PLAPI std::vector<PlotRoad> getRangedRoads() const;    // todo
-    PLAPI std::vector<PlotCross> getRangedCrosses() const; // todo
-    PLAPI std::optional<PlotPos> tryMerge(PlotPos const& other); // 尝试合并两个多边形，如果没有值则合并失败 // todo
+    PLAPI bool fixVertexs();
+    PLAPI std::vector<PlotPos> getRangedPlots() const;
+    PLAPI std::vector<PlotRoad> getRangedRoads() const;
+    PLAPI std::vector<PlotCross> getRangedCrosses() const;
+    PLAPI std::optional<PlotPos> tryMerge(PlotPos const& other); // 尝试合并两个多边形，如果没有值则合并失败
 };
 
 

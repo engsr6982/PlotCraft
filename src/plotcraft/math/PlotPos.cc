@@ -332,12 +332,255 @@ bool PlotPos::isCorner(PlotCross const& cross) const {
            (cross.mX + 1 == this->mX && cross.mZ + 1 == this->mZ) || // 左下角 (-1,-1)
            (cross.mX + 1 == this->mX && cross.mZ == this->mZ);       // 右下角 (-1,0)
 }
-bool                   PlotPos::fixVertexs() {}
-std::vector<PlotPos>   PlotPos::getRangedPlots() const {}
-std::vector<PlotRoad>  PlotPos::getRangedRoads() const {}
-std::vector<PlotCross> PlotPos::getRangedCrosses() const {}
-std::optional<PlotPos> PlotPos::tryMerge(PlotPos const& other) {}
+bool PlotPos::fixVertexs() {
+    if (mVertexs.empty()) {
+        return false;
+    }
 
+    // 使用凸包算法重新组织顶点，确保多边形的顶点顺序正确
+    std::vector<Vec3> sortedVertexs = mVertexs;
+
+    // 使用 Graham 扫描算法计算凸包
+    std::sort(sortedVertexs.begin(), sortedVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
+        if (a.z != b.z) return a.z < b.z;
+        return a.x < b.x;
+    });
+
+    Vec3 pivot = sortedVertexs[0];
+    std::sort(sortedVertexs.begin() + 1, sortedVertexs.end(), [&](const Vec3& a, const Vec3& b) -> bool {
+        double angleA = std::atan2(a.z - pivot.z, a.x - pivot.x);
+        double angleB = std::atan2(b.z - pivot.z, b.x - pivot.x);
+        if (angleA == angleB) return (pivot - a).length() < (pivot - b).length();
+        return angleA < angleB;
+    });
+
+    std::vector<Vec3> hull;
+    hull.push_back(sortedVertexs[0]);
+    hull.push_back(sortedVertexs[1]);
+
+    for (size_t i = 2; i < sortedVertexs.size(); ++i) {
+        while (hull.size() >= 2) {
+            Vec3   q     = hull[hull.size() - 2];
+            Vec3   r     = hull[hull.size() - 1];
+            Vec3   s     = sortedVertexs[i];
+            double cross = (r.x - q.x) * (s.z - q.z) - (r.z - q.z) * (s.x - q.x);
+            if (cross > 0) break;
+            hull.pop_back();
+        }
+        hull.push_back(sortedVertexs[i]);
+    }
+
+    // 确保多边形闭合
+    if (hull.front() != hull.back()) {
+        hull.push_back(hull.front());
+    }
+
+    mVertexs = hull;
+    return true;
+}
+
+std::vector<PlotPos> PlotPos::getRangedPlots() const {
+    std::vector<PlotPos> rangedPlots;
+    if (mVertexs.empty()) {
+        return rangedPlots;
+    }
+
+    // 确定边界
+    int minX = std::min_element(mVertexs.begin(), mVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
+                   return a.x < b.x;
+               })->x;
+
+    int maxX = std::max_element(mVertexs.begin(), mVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
+                   return a.x < b.x;
+               })->x;
+
+    int minZ = std::min_element(mVertexs.begin(), mVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
+                   return a.z < b.z;
+               })->z;
+
+    int maxZ = std::max_element(mVertexs.begin(), mVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
+                   return a.z < b.z;
+               })->z;
+
+    // 遍历边界内的所有地皮
+    for (int x = minX / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth) - 1;
+         x <= maxX / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth) + 1;
+         ++x) {
+        for (int z = minZ / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth) - 1;
+             z <= maxZ / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth) + 1;
+             ++z) {
+            PlotPos plot(x, z);
+            if (plot.isValid()) {
+                // 检查地皮是否在多边形内部
+                // 使用多边形包含判断
+                for (const auto& vertex : plot.mVertexs) {
+                    if (isPointInPolygon(vertex, mVertexs)) {
+                        rangedPlots.emplace_back(plot);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    return rangedPlots;
+}
+
+std::vector<PlotRoad> PlotPos::getRangedRoads() const {
+    std::vector<PlotRoad> rangedRoads;
+    if (mVertexs.empty()) {
+        return rangedRoads;
+    }
+
+    // 确定边界
+    int minX = std::min_element(mVertexs.begin(), mVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
+                   return a.x < b.x;
+               })->x;
+
+    int maxX = std::max_element(mVertexs.begin(), mVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
+                   return a.x < b.x;
+               })->x;
+
+    int minZ = std::min_element(mVertexs.begin(), mVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
+                   return a.z < b.z;
+               })->z;
+
+    int maxZ = std::max_element(mVertexs.begin(), mVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
+                   return a.z < b.z;
+               })->z;
+
+    // 遍历边界内的所有道路
+    for (int x = minX / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth) - 1;
+         x <= maxX / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth) + 1;
+         ++x) {
+        for (int z = minZ / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth) - 1;
+             z <= maxZ / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth) + 1;
+             ++z) {
+            PlotRoad road(x, z, PlotDirection::East);
+            if (road.isValid()
+                && isPointInPolygon(Vec3{road.mDiagonPos.first.x, 0, road.mDiagonPos.first.z}, mVertexs)) {
+                rangedRoads.emplace_back(road);
+            }
+            road = PlotRoad(x, z, PlotDirection::South);
+            if (road.isValid()
+                && isPointInPolygon(Vec3{road.mDiagonPos.first.x, 0, road.mDiagonPos.first.z}, mVertexs)) {
+                rangedRoads.emplace_back(road);
+            }
+        }
+    }
+
+    return rangedRoads;
+}
+
+std::vector<PlotCross> PlotPos::getRangedCrosses() const {
+    std::vector<PlotCross> rangedCrosses;
+    if (mVertexs.empty()) {
+        return rangedCrosses;
+    }
+
+    // 确定边界
+    int minX = std::min_element(mVertexs.begin(), mVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
+                   return a.x < b.x;
+               })->x;
+
+    int maxX = std::max_element(mVertexs.begin(), mVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
+                   return a.x < b.x;
+               })->x;
+
+    int minZ = std::min_element(mVertexs.begin(), mVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
+                   return a.z < b.z;
+               })->z;
+
+    int maxZ = std::max_element(mVertexs.begin(), mVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
+                   return a.z < b.z;
+               })->z;
+
+    // 遍历边界内的所有路口
+    for (int x = minX / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth) - 1;
+         x <= maxX / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth) + 1;
+         ++x) {
+        for (int z = minZ / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth) - 1;
+             z <= maxZ / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth) + 1;
+             ++z) {
+            PlotCross cross(x, z);
+            if (cross.isValid()
+                && isPointInPolygon(Vec3{cross.mDiagonPos.first.x, 0, cross.mDiagonPos.first.z}, mVertexs)) {
+                rangedCrosses.emplace_back(cross);
+            }
+        }
+    }
+
+    return rangedCrosses;
+}
+
+std::optional<PlotPos> PlotPos::tryMerge(PlotPos const& other) {
+    if (!this->isValid() || !other.isValid()) {
+        return std::nullopt;
+    }
+
+    // 检查两个地皮是否相邻
+    if (!PlotPos::isAdjacent(*this, other)) {
+        return std::nullopt;
+    }
+
+    // 合并两个多边形的顶点
+    std::vector<Vec3> mergedVertexs = mVertexs;
+    mergedVertexs.insert(mergedVertexs.end(), other.mVertexs.begin(), other.mVertexs.end());
+
+    // 使用凸包算法获取合并后的顶点
+    std::vector<Vec3> sortedVertexs = mergedVertexs;
+
+    // 使用 Graham 扫描算法计算凸包
+    std::sort(sortedVertexs.begin(), sortedVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
+        if (a.z != b.z) return a.z < b.z;
+        return a.x < b.x;
+    });
+
+    Vec3 pivot = sortedVertexs[0];
+    std::sort(sortedVertexs.begin() + 1, sortedVertexs.end(), [&](const Vec3& a, const Vec3& b) -> bool {
+        double angleA = std::atan2(a.z - pivot.z, a.x - pivot.x);
+        double angleB = std::atan2(b.z - pivot.z, b.x - pivot.x);
+        if (angleA == angleB) return (pivot - a).length() < (pivot - b).length();
+        return angleA < angleB;
+    });
+
+    std::vector<Vec3> hull;
+    hull.push_back(sortedVertexs[0]);
+    hull.push_back(sortedVertexs[1]);
+
+    for (size_t i = 2; i < sortedVertexs.size(); ++i) {
+        while (hull.size() >= 2) {
+            Vec3   q     = hull[hull.size() - 2];
+            Vec3   r     = hull[hull.size() - 1];
+            Vec3   s     = sortedVertexs[i];
+            double cross = (r.x - q.x) * (s.z - q.z) - (r.z - q.z) * (s.x - q.x);
+            if (cross > 0) break;
+            hull.pop_back();
+        }
+        hull.push_back(sortedVertexs[i]);
+    }
+
+    // 确保多边形闭合
+    if (hull.front() != hull.back()) {
+        hull.push_back(hull.front());
+    }
+
+    // 检查合并后的多边形是否有效
+    if (hull.size() < 4) { // 至少三个顶点加闭合点
+        return std::nullopt;
+    }
+
+    PlotPos mergedPlot;
+    mergedPlot.mVertexs = hull;
+
+    // 重新计算mX和mZ，根据合并后的区域
+    // mergedPlot.mX =
+    //     std::floor(mergedPlot.mVertexs[0].x / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth));
+    // mergedPlot.mZ =
+    //     std::floor(mergedPlot.mVertexs[0].z / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth));
+
+    return mergedPlot;
+}
 
 bool PlotPos::operator!=(PlotPos const& other) const { return !(*this == other); }
 bool PlotPos::operator==(PlotPos const& other) const { return other.mVertexs == this->mVertexs; }
