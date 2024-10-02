@@ -216,6 +216,9 @@ void _SetUpMergeCommand() {
             return;
         }
 
+        auto& db = data::PlotDBStorage::getInstance();
+
+
         // todo：合并计数检查
         // todo: 经济检查
 
@@ -241,6 +244,13 @@ void _SetUpMergeCommand() {
         }
 
         newPlot->fixBorder();
+        MergeBindData::disable(*player);
+
+        // todo: 更新 PlotMetadata.mMergedData
+        // todo: 更新 PlotMetadata.mMerged
+        // todo: 合并 PlotMetadata 数据
+        // todo: 归档被合并的 PlotMetadata 数据
+        // todo: 更新 PlotDBStorage 合并映射数据
 
         mc::sendText(out, "地皮合并完成");
     });

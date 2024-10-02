@@ -1,4 +1,5 @@
 #include "plotcraft/data/PlotDBStorage.h"
+#include "fmt/compile.h"
 #include "ll/api/data/KeyValueDB.h"
 #include "nlohmann/json_fwd.hpp"
 #include "plotcraft/math/PlotPos.h"
@@ -36,11 +37,6 @@ PlotDBStorage&        PlotDBStorage::getInstance() {
     return instance;
 }
 
-
-#define DB_PlayerSettingsKey "PlayerSettings"
-#define DB_PlotAdminsKey     "PlotAdmins"
-#define DB_ArchivedPrefix    "Archived_" // Archived_(0,1)
-
 void PlotDBStorage::_initKey() {
     if (!mDB->has(DB_PlayerSettingsKey)) {
         mDB->set(DB_PlayerSettingsKey, "{}");
@@ -49,7 +45,6 @@ void PlotDBStorage::_initKey() {
         mDB->set(DB_PlotAdminsKey, "[]");
     }
 }
-
 
 void PlotDBStorage::load() {
     if (!mDB) {
@@ -97,27 +92,26 @@ void PlotDBStorage::load() {
 
     // Init Map
     logger->info("初始化运行时必要的表...");
-    for (auto const& [id, ptr] : mPlotList) {
-        if (!ptr->isMerged()) {
+    for (auto const& [ownerPlotID, ownerPlotPtr] : mPlotList) {
+        if (!ownerPlotPtr->isMerged()) {
             continue;
         }
-        mMergedPlots.emplace(id); // self
+        // mMergedPlots.emplace(id); // self
 
-        auto& data = ptr->mMergedData;
-        for (auto const& p : data.mMergedPlotIDs) {
-            mMergedPlots.emplace(p);
+        auto const& data = ownerPlotPtr->mMergedData;
+        for (auto const& i : data.mMergedPlotIDs) {
+            mMergedPlots.emplace(i, ownerPlotID);
         }
-        for (auto const& r : data.mMergedRoadIDs) {
-            mMergeRoadMap.emplace(id, r);
+        for (auto const& i : data.mMergedRoadIDs) {
+            mMergeRoadMap.emplace(i, ownerPlotID);
         }
-        for (auto const& c : data.mMergedCrossIDs) {
-            mMergeCrossMap.emplace(id, c);
+        for (auto const& i : data.mMergedCrossIDs) {
+            mMergeCrossMap.emplace(i, ownerPlotID);
         }
     }
-    logger->info("初始化完成");
-    logger->debug("mMergedPlots: {}", mMergedPlots.size());
-    logger->debug("mMergeRoadMap: {}", mMergeRoadMap.size());
-    logger->debug("mMergeCrossMap: {}", mMergeCrossMap.size());
+    logger->info("合并地皮映射表: {}", mMergedPlots.size());
+    logger->info("合并道路映射表: {}", mMergeRoadMap.size());
+    logger->info("合并路口映射表: {}", mMergeCrossMap.size());
 }
 
 void PlotDBStorage::save(PlotMetadata const& plot) {
@@ -134,12 +128,11 @@ void PlotDBStorage::save() {
     mDB->set(DB_PlayerSettingsKey, JsonHelper::structToJson(mPlayerSettingList).dump());
 }
 
-
-bool PlotDBStorage::hasAdmin(UUIDs const& uuid) const {
+std::vector<UUIDs> PlotDBStorage::getAdmins() const { return mAdminList; }
+bool               PlotDBStorage::isAdmin(UUIDs const& uuid) const { return hasAdmin(uuid); }
+bool               PlotDBStorage::hasAdmin(UUIDs const& uuid) const {
     return std::find(mAdminList.begin(), mAdminList.end(), uuid) != mAdminList.end();
 }
-bool PlotDBStorage::isAdmin(UUIDs const& uuid) const { return hasAdmin(uuid); }
-
 bool PlotDBStorage::addAdmin(UUIDs const& uuid) {
     if (hasAdmin(uuid)) {
         return false;
@@ -147,7 +140,6 @@ bool PlotDBStorage::addAdmin(UUIDs const& uuid) {
     mAdminList.push_back(UUIDs(uuid));
     return true;
 }
-
 bool PlotDBStorage::delAdmin(UUIDs const& uuid) {
     auto it = std::find(mAdminList.begin(), mAdminList.end(), uuid);
     if (it == mAdminList.end()) {
@@ -157,11 +149,11 @@ bool PlotDBStorage::delAdmin(UUIDs const& uuid) {
     return true;
 }
 
-std::vector<UUIDs> PlotDBStorage::getAdmins() const { return mAdminList; }
-
 
 // Plots
-bool PlotDBStorage::hasPlot(PlotID const& id) const { return mPlotList.find(id) != mPlotList.end(); }
+bool PlotDBStorage::hasPlot(PlotID const& id, bool ignoreMergePlot) const {
+    return mPlotList.find(id) != mPlotList.end() || (mMergedPlots.find(id) != mMergedPlots.end() && !ignoreMergePlot);
+}
 
 bool PlotDBStorage::delPlot(PlotID const& id) {
     auto it = mPlotList.find(id);
@@ -184,7 +176,6 @@ bool PlotDBStorage::addPlot(PlotMetadataPtr ptr) {
     mPlotList[ptr->getPlotID()] = ptr;
     return true;
 }
-
 bool PlotDBStorage::addPlot(PlotID const& id, UUIDs const& owner, int x, int z) {
     auto ptr = PlotMetadata::make(id, owner, x, z);
     return addPlot(ptr);
@@ -192,10 +183,14 @@ bool PlotDBStorage::addPlot(PlotID const& id, UUIDs const& owner, int x, int z) 
 
 PlotMetadataPtr PlotDBStorage::getPlot(PlotID const& id) const {
     auto it = mPlotList.find(id);
-    if (it == mPlotList.end()) {
-        return nullptr;
+    if (it != mPlotList.end()) {
+        return it->second;
     }
-    return it->second;
+    auto it2 = mMergedPlots.find(id);
+    if (it2 != mMergedPlots.end()) {
+        return mPlotList.at(it2->second);
+    }
+    return nullptr;
 }
 
 std::vector<PlotMetadataPtr> PlotDBStorage::getPlots() const {
@@ -277,6 +272,29 @@ PlotPermission PlotDBStorage::getPlayerPermission(UUIDs const& uuid, PlotID cons
 void PlotDBStorage::_initClass(PlotRoad& road) { road.mIsMergedPlot = this->mMergeRoadMap.contains(road.getRoadID()); }
 void PlotDBStorage::_initClass(PlotCross& cross) {
     cross.mIsMergedPlot = this->mMergeCrossMap.contains(cross.getCrossID());
+}
+bool PlotDBStorage::_initClass(PlotPos& plot) {
+    auto ownerPlot = this->getPlot(plot.getPlotID());
+    if (ownerPlot && ownerPlot->isMerged()) {
+        plot.mVertexs.reserve(ownerPlot->mMergedData.mCurrentVertexs.size()); // 预分配内存
+        for (auto const& i : ownerPlot->mMergedData.mCurrentVertexs) {
+            plot.mVertexs.push_back(i);
+        }
+        return true;
+    }
+    return false;
+}
+void PlotDBStorage::_archivePlotData(PlotID const& id) {
+    auto iter = mPlotList.find(id);
+    if (iter == mPlotList.end()) {
+        return;
+    }
+
+    // 重命名Key
+    mDB->del(id);
+    mDB->set(DB_ArchivedPrefix + id, JsonHelper::structToJson(iter->second).dump());
+
+    mPlotList.erase(iter);
 }
 
 

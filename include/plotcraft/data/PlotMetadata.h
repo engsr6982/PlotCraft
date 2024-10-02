@@ -1,4 +1,6 @@
 #pragma once
+#include "mc/math/Vec3.h"
+#include "mc/world/level/BlockPos.h"
 #include "plotcraft/Global.h"
 #include <memory>
 #include <optional>
@@ -97,6 +99,16 @@ struct PlotPermissionTable {
     bool editSign{false};      // 编辑告示牌
 };
 
+struct VertexPos {
+    int x, y, z;
+
+    BlockPos         toBlockPos() const { return BlockPos(x, y, z); }
+    Vec3             toVec3() const { return Vec3(x, y, z); }
+    static VertexPos fromBlockPos(BlockPos const& pos) { return VertexPos(pos.x, pos.y, pos.z); }
+    operator BlockPos() const { return toBlockPos(); }
+    operator Vec3() const { return toVec3(); }
+};
+
 
 using PlotMetadataPtr = std::shared_ptr<class PlotMetadata>;
 class PlotMetadata {
@@ -121,10 +133,11 @@ public:
     // v1.1.0
     bool mMerged{false};
     struct {
-        std::vector<std::vector<int>> mCurrentVertexs; // 当前顶点列表 [[x,z], [x,z]]
-        std::vector<PlotID>           mMergedPlotIDs;  // 合并的地皮ID列表
-        std::vector<RoadID>           mMergedRoadIDs;  // 合并的道路ID列表
-        std::vector<CrossID>          mMergedCrossIDs; // 合并的交叉点ID列表
+        int                    mMergeCount{0};  // 合并次数
+        std::vector<VertexPos> mCurrentVertexs; // 当前顶点列表
+        std::vector<PlotID> mMergedPlotIDs; // 合并的地皮ID列表 (这里的地皮都算为子地皮，get时映射到主地皮)
+        std::vector<RoadID>  mMergedRoadIDs;  // 合并的道路ID列表
+        std::vector<CrossID> mMergedCrossIDs; // 合并的交叉点ID列表
     } mMergedData;
 
 public:

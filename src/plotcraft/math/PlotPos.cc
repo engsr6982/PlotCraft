@@ -26,6 +26,10 @@ using TemplateManager = core::TemplateManager;
 
 // !Class: PlotPos
 PlotPos::PlotPos(int x, int z) : mX(x), mZ(z) {
+    if (data::PlotDBStorage::getInstance()._initClass(*this)) {
+        return; // 从数据库中加载数据
+    }
+
     auto& cfg = Config::cfg.generator;
 
     Vec3 min, max;
@@ -68,6 +72,10 @@ PlotPos::PlotPos(const Vec3& vec3) {
     // 计算地皮坐标
     mX = (int)std::floor(vec3.x / total);
     mZ = (int)std::floor(vec3.z / total);
+
+    if (data::PlotDBStorage::getInstance()._initClass(*this)) {
+        return; // 从数据库中加载数据
+    }
 
     Vec3 min, max;
     bool isValid = true;

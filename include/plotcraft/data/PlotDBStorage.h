@@ -32,9 +32,9 @@ private:
     std::unordered_map<UUIDs, PlayerSettingItem> mPlayerSettingList; // 玩家设置
 
     // MergeAPI:
-    std::unordered_map<RoadID, PlotID>  mMergeRoadMap;  // 路ID => 地皮ID
-    std::unordered_map<CrossID, PlotID> mMergeCrossMap; // 十字路口ID => 地皮ID
-    std::unordered_set<PlotID>          mMergedPlots;   // 已合并的地皮
+    std::unordered_map<RoadID, PlotID>  mMergeRoadMap;  // 路ID => 主地皮ID
+    std::unordered_map<CrossID, PlotID> mMergeCrossMap; // 十字路口ID => 主地皮ID
+    std::unordered_map<PlotID, PlotID>  mMergedPlots;   // 被合并的地皮 => 主地皮ID
 
     // Functions:
     void _initKey();
@@ -47,7 +47,23 @@ public:
     // Merge API:
     PLAPI void _initClass(PlotRoad& road);
     PLAPI void _initClass(PlotCross& cross);
-    // PLAPI void _initClass(PlotPos& pos);     // todo
+    PLAPI bool _initClass(PlotPos& pos);
+
+    /**
+     * @brief 合并两个地皮的数据
+     * @param from 源地皮
+     * @param to 目标地皮
+     * @param ignoreMember 是否忽略成员
+     * @param ignoreComment 是否忽略评论
+     */
+    PLAPI void
+    _mergeData(PlotMetadataPtr from, PlotMetadataPtr to, bool ignoreMember = false, bool ignoreComment = false);
+
+    /**
+     * @brief 归档地皮数据 (归档后)
+     * @param id 地皮ID
+     */
+    PLAPI void _archivePlotData(PlotID const& id);
 
     // Instance API:
     PLAPI ll::data::KeyValueDB& getDB();
@@ -70,7 +86,7 @@ public:
     PLAPI std::vector<UUIDs> getAdmins() const;
 
     // Plot API:
-    PLAPI bool hasPlot(const PlotID& id) const;
+    PLAPI bool hasPlot(const PlotID& id, bool ignoreMergePlot = false) const;
     PLAPI bool addPlot(PlotID const& id, UUIDs const& owner, int x, int z);
     PLAPI bool addPlot(PlotMetadataPtr plot);
 
@@ -92,6 +108,12 @@ public:
     PLAPI bool buyPlotFromSale(PlotID const& pid, UUIDs const& buyer, bool resetShares = true); // 购买出售中的地皮
 
     PLAPI PlotPermission getPlayerPermission(UUIDs const& uuid, PlotID const& pid, bool ignoreAdmin = false) const;
+
+
+    // 特殊数据 Key (统一定义Key，请勿修改)
+    string const DB_ArchivedPrefix    = "Archived_";
+    string const DB_PlotAdminsKey     = "PlotAdmins";
+    string const DB_PlayerSettingsKey = "PlayerSettings";
 };
 
 
