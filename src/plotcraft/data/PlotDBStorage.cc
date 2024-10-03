@@ -54,6 +54,7 @@ void PlotDBStorage::load() {
     }
     mAdminList.clear();
     mPlotList.clear();
+    mPlayerSettingList.clear();
     _initKey();
 
     // Load data from database
@@ -281,6 +282,9 @@ void PlotDBStorage::_archivePlotData(PlotID const& id) {
     mPlotList.erase(iter);
 }
 bool PlotDBStorage::refreshMergeMap() {
+    mMergedPlots.clear();
+    mMergeRoadMap.clear();
+    mMergeCrossMap.clear();
     for (auto const& [ownerPlotID, ownerPlotPtr] : mPlotList) {
         if (!ownerPlotPtr->isMerged()) {
             continue;
