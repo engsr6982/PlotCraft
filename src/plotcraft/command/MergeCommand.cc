@@ -240,37 +240,26 @@ void _SetUpMergeCommand() {
             return;
         }
 
+        mc::sendText(out, "正在处理地皮...");
         auto newPlot = sou.tryMerge(tar);
         if (!newPlot.has_value()) {
             mc::sendText<mc::LogLevel::Error>(out, "合并失败，请重试");
             return;
         }
+        souPlot->updateMergeData(*newPlot); // 更新合并数据
+        db.refreshMergeMap();               // 刷新合并地图
 
-        auto roads   = newPlot->getRangedRoads();
-        auto crosses = newPlot->getRangedCrosses();
-        // auto plots   = newPlot->getRangedPlots();
+        souPlot->setMergeCount(count);             // 更新合并次数
+        souPlot->mergeData(tarPlot);               // 合并数据
+        db._archivePlotData(tarPlot->getPlotID()); // 归档目标地皮数据
 
-        mc::sendText(out, "合并成功，正在处理地皮...");
-
+        // 修正边框、道路、路口
         Block const& block = Block::tryGetFromRegistry(Config::cfg.generator.fillBlock);
-        // for (auto& i : plots) {}
-        for (auto& i : crosses) {
-            i.fill(block, true);
-        }
-        for (auto& i : roads) {
-            i.fill(block, true);
-        }
+        for (auto& i : newPlot->getRangedRoads()) i.fill(block, true);
+        for (auto& i : newPlot->getRangedCrosses()) i.fill(block, true);
 
         newPlot->fixBorder();
         MergeBindData::disable(*player);
-
-        souPlot->mergeData(tarPlot);
-        souPlot->updateMergeData(*newPlot);
-        souPlot->setMergeCount(count);
-
-        db._archivePlotData(tarPlot->getPlotID());
-        db.refreshMergeMap();
-
         mc::sendText(out, "地皮合并完成");
     });
 }

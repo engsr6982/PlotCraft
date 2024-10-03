@@ -6,6 +6,7 @@
 #include "mc/server/commands/CommandPositionFloat.h"
 #include "mc/server/commands/CommandVersion.h"
 #include "mc/world/actor/Actor.h"
+#include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/math/PlotPos.h"
 #include <sstream>
 
@@ -157,6 +158,18 @@ void SetupDebugCommand() {
             out_str << "Cross => Road: " << cross.isAdjacent(road) << "\n";
             out.success(out_str.str());
         });
+
+    cmd.overload().text("debug_reset_db").execute([](CommandOrigin const& ori, CommandOutput& out) {
+        auto& db   = data::PlotDBStorage::getInstance();
+        auto& impl = db.getDB();
+
+        impl.iter([&impl](auto k, auto v) {
+            impl.del(k);
+            return true;
+        });
+
+        db.load();
+    });
 }
 
 

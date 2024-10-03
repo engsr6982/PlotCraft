@@ -532,12 +532,6 @@ std::optional<PlotPos> PlotPos::tryMerge(PlotPos const& other) {
     PlotPos mergedPlot;
     mergedPlot.mVertexs = hull;
 
-    // 重新计算mX和mZ，根据合并后的区域
-    // mergedPlot.mX =
-    //     std::floor(mergedPlot.mVertexs[0].x / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth));
-    // mergedPlot.mZ =
-    //     std::floor(mergedPlot.mVertexs[0].z / (Config::cfg.generator.plotWidth + Config::cfg.generator.roadWidth));
-
     return mergedPlot;
 }
 
