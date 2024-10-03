@@ -75,7 +75,6 @@ public:
     PLAPI bool isAdjacent(PlotRoad const& road) const;
     PLAPI bool isCorner(PlotCross const& cross) const;
     PLAPI void fixBorder();
-    PLAPI bool fixVertexs();
     PLAPI std::vector<PlotPos> getRangedPlots() const;
     PLAPI std::vector<PlotRoad> getRangedRoads() const;
     PLAPI std::vector<PlotCross> getRangedCrosses() const;

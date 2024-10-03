@@ -2,6 +2,7 @@
 #include "mc/math/Vec3.h"
 #include "mc/world/level/BlockPos.h"
 #include "plotcraft/Global.h"
+#include "plotcraft/math/PlotPos.h"
 #include <memory>
 #include <optional>
 #include <vector>
@@ -104,7 +105,7 @@ struct VertexPos {
 
     BlockPos         toBlockPos() const { return BlockPos(x, y, z); }
     Vec3             toVec3() const { return Vec3(x, y, z); }
-    static VertexPos fromBlockPos(BlockPos const& pos) { return VertexPos(pos.x, pos.y, pos.z); }
+    static VertexPos fromBlockPos(BlockPos const& pos) { return VertexPos{pos.x, pos.y, pos.z}; }
     operator BlockPos() const { return toBlockPos(); }
     operator Vec3() const { return toVec3(); }
 };
@@ -150,6 +151,9 @@ public:
 
     // APIs:
     PLAPI bool isMerged() const;
+    PLAPI void mergeData(PlotMetadataPtr const other, bool mergeComment = true, bool mergeSharedPlayer = false);
+    PLAPI void updateMergeData(PlotPos const& newRange); // 更改后需调用 PlotDBStorage::refreshMergeMap 刷新映射表
+    PLAPI bool setMergeCount(int count);
 
     PLAPI bool isOwner(UUIDs const& uuid) const;
 

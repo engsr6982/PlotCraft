@@ -92,23 +92,7 @@ void PlotDBStorage::load() {
 
     // Init Map
     logger->info("初始化运行时必要的表...");
-    for (auto const& [ownerPlotID, ownerPlotPtr] : mPlotList) {
-        if (!ownerPlotPtr->isMerged()) {
-            continue;
-        }
-        // mMergedPlots.emplace(id); // self
-
-        auto const& data = ownerPlotPtr->mMergedData;
-        for (auto const& i : data.mMergedPlotIDs) {
-            mMergedPlots.emplace(i, ownerPlotID);
-        }
-        for (auto const& i : data.mMergedRoadIDs) {
-            mMergeRoadMap.emplace(i, ownerPlotID);
-        }
-        for (auto const& i : data.mMergedCrossIDs) {
-            mMergeCrossMap.emplace(i, ownerPlotID);
-        }
-    }
+    refreshMergeMap();
     logger->info("合并地皮映射表: {}", mMergedPlots.size());
     logger->info("合并道路映射表: {}", mMergeRoadMap.size());
     logger->info("合并路口映射表: {}", mMergeCrossMap.size());
@@ -292,9 +276,29 @@ void PlotDBStorage::_archivePlotData(PlotID const& id) {
 
     // 重命名Key
     mDB->del(id);
-    mDB->set(DB_ArchivedPrefix + id, JsonHelper::structToJson(iter->second).dump());
+    mDB->set(DB_ArchivedPrefix + id, JsonHelper::structToJson(*iter->second).dump());
 
     mPlotList.erase(iter);
+}
+bool PlotDBStorage::refreshMergeMap() {
+    for (auto const& [ownerPlotID, ownerPlotPtr] : mPlotList) {
+        if (!ownerPlotPtr->isMerged()) {
+            continue;
+        }
+        // mMergedPlots.emplace(id); // self
+
+        auto const& data = ownerPlotPtr->mMergedData;
+        for (auto const& i : data.mMergedPlotIDs) {
+            mMergedPlots.emplace(i, ownerPlotID);
+        }
+        for (auto const& i : data.mMergedRoadIDs) {
+            mMergeRoadMap.emplace(i, ownerPlotID);
+        }
+        for (auto const& i : data.mMergedCrossIDs) {
+            mMergeCrossMap.emplace(i, ownerPlotID);
+        }
+    }
+    return true;
 }
 
 

@@ -193,4 +193,65 @@ void PlotMetadata::save() { PlotDBStorage::getInstance().save(*this); }
 string PlotMetadata::toString() const { return JsonHelper::structToJson(*this).dump(); }
 
 
+void PlotMetadata::mergeData(PlotMetadataPtr const other, bool mergeComment, bool mergeSharedPlayer) {
+    if (!other) {
+        return;
+    }
+
+    if (mergeComment) {
+        for (auto const& i : other->mComments) {
+            this->mComments.push_back(PlotCommentItem{i}); // copy
+        }
+    }
+    if (mergeSharedPlayer) {
+        for (auto const& i : other->mSharedPlayers) {
+            if (this->isSharedPlayer(i.mSharedPlayer)) {
+                continue;
+            }
+            this->mSharedPlayers.push_back(PlotShareItem{i});
+        }
+    }
+}
+void PlotMetadata::updateMergeData(PlotPos const& newRange) {
+    if (!newRange.isValid()) {
+        return;
+    }
+
+    this->mMerged = true;
+    auto& data    = this->mMergedData;
+    auto  plots   = newRange.getRangedPlots();
+    auto  corsses = newRange.getRangedCrosses();
+    auto  roads   = newRange.getRangedRoads();
+
+    data.mCurrentVertexs.clear();
+    data.mCurrentVertexs.reserve(newRange.mVertexs.size());
+
+    data.mMergedPlotIDs.clear();
+    data.mMergedPlotIDs.reserve(plots.size());
+
+    data.mMergedCrossIDs.clear();
+    data.mMergedCrossIDs.reserve(corsses.size());
+
+    data.mMergedRoadIDs.clear();
+    data.mMergedRoadIDs.reserve(roads.size());
+
+    for (auto const& i : newRange.mVertexs) {
+        data.mCurrentVertexs.push_back(VertexPos::fromBlockPos(i));
+    }
+    for (auto const& i : plots) {
+        data.mMergedPlotIDs.push_back(i.getPlotID());
+    }
+    for (auto const& i : corsses) {
+        data.mMergedCrossIDs.push_back(i.getCrossID());
+    }
+    for (auto const& i : roads) {
+        data.mMergedRoadIDs.push_back(i.getRoadID());
+    }
+}
+bool PlotMetadata::setMergeCount(int count) {
+    this->mMergedData.mMergeCount = count;
+    return true;
+}
+
+
 } // namespace plo::data

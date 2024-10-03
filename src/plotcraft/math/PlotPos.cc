@@ -340,52 +340,6 @@ bool PlotPos::isCorner(PlotCross const& cross) const {
            (cross.mX + 1 == this->mX && cross.mZ + 1 == this->mZ) || // 左下角 (-1,-1)
            (cross.mX + 1 == this->mX && cross.mZ == this->mZ);       // 右下角 (-1,0)
 }
-bool PlotPos::fixVertexs() {
-    if (mVertexs.empty()) {
-        return false;
-    }
-
-    // 使用凸包算法重新组织顶点，确保多边形的顶点顺序正确
-    std::vector<Vec3> sortedVertexs = mVertexs;
-
-    // 使用 Graham 扫描算法计算凸包
-    std::sort(sortedVertexs.begin(), sortedVertexs.end(), [](const Vec3& a, const Vec3& b) -> bool {
-        if (a.z != b.z) return a.z < b.z;
-        return a.x < b.x;
-    });
-
-    Vec3 pivot = sortedVertexs[0];
-    std::sort(sortedVertexs.begin() + 1, sortedVertexs.end(), [&](const Vec3& a, const Vec3& b) -> bool {
-        double angleA = std::atan2(a.z - pivot.z, a.x - pivot.x);
-        double angleB = std::atan2(b.z - pivot.z, b.x - pivot.x);
-        if (angleA == angleB) return (pivot - a).length() < (pivot - b).length();
-        return angleA < angleB;
-    });
-
-    std::vector<Vec3> hull;
-    hull.push_back(sortedVertexs[0]);
-    hull.push_back(sortedVertexs[1]);
-
-    for (size_t i = 2; i < sortedVertexs.size(); ++i) {
-        while (hull.size() >= 2) {
-            Vec3   q     = hull[hull.size() - 2];
-            Vec3   r     = hull[hull.size() - 1];
-            Vec3   s     = sortedVertexs[i];
-            double cross = (r.x - q.x) * (s.z - q.z) - (r.z - q.z) * (s.x - q.x);
-            if (cross > 0) break;
-            hull.pop_back();
-        }
-        hull.push_back(sortedVertexs[i]);
-    }
-
-    // 确保多边形闭合
-    if (hull.front() != hull.back()) {
-        hull.push_back(hull.front());
-    }
-
-    mVertexs = hull;
-    return true;
-}
 
 std::vector<PlotPos> PlotPos::getRangedPlots() const {
     std::vector<PlotPos> rangedPlots;
@@ -433,7 +387,6 @@ std::vector<PlotPos> PlotPos::getRangedPlots() const {
 
     return rangedPlots;
 }
-
 std::vector<PlotRoad> PlotPos::getRangedRoads() const {
     std::vector<PlotRoad> rangedRoads;
     if (mVertexs.empty()) {
@@ -479,7 +432,6 @@ std::vector<PlotRoad> PlotPos::getRangedRoads() const {
 
     return rangedRoads;
 }
-
 std::vector<PlotCross> PlotPos::getRangedCrosses() const {
     std::vector<PlotCross> rangedCrosses;
     if (mVertexs.empty()) {
@@ -520,7 +472,6 @@ std::vector<PlotCross> PlotPos::getRangedCrosses() const {
 
     return rangedCrosses;
 }
-
 std::optional<PlotPos> PlotPos::tryMerge(PlotPos const& other) {
     if (!this->isValid() || !other.isValid()) {
         return std::nullopt;

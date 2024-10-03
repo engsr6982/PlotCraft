@@ -49,20 +49,7 @@ public:
     PLAPI void _initClass(PlotCross& cross);
     PLAPI bool _initClass(PlotPos& pos);
 
-    /**
-     * @brief 合并两个地皮的数据
-     * @param from 源地皮
-     * @param to 目标地皮
-     * @param ignoreMember 是否忽略成员
-     * @param ignoreComment 是否忽略评论
-     */
-    PLAPI void
-    _mergeData(PlotMetadataPtr from, PlotMetadataPtr to, bool ignoreMember = false, bool ignoreComment = false);
-
-    /**
-     * @brief 归档地皮数据 (归档后)
-     * @param id 地皮ID
-     */
+    PLAPI bool refreshMergeMap();
     PLAPI void _archivePlotData(PlotID const& id);
 
     // Instance API:

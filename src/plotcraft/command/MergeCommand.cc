@@ -7,6 +7,7 @@
 #include "plotcraft/Global.h"
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/math/PlotPos.h"
+#include "plotcraft/utils/EconomySystem.h"
 #include "plotcraft/utils/Mc.h"
 #include <unordered_map>
 #include <utility>
@@ -218,9 +219,26 @@ void _SetUpMergeCommand() {
 
         auto& db = data::PlotDBStorage::getInstance();
 
+        auto souPlot = db.getPlot(sou.getPlotID());
+        auto tarPlot = db.getPlot(tar.getPlotID());
+        if (!souPlot || !tarPlot) {
+            mc::sendText(out, "当前地皮不存在，请重新选择地皮");
+            return;
+        }
 
-        // todo：合并计数检查
-        // todo: 经济检查
+        int count = souPlot->mMergedData.mMergeCount + tarPlot->mMergedData.mMergeCount + 1;
+        if (count > Config::cfg.plotWorld.maxMergePlotCount) {
+            mc::sendText<mc::LogLevel::Error>(out, "合并次数超过限制，无法合并");
+            return;
+        }
+
+        int   price = Config::calculateMergePlotPrice(count);
+        auto& eco   = utils::EconomySystem::getInstance();
+        if (!eco.reduce(*player, price)) {
+            mc::sendText<mc::LogLevel::Warn>(out, eco.getMoneySpendTipStr(*player, price));
+            mc::sendText<mc::LogLevel::Error>(out, "您的余额不足，无法合并");
+            return;
+        }
 
         auto newPlot = sou.tryMerge(tar);
         if (!newPlot.has_value()) {
@@ -246,11 +264,12 @@ void _SetUpMergeCommand() {
         newPlot->fixBorder();
         MergeBindData::disable(*player);
 
-        // todo: 更新 PlotMetadata.mMergedData
-        // todo: 更新 PlotMetadata.mMerged
-        // todo: 合并 PlotMetadata 数据
-        // todo: 归档被合并的 PlotMetadata 数据
-        // todo: 更新 PlotDBStorage 合并映射数据
+        souPlot->mergeData(tarPlot);
+        souPlot->updateMergeData(*newPlot);
+        souPlot->setMergeCount(count);
+
+        db._archivePlotData(tarPlot->getPlotID());
+        db.refreshMergeMap();
 
         mc::sendText(out, "地皮合并完成");
     });
