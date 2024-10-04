@@ -2,6 +2,7 @@
 #include "fmt/compile.h"
 #include "ll/api/data/KeyValueDB.h"
 #include "nlohmann/json_fwd.hpp"
+#include "plotcraft/Global.h"
 #include "plotcraft/math/PlotPos.h"
 #include "plotcraft/utils/JsonHelper.h"
 #include "plugin/MyPlugin.h"
@@ -273,6 +274,20 @@ bool PlotDBStorage::_initClass(PlotPos& plot) {
     }
     return false;
 }
+Vertexs PlotDBStorage::_getInitClassVertexs(PlotPos& plot) {
+    auto ownerPlot = this->getPlot(plot.getPlotID());
+    if (ownerPlot && ownerPlot->isMerged()) {
+        Vertexs res;
+        res.reserve(ownerPlot->mMergedData.mCurrentVertexs.size()); // 预分配内存
+        for (auto const& i : ownerPlot->mMergedData.mCurrentVertexs) {
+            res.push_back(i);
+        }
+        return res;
+    }
+    return {};
+}
+
+
 void PlotDBStorage::_archivePlotData(PlotID const& id) {
     auto iter = mPlotList.find(id);
     if (iter == mPlotList.end()) {

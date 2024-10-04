@@ -45,9 +45,10 @@ public:
     PlotDBStorage& operator=(const PlotDBStorage&) = delete;
 
     // Merge API:
-    PLAPI void _initClass(PlotRoad& road);
-    PLAPI void _initClass(PlotCross& cross);
-    PLAPI bool _initClass(PlotPos& pos);
+    PLAPI void    _initClass(PlotRoad& road);
+    PLAPI void    _initClass(PlotCross& cross);
+    PLAPI bool    _initClass(PlotPos& pos);
+    PLAPI Vertexs _getInitClassVertexs(PlotPos& pos); // 获取初始化类顶点 (PlotPos Vec3构造函数使用)
 
     PLAPI bool refreshMergeMap();
     PLAPI void _archivePlotData(PlotID const& id);

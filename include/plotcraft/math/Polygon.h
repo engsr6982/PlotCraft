@@ -51,7 +51,7 @@ public:
         bool allInside  = true;
         bool allOutside = true;
         for (const auto& corner : Polygon::getAABBAroundVertexs(min, max)) {
-            bool inside  = isPointInPolygon(corner);
+            bool inside  = isPointInPolygon(this->mVertexs, corner);
             allInside   &= inside;
             allOutside  &= !inside;
             if (!allInside && !allOutside) {
@@ -159,24 +159,6 @@ public:
     }
 
     /**
-     * @brief 判断点是否在多边形内(射线法)
-     */
-    bool isPointInPolygon(Vec3 const& point) const {
-        bool inside = false;
-        int  n      = (int)mVertexs.size();
-        for (int i = 0, j = n - 1; i < n; j = i++) {
-            if (((mVertexs[i].z <= point.z && point.z < mVertexs[j].z)
-                 || (mVertexs[j].z <= point.z && point.z < mVertexs[i].z))
-                && (point.x
-                    < (mVertexs[j].x - mVertexs[i].x) * (point.z - mVertexs[i].z) / (mVertexs[j].z - mVertexs[i].z)
-                          + mVertexs[i].x)) {
-                inside = !inside;
-            }
-        }
-        return inside;
-    }
-
-    /**
      * @brief 尝试合并两个多边形(凸包算法 + Graham扫描)
      * @param other 另一个多边形
      * @return 合并后的多边形，如果无法合并则返回空
@@ -242,6 +224,22 @@ public:
         }
 
         return Polygon(hull);
+    }
+
+    /**
+     * @brief 判断点是否在多边形内(射线法)
+     */
+    static bool isPointInPolygon(Vertexs const& vertex, Vec3 const& point) {
+        bool inside = false;
+        int  n      = (int)vertex.size();
+        for (int i = 0, j = n - 1; i < n; j = i++) {
+            if (((vertex[i].z <= point.z && point.z < vertex[j].z) || (vertex[j].z <= point.z && point.z < vertex[i].z))
+                && (point.x < (vertex[j].x - vertex[i].x) * (point.z - vertex[i].z) / (vertex[j].z - vertex[i].z)
+                                  + vertex[i].x)) {
+                inside = !inside;
+            }
+        }
+        return inside;
     }
 
     /**

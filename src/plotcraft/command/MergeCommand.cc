@@ -255,8 +255,12 @@ void _SetUpMergeCommand() {
 
         // 修正边框、道路、路口
         Block const& block = Block::tryGetFromRegistry(Config::cfg.generator.fillBlock);
-        for (auto& i : newPlot->getRangedRoads()) i.fill(block, true);
-        for (auto& i : newPlot->getRangedCrosses()) i.fill(block, true);
+        for (auto& i : newPlot->getRangedRoads()) {
+            i.fill(block, true);
+        }
+        for (auto& i : newPlot->getRangedCrosses()) {
+            i.fill(block, true);
+        }
 
         newPlot->fixBorder();
         MergeBindData::disable(*player);

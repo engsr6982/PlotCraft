@@ -102,11 +102,11 @@ PlotPos::PlotPos(const Vec3& vec3) {
         }
     }
 
+    auto vtx = data::PlotDBStorage::getInstance()._getInitClassVertexs(*this);
+    if (!vtx.empty() && Polygon::isPointInPolygon(vtx, vec3)) {
+        this->mVertexs = vtx;
 
-    if (isValid) {
-        if (data::PlotDBStorage::getInstance()._initClass(*this)) {
-            return; // 从数据库中加载数据
-        }
+    } else if (isValid) {
         // 按顺时针顺序存储顶点
         mVertexs = {
             min, // 左下角
@@ -115,6 +115,7 @@ PlotPos::PlotPos(const Vec3& vec3) {
             Vec3{min.x, min.y, max.z}, // 左上角
             min  // 回到起点，形成闭合多边形
         };
+
     } else {
         mVertexs.clear();
         mX = 0;
@@ -372,7 +373,7 @@ bool PlotPos::isAdjacent(const PlotPos& plot1, const PlotPos& plot2) {
     return ((dx == 0 && dz == 1) || (dx == 1 && dz == 0)) && (plot1.isValid() && plot2.isValid());
 }
 bool PlotPos::isPointInPolygon(const Vec3& point, Vertexs const& polygon) {
-    return Polygon(polygon).isPointInPolygon(point);
+    return Polygon::isPointInPolygon(polygon, point);
 }
 int PlotPos::getSurfaceYStatic() {
     return TemplateManager::isUseTemplate() ? (TemplateManager::mTemplateData.template_offset + 1)
@@ -580,10 +581,9 @@ void PlotCross::fill(Block const& block, bool removeBorder) {
                 bs.setBlock(x, y, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
             }
 
-            if (removeBorder
-                && ((x == min.x && z == min.z) || (x == min.x && z == max.z) || (x == max.x && z == min.z)
-                    || (x == max.x && z == max.z))) {
-                bs.setBlock(x, y + 1, z, air, (int)BlockUpdateFlag::AllPriority, nullptr); // 替换四个角的方块为空气
+            auto& borderBlock = bs.getBlock(x, y + 1, z);
+            if ((removeBorder && !borderBlock.isAir()) && (x == min.x || x == max.x || z == min.z || z == max.z)) {
+                bs.setBlock(x, y + 1, z, air, (int)BlockUpdateFlag::AllPriority, nullptr);
             }
         }
     }

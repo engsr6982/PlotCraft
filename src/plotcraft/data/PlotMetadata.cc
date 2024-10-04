@@ -225,25 +225,25 @@ void PlotMetadata::updateMergeData(PlotPos const& newRange) {
 
     data.mCurrentVertexs.clear();
     data.mCurrentVertexs.reserve(newRange.mVertexs.size());
-
-    data.mMergedPlotIDs.clear();
-    data.mMergedPlotIDs.reserve(plots.size());
-
-    data.mMergedCrossIDs.clear();
-    data.mMergedCrossIDs.reserve(corsses.size());
-
-    data.mMergedRoadIDs.clear();
-    data.mMergedRoadIDs.reserve(roads.size());
-
     for (auto const& i : newRange.mVertexs) {
         data.mCurrentVertexs.push_back(VertexPos::fromBlockPos(i));
     }
+
+    data.mMergedPlotIDs.clear();
+    data.mMergedPlotIDs.reserve(plots.size());
     for (auto const& i : plots) {
+        if (i.getPlotID() == this->mPlotID) continue; // skip self
         data.mMergedPlotIDs.push_back(i.getPlotID());
     }
+
+    data.mMergedCrossIDs.clear();
+    data.mMergedCrossIDs.reserve(corsses.size());
     for (auto const& i : corsses) {
         data.mMergedCrossIDs.push_back(i.getCrossID());
     }
+
+    data.mMergedRoadIDs.clear();
+    data.mMergedRoadIDs.reserve(roads.size());
     for (auto const& i : roads) {
         data.mMergedRoadIDs.push_back(i.getRoadID());
     }
