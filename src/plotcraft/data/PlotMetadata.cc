@@ -212,8 +212,8 @@ void PlotMetadata::mergeData(PlotMetadataPtr const other, bool mergeComment, boo
         }
     }
 }
-void PlotMetadata::updateMergeData(PlotPos const& newRange) {
-    if (!newRange.isValid()) {
+void PlotMetadata::updateMergeData(std::unique_ptr<PlotPos> const& pos) {
+    if (!pos->isValid()) {
         return;
     }
 
@@ -222,13 +222,13 @@ void PlotMetadata::updateMergeData(PlotPos const& newRange) {
 
     // 更新顶点
     data.mCurrentVertexs.clear();
-    data.mCurrentVertexs.reserve(newRange.mVertexs.size());
-    for (auto const& i : newRange.mVertexs) {
+    data.mCurrentVertexs.reserve(pos->mVertexs.size());
+    for (auto const& i : pos->mVertexs) {
         data.mCurrentVertexs.push_back(VertexPos::fromBlockPos(i));
     }
 
     // 记录被合并的PlotID
-    auto plots = newRange.getRangedPlots();
+    auto plots = pos->getRangedPlots();
     data.mMergedPlotIDs.clear();
     data.mMergedPlotIDs.reserve(plots.size());
     for (auto const& i : plots) {
@@ -237,7 +237,7 @@ void PlotMetadata::updateMergeData(PlotPos const& newRange) {
     }
 
     // 记录被合并的CrossID
-    auto corsses = newRange.getRangedCrosses();
+    auto corsses = pos->getRangedCrosses();
     data.mMergedCrossIDs.clear();
     data.mMergedCrossIDs.reserve(corsses.size());
     for (auto const& i : corsses) {
@@ -245,7 +245,7 @@ void PlotMetadata::updateMergeData(PlotPos const& newRange) {
     }
 
     // 记录被合并的RoadID
-    auto roads = newRange.getRangedRoads();
+    auto roads = pos->getRangedRoads();
     data.mMergedRoadIDs.clear();
     data.mMergedRoadIDs.reserve(roads.size());
     for (auto const& i : roads) {

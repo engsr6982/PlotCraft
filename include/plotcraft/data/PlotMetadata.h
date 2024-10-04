@@ -152,7 +152,7 @@ public:
     // APIs:
     PLAPI bool isMerged() const;
     PLAPI void mergeData(PlotMetadataPtr const other, bool mergeComment = true, bool mergeSharedPlayer = false);
-    PLAPI void updateMergeData(PlotPos const& newRange); // 更改后需调用 PlotDBStorage::refreshMergeMap 刷新映射表
+    PLAPI void updateMergeData(std::unique_ptr<PlotPos> const& pos); // 更改后需调用 PlotDBStorage::refreshMergeMap
     PLAPI bool setMergeCount(int count);
 
     PLAPI bool isOwner(UUIDs const& uuid) const;

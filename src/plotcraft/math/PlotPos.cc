@@ -346,22 +346,22 @@ std::vector<PlotCross> PlotPos::getRangedCrosses() const {
 
     return rangedCrosses;
 }
-std::optional<PlotPos> PlotPos::tryMerge(PlotPos const& other) {
+std::unique_ptr<PlotPos> PlotPos::tryMerge(PlotPos const& other) const {
     if (!this->isValid() || !other.isValid()) {
-        return std::nullopt;
+        return nullptr;
     }
 
     // 检查两个地皮是否相邻
     if (!PlotPos::isAdjacent(*this, other)) {
-        return std::nullopt;
+        return nullptr;
     }
     Vertexs newRange = Polygon::tryMerge(mVertexs, other.mVertexs);
     if (newRange.empty()) {
-        return std::nullopt;
+        return nullptr;
     }
-    PlotPos res;
-    res.mVertexs = newRange;
-    return res;
+    auto ptr      = std::make_unique<PlotPos>();
+    ptr->mVertexs = newRange;
+    return ptr;
 }
 
 bool PlotPos::operator!=(PlotPos const& other) const { return !(*this == other); }

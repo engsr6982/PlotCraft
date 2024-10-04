@@ -199,8 +199,9 @@ void _SetUpMergeCommand() {
             mc::sendText<mc::LogLevel::Error>(out, "您未选择任何地皮，请先选择地皮");
             return;
         }
-        auto& souPos = _bindData->first;
-        auto& tarPos = _bindData->second;
+
+        auto const& souPos = _bindData->first;
+        auto const& tarPos = _bindData->second;
 
         if (!souPos.isValid() || !tarPos.isValid()) {
             mc::sendText(out, "源地皮或目标地皮无效，请重新选择地皮");
@@ -241,28 +242,29 @@ void _SetUpMergeCommand() {
         }
 
         mc::sendText(out, "正在处理地皮...");
-        auto newPlot = souPos.tryMerge(tarPos);
-        if (!newPlot.has_value()) {
+        auto resultPtr = souPos.tryMerge(tarPos);
+        if (!resultPtr) {
             mc::sendText<mc::LogLevel::Error>(out, "合并失败，请重试");
             return;
         }
-        souPlot->updateMergeData(*newPlot); // 更新合并数据
-        db.refreshMergeMap();               // 刷新合并地图
 
-        souPlot->setMergeCount(count);             // 更新合并次数
-        souPlot->mergeData(tarPlot);               // 合并数据
-        db._archivePlotData(tarPlot->getPlotID()); // 归档目标地皮数据
-
-        // 修正边框、道路、路口
+        // 处理合并
         Block const& block = Block::tryGetFromRegistry(Config::cfg.generator.fillBlock);
-        for (auto& i : newPlot->getRangedRoads()) {
+        auto         roads = resultPtr->getRangedRoads();
+        for (auto& i : roads) {
             i.fill(block, true);
         }
-        for (auto& i : newPlot->getRangedCrosses()) {
+        auto crosses = resultPtr->getRangedCrosses();
+        for (auto& i : crosses) {
             i.fill(block, true);
         }
 
-        newPlot->fixBorder();
+        resultPtr->fixBorder();
+        souPlot->updateMergeData(resultPtr);
+        souPlot->setMergeCount(count);
+        souPlot->mergeData(tarPlot);
+        db._archivePlotData(tarPlot->getPlotID());
+        db.refreshMergeMap();
         MergeBindData::disable(*player);
         mc::sendText(out, "地皮合并完成");
     });

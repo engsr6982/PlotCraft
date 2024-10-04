@@ -3,6 +3,7 @@
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/block/Block.h"
 #include "plotcraft/Global.h"
+#include <memory>
 #include <optional>
 #include <utility>
 #include <vector>
@@ -78,7 +79,7 @@ public:
     PLAPI std::vector<PlotPos> getRangedPlots() const;
     PLAPI std::vector<PlotRoad> getRangedRoads() const;
     PLAPI std::vector<PlotCross> getRangedCrosses() const;
-    PLAPI std::optional<PlotPos> tryMerge(PlotPos const& other); // 尝试合并两个多边形，如果没有值则合并失败
+    PLAPI std::unique_ptr<PlotPos> tryMerge(PlotPos const& other) const; // 尝试合并两个多边形，如果没有值则合并失败
 };
 
 
