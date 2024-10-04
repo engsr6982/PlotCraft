@@ -219,16 +219,16 @@ void PlotMetadata::updateMergeData(PlotPos const& newRange) {
 
     this->mMerged = true;
     auto& data    = this->mMergedData;
-    auto  plots   = newRange.getRangedPlots();
-    auto  corsses = newRange.getRangedCrosses();
-    auto  roads   = newRange.getRangedRoads();
 
+    // 更新顶点
     data.mCurrentVertexs.clear();
     data.mCurrentVertexs.reserve(newRange.mVertexs.size());
     for (auto const& i : newRange.mVertexs) {
         data.mCurrentVertexs.push_back(VertexPos::fromBlockPos(i));
     }
 
+    // 记录被合并的PlotID
+    auto plots = newRange.getRangedPlots();
     data.mMergedPlotIDs.clear();
     data.mMergedPlotIDs.reserve(plots.size());
     for (auto const& i : plots) {
@@ -236,12 +236,16 @@ void PlotMetadata::updateMergeData(PlotPos const& newRange) {
         data.mMergedPlotIDs.push_back(i.getPlotID());
     }
 
+    // 记录被合并的CrossID
+    auto corsses = newRange.getRangedCrosses();
     data.mMergedCrossIDs.clear();
     data.mMergedCrossIDs.reserve(corsses.size());
     for (auto const& i : corsses) {
         data.mMergedCrossIDs.push_back(i.getCrossID());
     }
 
+    // 记录被合并的RoadID
+    auto roads = newRange.getRangedRoads();
     data.mMergedRoadIDs.clear();
     data.mMergedRoadIDs.reserve(roads.size());
     for (auto const& i : roads) {

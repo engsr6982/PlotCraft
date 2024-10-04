@@ -194,33 +194,33 @@ void _SetUpMergeCommand() {
             return;
         }
 
-        auto data = MergeBindData::getBindData(*player);
-        if (!data) {
+        auto _bindData = MergeBindData::getBindData(*player);
+        if (!_bindData) {
             mc::sendText<mc::LogLevel::Error>(out, "您未选择任何地皮，请先选择地皮");
             return;
         }
-        auto& sou = data->first;
-        auto& tar = data->second;
+        auto& souPos = _bindData->first;
+        auto& tarPos = _bindData->second;
 
-        if (!sou.isValid() || !tar.isValid()) {
+        if (!souPos.isValid() || !tarPos.isValid()) {
             mc::sendText(out, "源地皮或目标地皮无效，请重新选择地皮");
             return;
         }
 
-        if (sou == tar) {
+        if (souPos == tarPos) {
             mc::sendText(out, "源地皮和目标地皮相同，请重新选择地皮");
             return;
         }
 
-        if (!PlotPos::isAdjacent(sou, tar)) {
+        if (!PlotPos::isAdjacent(souPos, tarPos)) {
             mc::sendText(out, "源地皮和目标地皮不是相邻地皮，请重新选择地皮");
             return;
         }
 
         auto& db = data::PlotDBStorage::getInstance();
 
-        auto souPlot = db.getPlot(sou.getPlotID());
-        auto tarPlot = db.getPlot(tar.getPlotID());
+        auto souPlot = db.getPlot(souPos.getPlotID());
+        auto tarPlot = db.getPlot(tarPos.getPlotID());
         if (!souPlot || !tarPlot) {
             mc::sendText(out, "当前地皮不存在，请重新选择地皮");
             return;
@@ -241,7 +241,7 @@ void _SetUpMergeCommand() {
         }
 
         mc::sendText(out, "正在处理地皮...");
-        auto newPlot = sou.tryMerge(tar);
+        auto newPlot = souPos.tryMerge(tarPos);
         if (!newPlot.has_value()) {
             mc::sendText<mc::LogLevel::Error>(out, "合并失败，请重试");
             return;
