@@ -173,7 +173,11 @@ PlotMetadataPtr PlotDBStorage::getPlot(PlotID const& id) const {
     }
     auto it2 = mMergedPlots.find(id);
     if (it2 != mMergedPlots.end()) {
-        return mPlotList.at(it2->second);
+        // return mPlotList.at(it2->second);
+        auto iter3 = mPlotList.find(it2->second);
+        if (iter3 != mPlotList.end()) {
+            return iter3->second;
+        }
     }
     return nullptr;
 }
