@@ -144,19 +144,19 @@ bool PlotPos::isPosOnBorder(const Vec3& vec3) const {
     if (vec3.y < -64 || vec3.y > 320) {
         return false;
     }
-    return Polygon(mVertexs).isOnEdge(vec3);
+    return Polygon::isOnEdge(mVertexs, vec3);
 }
 bool PlotPos::isAABBOnBorder(BlockPos const& min, BlockPos const& max) const {
     if (!isValid()) {
         return false;
     }
-    return Polygon(mVertexs).isAABBOnEdge(min, max);
+    return Polygon::isAABBOnEdge(mVertexs, min, max);
 }
 bool PlotPos::isRadiusOnBorder(BlockPos const& center, int radius) const {
     if (!isValid()) {
         return false;
     }
-    return Polygon(mVertexs).isCircleOnEdge(center, radius);
+    return Polygon::isCircleOnEdge(mVertexs, center, radius);
 }
 string PlotPos::toString() const {
 #if !defined(DEBUG)
@@ -355,7 +355,13 @@ std::optional<PlotPos> PlotPos::tryMerge(PlotPos const& other) {
     if (!PlotPos::isAdjacent(*this, other)) {
         return std::nullopt;
     }
-    return Polygon(mVertexs).tryMerge(Polygon(other.mVertexs));
+    Vertexs newRange = Polygon::tryMerge(mVertexs, other.mVertexs);
+    if (newRange.empty()) {
+        return std::nullopt;
+    }
+    PlotPos res;
+    res.mVertexs = newRange;
+    return res;
 }
 
 bool PlotPos::operator!=(PlotPos const& other) const { return !(*this == other); }

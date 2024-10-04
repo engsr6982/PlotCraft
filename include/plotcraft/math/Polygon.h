@@ -2,8 +2,6 @@
 #include "mc/math/Vec3.h"
 #include "mc/world/level/BlockPos.h"
 #include "plotcraft/Global.h"
-#include "plotcraft/math/PlotPos.h"
-#include <optional>
 #include <vector>
 
 
@@ -11,21 +9,24 @@ namespace plo {
 
 
 /**
- * @brief 多边形几何类，支持凸多边形
+ * @brief 多边形几何类，支持凸多边形(静态类)
  */
 class Polygon {
 public:
-    Vertexs const mVertexs; // [Vec3]
-
-    Polygon(Vertexs const& vertexs) : mVertexs(vertexs) {}
+    Polygon()                          = delete;
+    ~Polygon()                         = delete;
+    Polygon(Polygon&&)                 = delete;
+    Polygon(Polygon const&)            = delete;
+    Polygon& operator=(Polygon&&)      = delete;
+    Polygon& operator=(Polygon const&) = delete;
 
     /**
      * @brief 判断点是否在多边形边上
      */
-    bool isOnEdge(Vec3 const& point) const {
-        for (size_t i = 0; i < mVertexs.size() - 1; ++i) {
-            const Vec3& v1 = mVertexs[i];
-            const Vec3& v2 = mVertexs[(i + 1) % mVertexs.size()];
+    static bool isOnEdge(Vertexs const& polygon, Vec3 const& point) {
+        for (size_t i = 0; i < polygon.size() - 1; ++i) {
+            const Vec3& v1 = polygon[i];
+            const Vec3& v2 = polygon[(i + 1) % polygon.size()];
 
             // 检查点是否在当前边上
             if ((point.x >= std::min(v1.x, v2.x) && point.x <= std::max(v1.x, v2.x))
@@ -46,12 +47,12 @@ public:
     /**
      * @brief 判断AABB区域是否在多边形边上
      */
-    bool isAABBOnEdge(BlockPos const& min, BlockPos const& max) const {
+    static bool isAABBOnEdge(Vertexs const& polygon, BlockPos const& min, BlockPos const& max) {
         // 检查Cube是否完全在地皮外部或内部
         bool allInside  = true;
         bool allOutside = true;
         for (const auto& corner : Polygon::getAABBAroundVertexs(min, max)) {
-            bool inside  = isPointInPolygon(this->mVertexs, corner);
+            bool inside  = isPointInPolygon(polygon, corner);
             allInside   &= inside;
             allOutside  &= !inside;
             if (!allInside && !allOutside) {
@@ -63,9 +64,9 @@ public:
         }
 
         // 检查Cube的边是否与地皮边界相交
-        for (size_t i = 0; i < mVertexs.size() - 1; ++i) {
-            const BlockPos& v1 = mVertexs[i];
-            const BlockPos& v2 = mVertexs[i + 1];
+        for (size_t i = 0; i < polygon.size() - 1; ++i) {
+            const BlockPos& v1 = polygon[i];
+            const BlockPos& v2 = polygon[i + 1];
 
             // 检查水平边
             if (v1.z == v2.z) {
@@ -89,13 +90,13 @@ public:
     /**
      * @brief 判断一个圆是否在多边形边上
      */
-    bool isCircleOnEdge(Vec3 const& center, float radius) const {
+    static bool isCircleOnEdge(Vertexs const& polygon, Vec3 const& center, float radius) {
         // 快速检查：如果圆心到多边形中心的距离大于半径加上多边形对角线的一半，则一定不相交
-        Vec3   plotCenter = (mVertexs[0] + mVertexs[2]) * 0.5;
+        Vec3   plotCenter = (polygon[0] + polygon[2]) * 0.5;
         double dx         = center.x - plotCenter.x;
         double dz         = center.z - plotCenter.z;
         double centerDist = std::sqrt(dx * dx + dz * dz);
-        double plotRadius = (mVertexs[2] - mVertexs[0]).length() * 0.5;
+        double plotRadius = (polygon[2] - polygon[0]).length() * 0.5;
         if (centerDist > radius + plotRadius) {
             return false;
         }
@@ -103,7 +104,7 @@ public:
         // 检查圆是否完全包含多边形或完全在多边形外部
         bool allInside  = true;
         bool allOutside = true;
-        for (const auto& vertex : mVertexs) {
+        for (const auto& vertex : polygon) {
             dx                 = vertex.x - center.x;
             dz                 = vertex.z - center.z;
             double distSquared = dx * dx + dz * dz;
@@ -121,9 +122,9 @@ public:
         }
 
         // 检查圆是否与多边形的边相交
-        for (size_t i = 0; i < mVertexs.size() - 1; ++i) {
-            const Vec3& v1 = mVertexs[i];
-            const Vec3& v2 = mVertexs[i + 1];
+        for (size_t i = 0; i < polygon.size() - 1; ++i) {
+            const Vec3& v1 = polygon[i];
+            const Vec3& v2 = polygon[i + 1];
 
             // 计算边的方向向量
             double edgeX = v2.x - v1.x;
@@ -165,15 +166,15 @@ public:
      *
      * @warnning: 必须保证两个多边形是凸多边形，否则合并结果不正确
      */
-    std::optional<Polygon> tryMerge(Polygon const& other) const {
+    static Vertexs tryMerge(Vertexs const& mVertexs, Vertexs const& other) {
         // 首先检查两个多边形是否都是凸多边形
-        if (!isConvex(mVertexs) || !isConvex(other.mVertexs)) {
-            return std::nullopt;
+        if (!isConvex(mVertexs) || !isConvex(other)) {
+            return {};
         }
 
         // 合并两个多边形的顶点
         std::vector<Vec3> mergedVertexs = mVertexs;
-        mergedVertexs.insert(mergedVertexs.end(), other.mVertexs.begin(), other.mVertexs.end());
+        mergedVertexs.insert(mergedVertexs.end(), other.begin(), other.end());
 
         // 使用凸包算法获取合并后的顶点
         std::vector<Vec3> sortedVertexs = mergedVertexs;
@@ -215,15 +216,15 @@ public:
 
         // 检查合并后的多边形是否有效
         if (hull.size() < 4) { // 至少三个顶点加闭合点
-            return std::nullopt;
+            return {};
         }
 
         // 检查是否存在斜边
         if (!isEdgeHorizontalOrVertical(hull)) {
-            return std::nullopt;
+            return {};
         }
 
-        return Polygon(hull);
+        return hull;
     }
 
     /**
@@ -334,14 +335,6 @@ public:
             max1.x < min2.x || min1.x > max2.x || max1.y < min2.y || min1.y > max2.y || max1.z < min2.z
             || min1.z > max2.z
         );
-    }
-
-
-    // 重载运算符
-    operator PlotPos() const {
-        PlotPos pos;
-        pos.mVertexs = mVertexs;
-        return pos;
     }
 };
 
