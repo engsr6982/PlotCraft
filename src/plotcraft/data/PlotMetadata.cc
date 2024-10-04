@@ -216,6 +216,7 @@ void PlotMetadata::updateMergeData(std::unique_ptr<PlotPos> const& pos) {
     if (!pos->isValid()) {
         return;
     }
+    // fmt::print("updateMergeData: pos 地址 {}\n", fmt::ptr(std::addressof(*pos)));
 
     this->mMerged = true;
     auto& data    = this->mMergedData;
@@ -228,7 +229,7 @@ void PlotMetadata::updateMergeData(std::unique_ptr<PlotPos> const& pos) {
     }
 
     // 记录被合并的PlotID
-    auto plots = pos->getRangedPlots();
+    auto plots = std::addressof(*pos)->getRangedPlots();
     data.mMergedPlotIDs.clear();
     data.mMergedPlotIDs.reserve(plots.size());
     for (auto const& i : plots) {
@@ -237,7 +238,7 @@ void PlotMetadata::updateMergeData(std::unique_ptr<PlotPos> const& pos) {
     }
 
     // 记录被合并的CrossID
-    auto corsses = pos->getRangedCrosses();
+    auto corsses = std::addressof(*pos)->getRangedCrosses();
     data.mMergedCrossIDs.clear();
     data.mMergedCrossIDs.reserve(corsses.size());
     for (auto const& i : corsses) {
@@ -245,7 +246,7 @@ void PlotMetadata::updateMergeData(std::unique_ptr<PlotPos> const& pos) {
     }
 
     // 记录被合并的RoadID
-    auto roads = pos->getRangedRoads();
+    auto roads = std::addressof(*pos)->getRangedRoads();
     data.mMergedRoadIDs.clear();
     data.mMergedRoadIDs.reserve(roads.size());
     for (auto const& i : roads) {

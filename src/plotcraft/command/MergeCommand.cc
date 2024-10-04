@@ -9,6 +9,7 @@
 #include "plotcraft/math/PlotPos.h"
 #include "plotcraft/utils/EconomySystem.h"
 #include "plotcraft/utils/Mc.h"
+#include <memory>
 #include <unordered_map>
 #include <utility>
 
@@ -247,24 +248,24 @@ void _SetUpMergeCommand() {
             mc::sendText<mc::LogLevel::Error>(out, "合并失败，请重试");
             return;
         }
+        // fmt::print("resultPtr 地址: {}\n", fmt::ptr(std::addressof(*resultPtr)));
 
-        // 处理合并
         Block const& block = Block::tryGetFromRegistry(Config::cfg.generator.fillBlock);
-        auto         roads = resultPtr->getRangedRoads();
+        auto         roads = std::addressof(*resultPtr)->getRangedRoads();
         for (auto& i : roads) {
             i.fill(block, true);
         }
-        auto crosses = resultPtr->getRangedCrosses();
+        auto crosses = std::addressof(*resultPtr)->getRangedCrosses();
         for (auto& i : crosses) {
             i.fill(block, true);
         }
 
-        resultPtr->fixBorder();
         souPlot->updateMergeData(resultPtr);
         souPlot->setMergeCount(count);
         souPlot->mergeData(tarPlot);
         db._archivePlotData(tarPlot->getPlotID());
         db.refreshMergeMap();
+        resultPtr->fixBorder();
         MergeBindData::disable(*player);
         mc::sendText(out, "地皮合并完成");
     });

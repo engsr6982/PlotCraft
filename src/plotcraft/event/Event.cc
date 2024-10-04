@@ -452,9 +452,9 @@ bool registerEventListener() {
     mSpawningMobEvent = bus->emplaceListener<ll::event::SpawningMobEvent>([](ll::event::SpawningMobEvent& e) {
         if (e.blockSource().getDimensionId() != getPlotWorldDimensionId()) return true;
 
-        auto const& type = e.identifier().getFullName();
+        // auto const& type = e.identifier().getFullName();
 
-        debugger("[SpawningMob]: " << type);
+        // debugger("[SpawningMob]: " << type);
 
         if (Config::cfg.plotWorld.spawnMob) return true;
 
