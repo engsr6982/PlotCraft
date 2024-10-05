@@ -13,10 +13,10 @@
 
 
 // Config
-#define CONFIG_VERSION 8
+#define CONFIG_VERSION 9
 
 // PlotMetadata
-#define METADATA_VERSION 6
+#define METADATA_VERSION 7
 
 // PlayerSetting
 #define SETTING_VERSION 1
