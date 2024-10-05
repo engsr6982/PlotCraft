@@ -235,9 +235,9 @@ void _SetUpMergeCommand() {
         }
 
         int   price = Config::calculateMergePlotPrice(count);
-        auto& eco   = utils::EconomySystem::getInstance();
+        auto& eco   = EconomySystem::getInstance();
         if (!eco.reduce(*player, price)) {
-            mc::sendText<mc::LogLevel::Warn>(out, eco.getMoneySpendTipStr(*player, price));
+            eco.sendNotEnoughMessage(*player, price);
             mc::sendText<mc::LogLevel::Error>(out, "您的余额不足，无法合并");
             return;
         }

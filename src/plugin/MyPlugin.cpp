@@ -75,7 +75,7 @@ bool MyPlugin::load() {
     plo::data::PlotDBStorage::getInstance().load();
     plo::data::PlayerNameDB::getInstance().initPlayerNameDB();
     plo::EconomyQueue::getInstance().load();
-    plo::utils::EconomySystem::getInstance().updateConfig(plo::Config::cfg.economy);
+    plo::EconomySystem::getInstance().update(&plo::Config::cfg.economy);
 
     return true;
 }

@@ -53,7 +53,7 @@ bool EconomyQueue::transfer(Player& target) {
     UUIDs uid = target.getUuid().asString();
     if (!has(uid)) return false;
 
-    auto&      ms  = utils::EconomySystem::getInstance();
+    auto&      ms  = EconomySystem::getInstance();
     auto       ptr = get(uid);
     bool const ok  = ms.add(target, ptr->second);
     if (ok) {

@@ -28,7 +28,7 @@ struct Config {
         string templateFile = "";
     } generator;
 
-    utils::EconomyConfig economy; // 经济系统配置
+    EconomySystem::Config economy; // 经济系统配置
 
     struct {
         int    maxBuyPlotCount   = 25;   // 最大购买地皮数量

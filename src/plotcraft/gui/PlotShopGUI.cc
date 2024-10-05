@@ -82,7 +82,7 @@ void _buyPlot(Player& player, PlotMetadataPtr pt) {
 
     ModalForm{
         PLUGIN_TITLE,
-        fmt::format("是否确认购买地皮 {} ?\n{}", pt->getPlotID(), ms->getMoneySpendTipStr(player, price)),
+        fmt::format("是否确认购买地皮 {} ?\n{}", pt->getPlotID(), ms->getCostMessage(player, price)),
         "确认",
         "返回"
     }
