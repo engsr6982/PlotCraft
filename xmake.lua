@@ -8,8 +8,7 @@ add_repositories("engsr6982-repo https://github.com/engsr6982/xmake-repo.git")
 -- add_requires("levilamina develop") to use develop version
 -- please note that you should add bdslibrary yourself if using dev version
 add_requires(
-    "levilamina 0.13.5",
-    "legacymoney 0.8.3"
+    "levilamina 0.13.5"
 )
 add_requires("more_events 0.1.0")
 
@@ -44,7 +43,6 @@ target("PlotCraft")
     )
     add_packages(
         "levilamina",
-        "legacymoney",
         "more_events"
     )
     add_files("src/**.cpp", "src/**.cc")
