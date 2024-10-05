@@ -253,10 +253,12 @@ void _SetUpMergeCommand() {
         Block const& block = Block::tryGetFromRegistry(Config::cfg.generator.fillBlock);
         auto         roads = std::addressof(*resultPtr)->getRangedRoads();
         for (auto& i : roads) {
+            if (i.mIsMergedPlot) continue; // 已经被合并，不再填充
             i.fill(block, true);
         }
         auto crosses = std::addressof(*resultPtr)->getRangedCrosses();
         for (auto& i : crosses) {
+            if (i.mIsMergedPlot) continue; // 已经被合并，不再填充
             i.fill(block, true);
         }
 
