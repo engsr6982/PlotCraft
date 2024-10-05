@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - 重构 `EconomySystem` 类
 - 重构 `PlotShopGUI` 逻辑
+- 重构表单 `_addSharePlayer`
 
 ## [1.0.2] - 2024-8-28
 

@@ -1,4 +1,9 @@
 #include "Global.h"
+#include "plotcraft/Global.h"
+#include "plotcraft/data/PlotDBStorage.h"
+#include "plotcraft/utils/Mc.h"
+#include "plotcraft/utils/Utils.h"
+#include <variant>
 
 
 namespace plo::gui {
@@ -71,45 +76,78 @@ void _addSharePlayer(Player& player, PlotMetadataPtr pt) {
         return true;
     });
 
-    fm.appendDropdown("sp", "[在线] 选择共享者:", names);
+    fm.appendDropdown("choose_player", "[在线] 选择共享者:", names);
 
-    fm.appendInput("in", "[离线] 输入共享者的名字:", "string");
+    fm.appendInput("input_player", "[离线] 输入共享者的名字:", "string");
 
-    fm.appendToggle("sw", "在线 <-> 离线");
+    fm.appendToggle("switch_online_offline", "在线 <-> 离线");
 
     fm.sendTo(player, [pt, ndb](Player& pl, CustomFormResult const& dt, FormCancelReason) {
         if (!dt) {
             sendText(pl, "表单已放弃");
             return;
         }
+        DebugFormPrint(dt);
 
-        bool const   sw = std::get<uint64_t>(dt->at("sw"));
-        string const sp = std::get<string>(dt->at("sp"));
-        string const in = std::get<string>(dt->at("in"));
+        bool const switch_online_offline = std::get<uint64_t>(dt->at("switch_online_offline")); // false: 在线true: 离线
 
-        bool ok = false;
-
-        if (sw) {
-            // 离线
-            if (in.empty()) {
-                sendText(pl, "输入共享者的名字不能为空");
+        string realName;
+        if (switch_online_offline) {
+            // Offline
+            auto iter = dt->find("input_player");
+            if (iter == dt->end()) {
+                sendText<LogLevel::Error>(pl, "表单数据错误 [{}#{}L]", __FILE__, __LINE__);
                 return;
             }
-
-            auto const uuid = ndb->getPlayerUUID(in);
-            if (uuid.empty()) {
-                sendText(pl, "输入的共享者不存在,获取UUID失败");
+            if (std::holds_alternative<std::monostate>(iter->second)) {
+                sendText(pl, "表单数据错误，Value为空 [{}#{}L]", __FILE__, __LINE__);
                 return;
             }
+            if (!std::holds_alternative<string>(iter->second)) {
+                sendText(pl, "表单数据错误, 获取 string 失败 [{}#{}L]", __FILE__, __LINE__);
+                return;
+            }
+            realName = std::get<string>(iter->second);
 
-            ok = pt->addSharedPlayer(uuid);
         } else {
-            // 在线
-            ok = pt->addSharedPlayer(ndb->getPlayerUUID(sp));
+            // Online
+            auto iter = dt->find("choose_player");
+            if (iter == dt->end()) {
+                sendText<LogLevel::Error>(pl, "表单数据错误 [{}#{}L]", __FILE__, __LINE__);
+                return;
+            }
+            if (std::holds_alternative<std::monostate>(iter->second)) {
+                sendText(pl, "表单数据错误，Value为空 [{}#{}L]", __FILE__, __LINE__);
+                return;
+            }
+            if (!std::holds_alternative<string>(iter->second)) {
+                sendText(pl, "表单数据错误, 获取 string 失败 [{}#{}L]", __FILE__, __LINE__);
+                return;
+            }
+            realName = std::get<string>(iter->second);
         }
 
-        if (ok) sendText(pl, "共享权限添加成功");
-        else sendText<LogLevel::Error>(pl, "共享权限添加失败");
+        if (realName.empty()) {
+            sendText<LogLevel::Error>(pl, "玩家名字不能为空");
+            return;
+        }
+
+        if (realName == pl.getRealName() && !PlotDBStorage::getInstance().isAdmin(pl.getUuid().asString())) {
+            sendText<LogLevel::Error>(pl, "您不能将自己添加到共享成员中");
+            return;
+        }
+
+        string uuid = ndb->getPlayerUUID(realName);
+        if (uuid.empty()) {
+            sendText<LogLevel::Error>(pl, "获取玩家 {} 的UUID失败", realName);
+            return;
+        }
+
+        if (pt->addSharedPlayer(uuid)) {
+            sendText(pl, "成功添加 {} 为共享成员", realName);
+        } else {
+            sendText<LogLevel::Error>(pl, "无法添加 {} 为共享成员", realName);
+        }
     });
 }
 
