@@ -1,10 +1,11 @@
 #pragma once
 #include "Global.h"
 #include "ll/api/Config.h"
+#include "plotcraft/EconomySystem.h"
 #include "plotcraft/Global.h"
-#include "plotcraft/utils/EconomySystem.h"
 #include <string>
 #include <vector>
+
 
 
 namespace plot {

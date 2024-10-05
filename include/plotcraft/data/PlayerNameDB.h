@@ -1,12 +1,8 @@
 #pragma once
-#include "PlotMetadata.h"
 #include "ll/api/data/KeyValueDB.h"
-#include "mc/deps/core/mce/UUID.h"
 #include "mc/world/actor/player/Player.h"
 #include "plotcraft/Global.h"
 
-
-using string = std::string;
 
 namespace plot::data {
 

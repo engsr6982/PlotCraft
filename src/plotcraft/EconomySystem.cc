@@ -1,4 +1,4 @@
-#include "plotcraft/utils/EconomySystem.h"
+#include "plotcraft/EconomySystem.h"
 #include "fmt/core.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/deps/core/mce/UUID.h"
