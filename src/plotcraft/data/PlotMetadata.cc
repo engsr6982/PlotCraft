@@ -1,5 +1,8 @@
 #include "plotcraft/data/PlotMetadata.h"
 #include "plotcraft/data/PlotDBStorage.h"
+#include "plotcraft/math/PlotCross.h"
+#include "plotcraft/math/PlotPos.h"
+#include "plotcraft/math/PlotRoad.h"
 #include "plotcraft/utils/Date.h"
 #include "plotcraft/utils/JsonHelper.h"
 #include <algorithm>

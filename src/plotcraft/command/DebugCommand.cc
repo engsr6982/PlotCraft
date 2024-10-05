@@ -7,8 +7,11 @@
 #include "mc/server/commands/CommandVersion.h"
 #include "mc/world/actor/Actor.h"
 #include "plotcraft/data/PlotDBStorage.h"
+#include "plotcraft/math/PlotCross.h"
 #include "plotcraft/math/PlotPos.h"
+#include "plotcraft/math/PlotRoad.h"
 #include <sstream>
+
 
 namespace plot::command {
 

@@ -6,7 +6,9 @@
 #include "plotcraft/Config.h"
 #include "plotcraft/Global.h"
 #include "plotcraft/data/PlotDBStorage.h"
+#include "plotcraft/math/PlotCross.h"
 #include "plotcraft/math/PlotPos.h"
+#include "plotcraft/math/PlotRoad.h"
 #include "plotcraft/utils/EconomySystem.h"
 #include "plotcraft/utils/Mc.h"
 #include <memory>

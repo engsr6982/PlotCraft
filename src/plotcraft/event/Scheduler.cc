@@ -16,7 +16,9 @@
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
 #include "plotcraft/event/PlotEvents.h"
+#include "plotcraft/math/PlotCross.h"
 #include "plotcraft/math/PlotPos.h"
+#include "plotcraft/math/PlotRoad.h"
 #include "plotcraft/utils/Mc.h"
 #include "plotcraft/utils/Utils.h"
 #include "plugin/MyPlugin.h"
@@ -77,13 +79,19 @@ void buildTipMessage(Player& player, PlotPos const& pps, PlayerNameDB* ndb, Plot
                 noOwner ? "\n输入：/plot buy 打开购买菜单" : ""
             );
             // clang-format on
+
         } else {
+            // Tip3
+#if defined(DEBUG)
             pkt.mMessage = fmt::format(
                 "{0} | 地皮世界\n输入: /plot 打开地皮菜单\n\nRoad: {1}\nCross: {2}",
                 PLUGIN_TITLE,
                 PlotRoad(player.getPosition()).toString(),
                 PlotCross(player.getPosition()).toString()
-            ); // Tip3
+            );
+#else
+            pkt.mMessage = fmt::format("{0} | 地皮世界\n输入: /plot 打开地皮菜单", PLUGIN_TITLE);
+#endif
         }
 
         pkt.sendTo(player);

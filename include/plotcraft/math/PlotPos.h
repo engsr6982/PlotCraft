@@ -4,32 +4,15 @@
 #include "mc/world/level/block/Block.h"
 #include "plotcraft/Global.h"
 #include <memory>
-#include <optional>
-#include <utility>
 #include <vector>
 
 
 namespace plot {
 
 
-// 预定义
 class PlotRoad;
 class PlotCross;
 class PlotPos;
-
-
-enum class PlotDirection : int {
-    Unknown = -1, // 未知
-    North   = 0,  // 北     z-
-    East    = 1,  // 东     x+
-    South   = 2,  // 南     z+
-    West    = 3,  // 西     x-
-    NE      = 4,  // 东北   z- x+
-    SE      = 5,  // 东南   z+ x+
-    SW      = 6,  // 西南   z+ x-
-    NW      = 7,  // 西北   z- x-
-};
-
 
 class PlotPos {
 public:
@@ -80,61 +63,6 @@ public:
     PLAPI std::vector<PlotRoad> getRangedRoads() const;
     PLAPI std::vector<PlotCross> getRangedCrosses() const;
     PLAPI std::unique_ptr<PlotPos> tryMerge(PlotPos const& other) const; // 尝试合并两个多边形，如果没有值则合并失败
-};
-
-
-class PlotRoad {
-public:
-    int           mX, mZ;        // 道路坐标 (注意：此坐标会重复, 因为地皮x,z正方向有两个道路)
-    DiagonPos     mDiagonPos;    // 对角线坐标
-    bool          mIsMergedPlot; // 是否是合并的地皮
-    bool          mValid;        // 是否有效
-    PlotDirection mDirection;    // 道路方向 (East: x+ 道路横向, South: z+ 道路纵向 (方向以x+为基准))
-
-    PlotRoad() = delete;
-    PLAPI PlotRoad(Vec3 const& vec3);
-
-    /**
-     * @brief 创建道路
-     * @param x 道路x坐标
-     * @param z 道路z坐标
-     * @param direction 道路方向，请传递 East 或 South 其余抛出异常
-     */
-    [[deprecated]] PLAPI PlotRoad(int x, int z, PlotDirection direction);
-
-    PLAPI bool isValid() const; // 判断是否有效
-
-    PLAPI string toString() const;
-    PLAPI RoadID getRoadID() const;
-
-    PLAPI bool hasPoint(BlockPos const& pos) const;                 // 判断一个点是否在道路内
-    PLAPI void fill(Block const& block, bool removeBorder = false); // 填充道路
-
-    PLAPI std::vector<PlotCross> getAdjacentCrosses() const;
-    PLAPI bool                   isAdjacent(PlotCross const& cross) const;
-};
-
-class PlotCross {
-public:
-    int       mX, mZ;
-    DiagonPos mDiagonPos;
-    bool      mIsMergedPlot; // 是否是合并的地皮
-    bool      mValid;        // 是否有效
-
-    PlotCross() = delete;
-    PLAPI PlotCross(int x, int z);
-    PLAPI PlotCross(const Vec3& vec3);
-
-    PLAPI bool isValid() const; // 判断是否有效
-
-    PLAPI string  toString() const;
-    PLAPI CrossID getCrossID() const;
-
-    PLAPI bool hasPoint(BlockPos const& pos) const;                 // 判断一个点是否在路口内
-    PLAPI void fill(Block const& block, bool removeBorder = false); // 填充路口
-
-    PLAPI std::vector<PlotRoad> getAdjacentRoads() const;
-    PLAPI bool                  isAdjacent(PlotRoad const& road) const;
 };
 
 

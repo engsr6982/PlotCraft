@@ -3,7 +3,9 @@
 #include "ll/api/data/KeyValueDB.h"
 #include "nlohmann/json_fwd.hpp"
 #include "plotcraft/Global.h"
+#include "plotcraft/math/PlotCross.h"
 #include "plotcraft/math/PlotPos.h"
+#include "plotcraft/math/PlotRoad.h"
 #include "plotcraft/utils/JsonHelper.h"
 #include "plugin/MyPlugin.h"
 #include <memory>
