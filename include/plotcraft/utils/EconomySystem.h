@@ -1,45 +1,73 @@
 #pragma once
-#include "Date.h"
-#include "Utils.h"
+#include "mc/deps/core/mce/UUID.h"
 #include "mc/world/actor/player/Player.h"
 #include "plotcraft/Global.h"
 
-using string = std::string;
 
-namespace plo::utils {
+namespace plo {
 
-
-enum class EconomyType : int { Unknown = -1, LegacyMoney = 0, ScoreBoard = 1 };
-struct EconomyConfig {
-    bool        enable       = false;
-    EconomyType type         = EconomyType::LegacyMoney;
-    string      scoreName    = "";
-    string      economicName = "金币";
-};
 
 class EconomySystem {
 public:
-    EconomyConfig mEconomyConfig;
+    enum class EconomyKit { LegacyMoney, Scoreboard };
+    struct Config {
+        bool       enabled{false};               // 是否启用经济系统
+        EconomyKit kit{EconomyKit::LegacyMoney}; // 经济系统类型
+        string     currency{"money"};            // 货币名称
+        string     scoreboard{""};               // Scoreboard 经济系统使用的计分板名称
+    };
+
+    Config const* mConfig; // 经济系统配置
 
     EconomySystem()                                = default;
     EconomySystem(const EconomySystem&)            = delete;
     EconomySystem& operator=(const EconomySystem&) = delete;
 
-    PLAPI static EconomySystem& getInstance();
-    PLAPI bool                  updateConfig(EconomyConfig Config);
+    static EconomySystem& getInstance();
+    void                  update(Config const* config);
 
-    PLAPI long long get(Player& player);
+    /**
+     * @brief 是否装载经济前置LegacyMoney
+     */
+    bool isLegacyMoneyLoaded() const;
 
-    PLAPI bool set(Player& player, long long money);
+    /**
+     * @brief 获取玩家余额
+     */
+    llong get(Player& player) const;        // 在线API
+    llong get(mce::UUID const& uuid) const; // 离线API
 
-    PLAPI bool add(Player& player, long long money);
+    /**
+     * @brief 设置玩家余额
+     */
+    bool set(Player& player, llong amount) const;
+    bool set(mce::UUID const& uuid, llong amount) const;
 
-    PLAPI bool reduce(Player& player, long long money);
+    /**
+     * @brief 增加玩家余额
+     */
+    bool add(Player& player, llong amount) const;
+    bool add(mce::UUID const& uuid, llong amount) const;
 
-    PLAPI string getMoneySpendTipStr(Player& player, long long money);
+    /**
+     * @brief 减少玩家余额
+     */
+    bool reduce(Player& player, llong amount) const;
+    bool reduce(mce::UUID const& uuid, llong amount) const;
 
-    PLAPI void sendLackMoneyTip(Player& player, long long money); // 发送经济不足提示
+    /**
+     * @brief 生成经济花费提示模板
+     */
+    string getCostMessage(Player& player, llong cost) const;
+
+    /**
+     * @brief 发送经济不足提示
+     */
+    void sendNotEnoughMessage(Player& player, llong cost) const;
+
+    static void sendErrorMessage(Player& player, string const& message);
+    static void sendMessage(Player& player, string const& message, string const& prefix = "[EconomySystem] §b");
 };
 
 
-} // namespace plo::utils
+} // namespace plo

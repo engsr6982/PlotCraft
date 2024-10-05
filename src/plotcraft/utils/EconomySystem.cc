@@ -1,36 +1,33 @@
 #include "plotcraft/utils/EconomySystem.h"
-#include "LLMoney.h"
-#include "ll/api/form/SimpleForm.h"
-#include "ll/api/i18n/I18n.h"
+#include "fmt/core.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/deps/core/mce/UUID.h"
+#include "mc/nbt/CompoundTag.h"
 #include "mc/world/actor/player/PlayerScoreSetFunction.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/scores/ScoreInfo.h"
-#include "plotcraft/utils/Mc.h"
-#include "plotcraft/utils/Utils.h"
+#include <ll/api/service/PlayerInfo.h>
 #include <mc/world/actor/player/Player.h>
 #include <mc/world/scores/Objective.h>
 #include <mc/world/scores/Scoreboard.h>
 #include <mc/world/scores/ScoreboardId.h>
-#include <memory>
 #include <stdexcept>
 
-
-// disable warning C4244: conversion from 'double' to 'int', possible loss of data
-#pragma warning(disable : 4244)
-
-namespace plo::utils {
-using ll::i18n_literals::operator""_tr;
-using SimpleForm = ll::form::SimpleForm;
-using namespace plo::mc;
+#include "ll/api/memory/Hook.h"
+#include "mc/world/level/storage/DBStorage.h"
 
 
-int ScoreBoard_Get(Player& player, string const& scoreName) {
+#include <Windows.h>
+#include <winuser.h>
+
+namespace plo {
+
+// 在线计分板
+int ScoreBoard_Get_Online(Player& player, string const& scoreName) {
     Scoreboard& scoreboard = ll::service::getLevel()->getScoreboard();
     Objective*  obj        = scoreboard.getObjective(scoreName);
     if (!obj) {
-        sendText<LogLevel::Error>(player, "[Moneys] 插件错误: 找不到指定的计分板: {}"_tr(scoreName));
+        EconomySystem::sendErrorMessage(player, "找不到指定的计分板: " + scoreName);
         return 0;
     }
     ScoreboardId const& id = scoreboard.getScoreboardId(player);
@@ -39,12 +36,11 @@ int ScoreBoard_Get(Player& player, string const& scoreName) {
     }
     return obj->getPlayerScore(id).mScore;
 }
-
-bool ScoreBoard_Set(Player& player, int score, string const& scoreName) {
+bool ScoreBoard_Set_Online(Player& player, int score, string const& scoreName) {
     Scoreboard& scoreboard = ll::service::getLevel()->getScoreboard();
     Objective*  obj        = scoreboard.getObjective(scoreName);
     if (!obj) {
-        sendText<LogLevel::Error>(player, "[Moneys] 插件错误: 找不到指定的计分板: "_tr(scoreName));
+        EconomySystem::sendErrorMessage(player, "找不到指定的计分板: " + scoreName);
         return false;
     }
     const ScoreboardId& id = scoreboard.getScoreboardId(player);
@@ -55,12 +51,11 @@ bool ScoreBoard_Set(Player& player, int score, string const& scoreName) {
     scoreboard.modifyPlayerScore(isSuccess, id, *obj, score, PlayerScoreSetFunction::Set);
     return isSuccess;
 }
-
-bool ScoreBoard_Add(Player& player, int score, string const& scoreName) {
+bool ScoreBoard_Add_Online(Player& player, int score, string const& scoreName) {
     Scoreboard& scoreboard = ll::service::getLevel()->getScoreboard();
     Objective*  obj        = scoreboard.getObjective(scoreName);
     if (!obj) {
-        sendText<LogLevel::Error>(player, "[Moneys] 插件错误: 找不到指定的计分板: "_tr(scoreName));
+        EconomySystem::sendErrorMessage(player, "找不到指定的计分板: " + scoreName);
         return false;
     }
     const ScoreboardId& id = scoreboard.getScoreboardId(player);
@@ -71,12 +66,11 @@ bool ScoreBoard_Add(Player& player, int score, string const& scoreName) {
     scoreboard.modifyPlayerScore(isSuccess, id, *obj, score, PlayerScoreSetFunction::Add);
     return isSuccess;
 }
-
-bool ScoreBoard_Reduce(Player& player, int score, string const& scoreName) {
+bool ScoreBoard_Reduce_Online(Player& player, int score, string const& scoreName) {
     Scoreboard& scoreboard = ll::service::getLevel()->getScoreboard();
     Objective*  obj        = scoreboard.getObjective(scoreName);
     if (!obj) {
-        sendText<LogLevel::Error>(player, "[Moneys] 插件错误: 找不到指定的计分板: "_tr(scoreName));
+        EconomySystem::sendErrorMessage(player, "找不到指定的计分板: " + scoreName);
         return false;
     }
     const ScoreboardId& id = scoreboard.getScoreboardId(player);
@@ -88,104 +82,334 @@ bool ScoreBoard_Reduce(Player& player, int score, string const& scoreName) {
     return isSuccess;
 }
 
+// 离线计分板
+DBStorage* MC_DBStorage;
+LL_AUTO_TYPE_INSTANCE_HOOK(
+    DBStorageHook,
+    HookPriority::Normal,
+    DBStorage,
+    "??0DBStorage@@QEAA@UDBStorageConfig@@V?$not_null@V?$NonOwnerPointer@VLevelDbEnv@@@Bedrock@@@gsl@@@Z",
+    DBStorage*,
+    struct DBStorageConfig&                        cfg,
+    Bedrock::NotNullNonOwnerPtr<class LevelDbEnv>& dbEnv
+) {
+    DBStorage* ori = origin(cfg, dbEnv);
+    MC_DBStorage   = ori;
+    return ori;
+};
+
+int ScoreBoard_Get_Offline(mce::UUID const& uuid, string const& scoreName) {
+    Scoreboard& scoreboard = ll::service::getLevel()->getScoreboard();
+    Objective*  objective  = scoreboard.getObjective(scoreName);
+    if (!objective || !MC_DBStorage
+        || !MC_DBStorage->hasKey("player_" + uuid.asString(), DBHelpers::Category::Player)) {
+        return 0;
+    }
+    std::unique_ptr<CompoundTag> playerTag =
+        MC_DBStorage->getCompoundTag("player_" + uuid.asString(), DBHelpers::Category::Player);
+    if (!playerTag) {
+        return 0;
+    }
+    std::string serverId = playerTag->at("ServerId");
+    if (serverId.empty() || !MC_DBStorage->hasKey(serverId, DBHelpers::Category::Player)) {
+        return 0;
+    }
+    std::unique_ptr<CompoundTag> serverIdTag = MC_DBStorage->getCompoundTag(serverId, DBHelpers::Category::Player);
+    if (!serverIdTag || !serverIdTag->contains("UniqueID")) {
+        return 0;
+    }
+    int64        uniqueId = serverIdTag->at("UniqueID");
+    ScoreboardId sid      = scoreboard.getScoreboardId(PlayerScoreboardId(uniqueId));
+    if (!sid.isValid() || !objective->hasScore(sid)) {
+        return 0;
+    }
+    return objective->getPlayerScore(sid).mScore;
+}
+bool ScoreBoard_Set_Offline(mce::UUID const& uuid, int score, string const& scoreName) {
+    Scoreboard& scoreboard = ll::service::getLevel()->getScoreboard();
+    Objective*  objective  = scoreboard.getObjective(scoreName);
+    if (!objective || !MC_DBStorage
+        || !MC_DBStorage->hasKey("player_" + uuid.asString(), DBHelpers::Category::Player)) {
+        return false;
+    }
+    std::unique_ptr<CompoundTag> playerTag =
+        MC_DBStorage->getCompoundTag("player_" + uuid.asString(), DBHelpers::Category::Player);
+    if (!playerTag) {
+        return false;
+    }
+    std::string serverId = playerTag->at("ServerId");
+    if (serverId.empty() || !MC_DBStorage->hasKey(serverId, DBHelpers::Category::Player)) {
+        return false;
+    }
+    std::unique_ptr<CompoundTag> serverIdTag = MC_DBStorage->getCompoundTag(serverId, DBHelpers::Category::Player);
+    if (!serverIdTag || !serverIdTag->contains("UniqueID")) {
+        return false;
+    }
+    int64        uniqueId = serverIdTag->at("UniqueID");
+    ScoreboardId sid      = scoreboard.getScoreboardId(PlayerScoreboardId(uniqueId));
+    if (!sid.isValid()) {
+        return false;
+    }
+    bool isSuccess = false;
+    scoreboard.modifyPlayerScore(isSuccess, sid, *objective, score, PlayerScoreSetFunction::Set);
+    return isSuccess;
+}
+bool ScoreBoard_Add_Offline(mce::UUID const& uuid, int score, string const& scoreName) {
+    Scoreboard& scoreboard = ll::service::getLevel()->getScoreboard();
+    Objective*  objective  = scoreboard.getObjective(scoreName);
+    if (!objective || !MC_DBStorage
+        || !MC_DBStorage->hasKey("player_" + uuid.asString(), DBHelpers::Category::Player)) {
+        return false;
+    }
+    std::unique_ptr<CompoundTag> playerTag =
+        MC_DBStorage->getCompoundTag("player_" + uuid.asString(), DBHelpers::Category::Player);
+    if (!playerTag) {
+        return false;
+    }
+    std::string serverId = playerTag->at("ServerId");
+    if (serverId.empty() || !MC_DBStorage->hasKey(serverId, DBHelpers::Category::Player)) {
+        return false;
+    }
+    std::unique_ptr<CompoundTag> serverIdTag = MC_DBStorage->getCompoundTag(serverId, DBHelpers::Category::Player);
+    if (!serverIdTag || !serverIdTag->contains("UniqueID")) {
+        return false;
+    }
+    int64        uniqueId = serverIdTag->at("UniqueID");
+    ScoreboardId sid      = scoreboard.getScoreboardId(PlayerScoreboardId(uniqueId));
+    if (!sid.isValid()) {
+        return false;
+    }
+    bool isSuccess = false;
+    scoreboard.modifyPlayerScore(isSuccess, sid, *objective, score, PlayerScoreSetFunction::Add);
+    return isSuccess;
+}
+bool ScoreBoard_Reduce_Offline(mce::UUID const& uuid, int score, string const& scoreName) {
+    Scoreboard& scoreboard = ll::service::getLevel()->getScoreboard();
+    Objective*  objective  = scoreboard.getObjective(scoreName);
+    if (!objective || !MC_DBStorage
+        || !MC_DBStorage->hasKey("player_" + uuid.asString(), DBHelpers::Category::Player)) {
+        return false;
+    }
+    std::unique_ptr<CompoundTag> playerTag =
+        MC_DBStorage->getCompoundTag("player_" + uuid.asString(), DBHelpers::Category::Player);
+    if (!playerTag) {
+        return false;
+    }
+    std::string serverId = playerTag->at("ServerId");
+    if (serverId.empty() || !MC_DBStorage->hasKey(serverId, DBHelpers::Category::Player)) {
+        return false;
+    }
+    std::unique_ptr<CompoundTag> serverIdTag = MC_DBStorage->getCompoundTag(serverId, DBHelpers::Category::Player);
+    if (!serverIdTag || !serverIdTag->contains("UniqueID")) {
+        return false;
+    }
+    int64        uniqueId = serverIdTag->at("UniqueID");
+    ScoreboardId sid      = scoreboard.getScoreboardId(PlayerScoreboardId(uniqueId));
+    if (!sid.isValid()) {
+        return false;
+    }
+    bool isSuccess = false;
+    scoreboard.modifyPlayerScore(isSuccess, sid, *objective, score, PlayerScoreSetFunction::Subtract);
+    return isSuccess;
+}
+
+// LegacyMoney
+static const wchar_t* LegacyMoneyModuleName = L"LegacyMoney.dll";
+bool                  LegacyMoney_IsLoaded() { return GetModuleHandle(LegacyMoneyModuleName) != nullptr; }
+llong                 LegacyMonet_Get(string const& xuid) {
+    try {
+        if (!LegacyMoney_IsLoaded()) {
+            return 0;
+        }
+        return ((llong(*)(std::string))GetProcAddress(GetModuleHandle(LegacyMoneyModuleName), "LLMoney_Get"))(xuid);
+    } catch (...) {
+        return 0;
+    }
+}
+bool LegacyMonet_Set(string const& xuid, llong money) {
+    try {
+        if (!LegacyMoney_IsLoaded()) {
+            return false;
+        }
+        return ((bool (*)(std::string, llong)
+        )GetProcAddress(GetModuleHandle(LegacyMoneyModuleName), "LLMoney_Set"))(xuid, money);
+    } catch (...) {
+        return false;
+    }
+}
+bool LegacyMonet_Add(string const& xuid, llong money) {
+    try {
+        if (!LegacyMoney_IsLoaded()) {
+            return false;
+        }
+        return ((bool (*)(std::string, llong)
+        )GetProcAddress(GetModuleHandle(LegacyMoneyModuleName), "LLMoney_Add"))(xuid, money);
+    } catch (...) {
+        return false;
+    }
+}
+bool LegacyMonet_Reduce(string const& xuid, llong money) {
+    try {
+        if (!LegacyMoney_IsLoaded()) {
+            return false;
+        }
+        return ((bool (*)(std::string, llong)
+        )GetProcAddress(GetModuleHandle(LegacyMoneyModuleName), "LLMoney_Reduce"))(xuid, money);
+    } catch (...) {
+        return false;
+    }
+}
+
 
 // EconomySystem
 EconomySystem& EconomySystem::getInstance() {
     static EconomySystem instance;
     return instance;
 }
+void EconomySystem::update(Config const* Config) { this->mConfig = Config; }
+bool EconomySystem::isLegacyMoneyLoaded() const { return LegacyMoney_IsLoaded(); }
 
-bool EconomySystem::updateConfig(EconomyConfig Config) {
-    this->mEconomyConfig = Config;
-    return true;
+void EconomySystem::sendMessage(Player& player, const string& message, string const& prefix) {
+    if (!prefix.empty()) {
+        string prefixMessage = prefix + message + "§r";
+        player.sendMessage(prefixMessage);
+        return;
+    }
+    player.sendMessage(message);
+}
+void EconomySystem::sendErrorMessage(Player& player, const string& message) {
+    string prefix = "§c" + message;
+    sendMessage(player, prefix);
+}
+
+#define PreCheckConfig                                                                                                 \
+    if (!mConfig) {                                                                                                    \
+        throw std::runtime_error(fmt::format("EconomySystem::mConfig is nullptr, at function: {}", __FUNCTION__));     \
+    }
+
+string EconomySystem::getCostMessage(Player& player, llong cost) const {
+    PreCheckConfig;
+    static const string prefix = "\n[§uTip§r]§r ";
+    if (mConfig->enabled) {
+        llong currentMoney = mConfig->enabled ? get(player) : 0;
+        return fmt::format(
+            "{0}此操作将花费§6{1}§r:§e{2}§r | 当前§6{3}§r:§d{4}§r | 预计剩余§6{5}§r:§s{6}§r | §6{7}§r{8}",
+            prefix,
+            mConfig->currency,
+            cost,
+            mConfig->currency,
+            currentMoney,
+            mConfig->currency,
+            currentMoney - cost,
+            mConfig->currency,
+            currentMoney >= cost ? "§a充足§r" : "§c不足§r"
+        );
+    } else {
+        return fmt::format("{0}经济系统未启用，此操作不消耗§6{1}§r", prefix, mConfig->currency);
+    }
+}
+void EconomySystem::sendNotEnoughMessage(Player& player, llong cost) const {
+    PreCheckConfig;
+    sendErrorMessage(
+        player,
+        fmt::format("操作失败，此操作需要{0}:{1}，当前{2}:{3}", mConfig->currency, cost, mConfig->currency, get(player))
+    );
+}
+
+llong EconomySystem::get(Player& player) const {
+    PreCheckConfig;
+    if (mConfig->kit == EconomyKit::LegacyMoney) {
+        return LegacyMonet_Get(player.getXuid());
+    } else if (mConfig->kit == EconomyKit::Scoreboard) {
+        return ScoreBoard_Get_Online(player, mConfig->scoreboard);
+    }
+    return 0;
+}
+llong EconomySystem::get(mce::UUID const& uuid) const {
+    PreCheckConfig;
+    if (mConfig->kit == EconomyKit::LegacyMoney) {
+        auto info = ll::service::PlayerInfo::getInstance().fromUuid(uuid);
+        return info ? LegacyMonet_Get(info->xuid) : 0;
+    } else if (mConfig->kit == EconomyKit::Scoreboard) {
+        return ScoreBoard_Get_Offline(uuid, mConfig->scoreboard);
+    }
+    return 0;
 }
 
 
-long long EconomySystem::get(Player& player) {
-    switch (mEconomyConfig.type) {
-    case EconomyType::ScoreBoard:
-        return ScoreBoard_Get(player, mEconomyConfig.scoreName);
-    case EconomyType::LegacyMoney:
-        return LLMoney_Get(player.getXuid());
-    default:
-        return 0;
+bool EconomySystem::set(Player& player, llong amount) const {
+    PreCheckConfig;
+    if (amount < 0) return false;
+    if (mConfig->kit == EconomyKit::LegacyMoney) {
+        return LegacyMonet_Set(player.getXuid(), amount);
+    } else if (mConfig->kit == EconomyKit::Scoreboard) {
+        return ScoreBoard_Set_Online(player, amount, mConfig->scoreboard);
     }
+    return false;
 }
-
-
-bool EconomySystem::set(Player& player, long long money) {
-    switch (mEconomyConfig.type) {
-    case EconomyType::ScoreBoard:
-        return ScoreBoard_Set(player, money, mEconomyConfig.scoreName);
-    case EconomyType::LegacyMoney:
-        return LLMoney_Set(player.getXuid(), money);
-    default:
-        return false;
+bool EconomySystem::set(mce::UUID const& uuid, llong amount) const {
+    PreCheckConfig;
+    if (amount < 0) return false;
+    if (mConfig->kit == EconomyKit::LegacyMoney) {
+        auto info = ll::service::PlayerInfo::getInstance().fromUuid(uuid);
+        return info ? LegacyMonet_Set(info->xuid, amount) : false;
+    } else if (mConfig->kit == EconomyKit::Scoreboard) {
+        return ScoreBoard_Set_Offline(uuid, amount, mConfig->scoreboard);
     }
-}
-
-
-bool EconomySystem::add(Player& player, long long money) {
-    if (!mEconomyConfig.enable) return true; // 未启用则不限制
-    switch (mEconomyConfig.type) {
-    case EconomyType::ScoreBoard:
-        return ScoreBoard_Add(player, money, mEconomyConfig.scoreName);
-    case EconomyType::LegacyMoney:
-        return LLMoney_Add(player.getXuid(), money);
-    default:
-        return false;
-    }
-}
-
-
-bool EconomySystem::reduce(Player& player, long long money) {
-    if (!mEconomyConfig.enable) return true; // 未启用则不限制
-    if (get(player) >= money) {              // 防止玩家余额不足
-        switch (mEconomyConfig.type) {
-        case EconomyType::ScoreBoard:
-            return ScoreBoard_Reduce(player, money, mEconomyConfig.scoreName);
-        case EconomyType::LegacyMoney:
-            return LLMoney_Reduce(player.getXuid(), money);
-        default:
-            return false;
-        }
-    }
-    // 封装提示信息
-    sendLackMoneyTip(player, money);
     return false;
 }
 
 
-string EconomySystem::getMoneySpendTipStr(Player& player, long long money) {
-    long long currentMoney = mEconomyConfig.enable ? get(player) : 0;
-    string    prefix       = "\n[§uTip§r]§r ";
-
-    auto& name = mEconomyConfig.economicName;
-
-    if (mEconomyConfig.enable)
-        return prefix
-             + "此操作消耗§6{0}§r:§e{1}§r | 当前§6{2}§r:§d{3}§r | 剩余§6{4}§r:§s{5}§r | {6}"_tr(
-                   name,
-                   money,
-                   name,
-                   currentMoney,
-                   name,
-                   currentMoney - money,
-                   currentMoney >= money ? "§6{}§r§a充足§r"_tr(name) : "§6{}§r§c不足§r"_tr(name)
-             );
-    else return prefix + "经济系统未启用，此操作不消耗§6{0}§r"_tr(name);
+bool EconomySystem::add(Player& player, llong amount) const {
+    PreCheckConfig;
+    if (!mConfig->enabled) return true; // 未启用经济系统
+    if (mConfig->kit == EconomyKit::LegacyMoney) {
+        return LegacyMonet_Add(player.getXuid(), amount);
+    } else if (mConfig->kit == EconomyKit::Scoreboard) {
+        return ScoreBoard_Add_Online(player, amount, mConfig->scoreboard);
+    }
+    return false;
+}
+bool EconomySystem::add(mce::UUID const& uuid, llong amount) const {
+    PreCheckConfig;
+    if (!mConfig->enabled) return true; // 未启用经济系统
+    if (mConfig->kit == EconomyKit::LegacyMoney) {
+        auto info = ll::service::PlayerInfo::getInstance().fromUuid(uuid);
+        return info ? LegacyMonet_Add(info->xuid, amount) : false;
+    } else if (mConfig->kit == EconomyKit::Scoreboard) {
+        return ScoreBoard_Add_Offline(uuid, amount, mConfig->scoreboard);
+    }
+    return false;
 }
 
-void EconomySystem::sendLackMoneyTip(Player& player, long long money) {
-    sendText<LogLevel::Error>(
-        player,
-        "[Moneys] 操作失败，此操作需要{0}:{1}，当前{2}:{3}"_tr(
-            mEconomyConfig.economicName,
-            money,
-            mEconomyConfig.economicName,
-            get(player)
-        )
-    );
+
+bool EconomySystem::reduce(Player& player, llong amount) const {
+    PreCheckConfig;
+    if (!mConfig->enabled) return true; // 未启用经济系统
+    if (get(player) < amount) {
+        return false;
+    }
+    if (mConfig->kit == EconomyKit::LegacyMoney) {
+        return LegacyMonet_Reduce(player.getXuid(), amount);
+    } else if (mConfig->kit == EconomyKit::Scoreboard) {
+        return ScoreBoard_Reduce_Online(player, amount, mConfig->scoreboard);
+    }
+    return false;
+}
+bool EconomySystem::reduce(mce::UUID const& uuid, llong amount) const {
+    PreCheckConfig;
+    if (!mConfig->enabled) return true; // 未启用经济系统
+    if (get(uuid) < amount) {
+        return false;
+    }
+    if (mConfig->kit == EconomyKit::LegacyMoney) {
+        auto info = ll::service::PlayerInfo::getInstance().fromUuid(uuid);
+        return info ? LegacyMonet_Reduce(info->xuid, amount) : false;
+    } else if (mConfig->kit == EconomyKit::Scoreboard) {
+        return ScoreBoard_Reduce_Offline(uuid, amount, mConfig->scoreboard);
+    }
+    return false;
 }
 
-} // namespace plo::utils
+
+} // namespace plo
