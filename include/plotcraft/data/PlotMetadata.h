@@ -103,11 +103,11 @@ struct PlotPermissionTable {
 struct VertexPos {
     int x, y, z;
 
-    BlockPos         toBlockPos() const { return BlockPos(x, y, z); }
-    Vec3             toVec3() const { return Vec3(x, y, z); }
-    static VertexPos fromBlockPos(BlockPos const& pos) { return VertexPos{pos.x, pos.y, pos.z}; }
-    operator BlockPos() const { return toBlockPos(); }
-    operator Vec3() const { return toVec3(); }
+    PLAPI BlockPos         toBlockPos() const { return BlockPos(x, y, z); }
+    PLAPI Vec3             toVec3() const { return Vec3(x, y, z); }
+    PLAPI static VertexPos fromBlockPos(BlockPos const& pos) { return VertexPos{pos.x, pos.y, pos.z}; }
+    PLAPI                  operator BlockPos() const { return toBlockPos(); }
+    PLAPI                  operator Vec3() const { return toVec3(); }
 };
 
 

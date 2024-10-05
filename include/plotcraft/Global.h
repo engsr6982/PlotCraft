@@ -39,7 +39,7 @@ using UUIDs     = string;
 using CommentID = int;
 
 
-int getPlotWorldDimensionId();
+PLAPI int getPlotWorldDimensionId();
 
 
 } // namespace plot
