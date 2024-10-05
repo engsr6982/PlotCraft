@@ -55,10 +55,9 @@
 #include <string>
 
 
-
 using string = std::string;
 
-namespace plo::mc {
+namespace plot::mc {
 
 PLAPI inline Block const& getBlock(BlockPos& bp, int dimid) {
     return ll::service::getLevel()->getDimension(dimid)->getBlockSourceFromMainChunkSource().getBlock(bp);
@@ -192,4 +191,4 @@ PLAPI inline void sendText(const string& realName, const string& fmt, Args&&... 
 }
 
 
-} // namespace plo::mc
+} // namespace plot::mc

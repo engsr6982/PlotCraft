@@ -9,7 +9,7 @@
 
 using string = std::string;
 
-namespace plo::core {
+namespace plot::core {
 
 typedef string ints; // string int
 struct TemplateData {
@@ -84,4 +84,4 @@ private:
     TemplateManager& operator=(TemplateManager const&) = delete;
 };
 
-} // namespace plo::core
+} // namespace plot::core

@@ -8,7 +8,7 @@
 #include <vector>
 
 
-namespace plo::data {
+namespace plot::data {
 
 
 enum class PlotPermission : int { None = 0, Shared = 1, Owner = 2, Admin = 3 };
@@ -224,4 +224,4 @@ public:
 };
 
 
-} // namespace plo::data
+} // namespace plot::data

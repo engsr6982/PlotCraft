@@ -9,7 +9,7 @@ class ChunkViewSource;
 class LevelChunk;
 class ChunkPos;
 
-namespace plo::core {
+namespace plot::core {
 
 using TemplateSubChunkVector = std::vector<Block const*>;
 
@@ -36,4 +36,4 @@ public:
     void loadChunk(LevelChunk& levelchunk, bool forceImmediateReplacementDataLoad);
 };
 
-} // namespace plo::core
+} // namespace plot::core

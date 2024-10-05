@@ -2,7 +2,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace plo::event {
+namespace plot::event {
 
 enum class MapType : int {
     UseItemOn     = 0, // 使用物品
@@ -27,4 +27,4 @@ public:
 };
 
 
-} // namespace plo::event
+} // namespace plot::event

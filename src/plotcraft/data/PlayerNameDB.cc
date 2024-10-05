@@ -1,7 +1,7 @@
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plugin/MyPlugin.h"
 
-namespace plo::data {
+namespace plot::data {
 
 PlayerNameDB& PlayerNameDB::getInstance() {
     static PlayerNameDB instance;
@@ -38,4 +38,4 @@ bool PlayerNameDB::insertPlayer(Player& player) {
 }
 
 
-} // namespace plo::data
+} // namespace plot::data

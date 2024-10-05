@@ -14,7 +14,7 @@
 #include <utility>
 
 
-namespace plo::command {
+namespace plot::command {
 
 
 class MergeBindData {
@@ -274,4 +274,4 @@ void _SetUpMergeCommand() {
 }
 
 
-} // namespace plo::command
+} // namespace plot::command

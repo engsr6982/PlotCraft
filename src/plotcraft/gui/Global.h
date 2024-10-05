@@ -29,12 +29,12 @@
 #include <string>
 
 
-namespace plo::gui {
-using namespace plo::data;
+namespace plot::gui {
+using namespace plot::data;
 using namespace ll::form;
-using namespace plo::utils;
-using namespace plo::mc;
-namespace pev = plo::event;
+using namespace plot::utils;
+using namespace plot::mc;
+namespace pev = plot::event;
 
 
 // MainGUI.cc
@@ -82,4 +82,4 @@ void _buyPlot(Player& player, PlotMetadataPtr pt);
 void PluginSettingGUI(Player& player);
 
 
-} // namespace plo::gui
+} // namespace plot::gui

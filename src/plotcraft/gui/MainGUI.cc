@@ -1,6 +1,6 @@
 #include "Global.h"
 
-namespace plo::gui {
+namespace plot::gui {
 
 
 void MainGUI(Player& player) {
@@ -10,16 +10,16 @@ void MainGUI(Player& player) {
 
     if (player.getDimensionId() == getPlotWorldDimensionId()) {
         fm.appendButton("前往主世界", "textures/ui/realmsIcon", "path", [](Player& pl) {
-            mc::executeCommand("plo go overworld", &pl);
+            mc::executeCommand("plot go overworld", &pl);
         });
     } else {
         fm.appendButton("前往地皮世界", "textures/ui/realmsIcon", "path", [](Player& pl) {
-            mc::executeCommand("plo go plot", &pl);
+            mc::executeCommand("plot go plot", &pl);
         });
     }
 
     fm.appendButton("管理脚下地皮", "textures/ui/icon_recipe_item", "path", [](Player& pl) {
-        mc::executeCommand("plo this", &pl);
+        mc::executeCommand("plot this", &pl);
     });
 
     fm.appendButton("管理地皮", "textures/ui/icon_recipe_nature", "path", [](Player& pl) { _selectPlot(pl); });
@@ -34,4 +34,4 @@ void MainGUI(Player& player) {
 }
 
 
-} // namespace plo::gui
+} // namespace plot::gui

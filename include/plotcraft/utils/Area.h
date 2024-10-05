@@ -23,7 +23,7 @@
 #pragma warning(disable : 4244)
 using string = std::string;
 
-namespace plo::area {
+namespace plot::area {
 
 // 2D/3D 圆/正方体/中心正方体
 struct Circle2 {
@@ -327,4 +327,4 @@ PLAPI inline FindResult findSafePos(
 }
 
 
-} // namespace plo::area
+} // namespace plot::area

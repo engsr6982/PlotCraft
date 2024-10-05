@@ -52,7 +52,7 @@
 
 
 using string         = std::string;
-using PlotPermission = plo::data::PlotPermission;
+using PlotPermission = plot::data::PlotPermission;
 
 
 // Global variables
@@ -74,7 +74,7 @@ ll::event::ListenerPtr mArmorStandSwapItemEvent;  // 玩家交换盔甲架物品
 ll::event::ListenerPtr mPlayerAttackBlockEvent;   // 玩家攻击方块
 ll::event::ListenerPtr mPlayerDropItemEvent;      // 玩家丢弃物品
 
-namespace plo::event {
+namespace plot::event {
 bool CheckPerm(PlotDBStorage* pdb, PlotID const& id, UUIDs const& uuid, bool ignoreAdmin) {
     PlotDBStorage* db = pdb ? pdb : &PlotDBStorage::getInstance();
     return db->getPlayerPermission(uuid, id, ignoreAdmin) != PlotPermission::None;
@@ -506,4 +506,4 @@ bool unRegisterEventListener() {
 }
 
 
-} // namespace plo::event
+} // namespace plot::event

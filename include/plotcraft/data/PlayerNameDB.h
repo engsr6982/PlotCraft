@@ -8,7 +8,7 @@
 
 using string = std::string;
 
-namespace plo::data {
+namespace plot::data {
 
 
 class PlayerNameDB {
@@ -33,4 +33,4 @@ public:
 };
 
 
-} // namespace plo::data
+} // namespace plot::data

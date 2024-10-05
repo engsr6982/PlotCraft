@@ -10,7 +10,7 @@
 #include "plotcraft/math/PlotPos.h"
 #include <sstream>
 
-namespace plo::command {
+namespace plot::command {
 
 struct DParam {
     CommandBlockName name;
@@ -173,4 +173,4 @@ void SetupDebugCommand() {
 }
 
 
-} // namespace plo::command
+} // namespace plot::command

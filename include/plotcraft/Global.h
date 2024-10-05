@@ -22,7 +22,7 @@
 #define SETTING_VERSION 1
 
 
-namespace plo {
+namespace plot {
 
 
 using string    = std::string;
@@ -42,4 +42,4 @@ using CommentID = int;
 int getPlotWorldDimensionId();
 
 
-} // namespace plo
+} // namespace plot

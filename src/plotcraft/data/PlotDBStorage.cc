@@ -12,9 +12,9 @@
 #include <vector>
 
 
-using namespace plo::utils;
+using namespace plot::utils;
 
-namespace plo::data {
+namespace plot::data {
 
 bool PlotDBStorage::isSaveThreadRunning() const { return mThreadRunning; }
 void PlotDBStorage::stopSaveThread() { mThreadRequiredExit = true; }
@@ -325,4 +325,4 @@ bool PlotDBStorage::refreshMergeMap() {
 }
 
 
-} // namespace plo::data
+} // namespace plot::data

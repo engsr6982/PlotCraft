@@ -17,10 +17,10 @@
 #include <ostream>
 
 
-namespace plo::core {
+namespace plot::core {
 namespace fs = std::filesystem;
 using json   = nlohmann::json;
-using namespace plo::mc;
+using namespace plot::mc;
 
 // static member definitions
 TemplateData                                          TemplateManager::mTemplateData;
@@ -286,4 +286,4 @@ bool TemplateManager::resetRecordTemplate() {
     return true;
 }
 
-} // namespace plo::core
+} // namespace plot::core

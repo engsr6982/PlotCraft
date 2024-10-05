@@ -73,7 +73,7 @@
 
 
 using string         = std::string;
-using PlotPermission = plo::data::PlotPermission;
+using PlotPermission = plot::data::PlotPermission;
 
 #define CATCH                                                                                                          \
     catch (std::exception const& e) {                                                                                  \
@@ -108,7 +108,7 @@ using PlotPermission = plo::data::PlotPermission;
 
 #define Normal High
 
-namespace plo::event {
+namespace plot::event {
 
 // 生物受伤
 LL_TYPE_INSTANCE_HOOK(
@@ -623,4 +623,4 @@ void registerHook() { GetHooks().hook(); }
 void unregisterHook() { GetHooks().unhook(); }
 
 
-} // namespace plo::event
+} // namespace plot::event

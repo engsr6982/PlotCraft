@@ -9,7 +9,7 @@
 #include <vector>
 
 
-namespace plo {
+namespace plot {
 
 
 // 预定义
@@ -138,4 +138,4 @@ public:
 };
 
 
-} // namespace plo
+} // namespace plot

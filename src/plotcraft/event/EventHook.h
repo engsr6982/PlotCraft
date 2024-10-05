@@ -1,8 +1,8 @@
-namespace plo::event {
+namespace plot::event {
 
 void registerHook();
 
 void unregisterHook();
 
 
-} // namespace plo::event
+} // namespace plot::event

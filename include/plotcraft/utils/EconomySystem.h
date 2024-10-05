@@ -4,7 +4,7 @@
 #include "plotcraft/Global.h"
 
 
-namespace plo {
+namespace plot {
 
 
 class EconomySystem {
@@ -76,4 +76,4 @@ public:
 };
 
 
-} // namespace plo
+} // namespace plot

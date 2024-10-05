@@ -1,7 +1,7 @@
 #include "plotcraft/Global.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 
-namespace plo {
+namespace plot {
 
 int getPlotWorldDimensionId() {
 #if defined(OVERWORLD)
@@ -12,4 +12,4 @@ int getPlotWorldDimensionId() {
 #endif
 }
 
-} // namespace plo
+} // namespace plot

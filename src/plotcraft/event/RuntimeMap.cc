@@ -1,7 +1,7 @@
 #include "RuntimeMap.h"
 #include <vector>
 
-namespace plo::event {
+namespace plot::event {
 
 
 // Last updated: 2024.8.21 & v1.21.3
@@ -283,4 +283,4 @@ bool RuntimeMap::has(MapType type, std::string const& typeName) {
 }
 
 
-} // namespace plo::event
+} // namespace plot::event

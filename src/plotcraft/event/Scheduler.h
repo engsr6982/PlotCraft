@@ -1,5 +1,5 @@
 
-namespace plo::event {
+namespace plot::event {
 
 void initPlotEventScheduler();
 

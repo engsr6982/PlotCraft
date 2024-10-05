@@ -4,7 +4,7 @@
 #include <string>
 
 
-namespace plo::event {
+namespace plot::event {
 
 
 bool registerEventListener();
@@ -16,4 +16,4 @@ bool CheckPerm(data::PlotDBStorage* pdb, PlotID const& id, UUIDs const& uuid, bo
 bool StringFind(std::string const& str, std::string const& sub);
 
 
-} // namespace plo::event
+} // namespace plot::event

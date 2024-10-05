@@ -5,7 +5,7 @@
 #include <vector>
 
 
-namespace plo {
+namespace plot {
 
 
 /**
@@ -338,4 +338,4 @@ public:
     }
 };
 
-} // namespace plo
+} // namespace plot

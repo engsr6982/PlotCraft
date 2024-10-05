@@ -35,16 +35,16 @@ using ll::chrono_literals::operator""_tick;
 class CustomEventHelper {
 public:
     //               player           PlotPos     Dimension
-    std::unordered_map<string, std::pair<plo::PlotPos, int>> mPlayerPos; // 玩家位置缓存
+    std::unordered_map<string, std::pair<plot::PlotPos, int>> mPlayerPos; // 玩家位置缓存
 
     bool has(string const& uid) { return mPlayerPos.find(uid) != mPlayerPos.end(); }
 
-    void set(string uid, plo::PlotPos pps, int dim) { mPlayerPos[uid] = std::make_pair(pps, dim); }
+    void set(string uid, plot::PlotPos pps, int dim) { mPlayerPos[uid] = std::make_pair(pps, dim); }
 
-    std::pair<plo::PlotPos, int> const& get(string const& uid) {
+    std::pair<plot::PlotPos, int> const& get(string const& uid) {
         auto it = mPlayerPos.find(uid);
         if (it == mPlayerPos.end()) {
-            mPlayerPos[uid] = std::make_pair(plo::PlotPos{}, -1);
+            mPlayerPos[uid] = std::make_pair(plot::PlotPos{}, -1);
             return mPlayerPos[uid];
         }
         return it->second;
@@ -52,7 +52,7 @@ public:
 } helper;
 
 
-namespace plo::event {
+namespace plot::event {
 
 void buildTipMessage(Player& player, PlotPos const& pps, PlayerNameDB* ndb, PlotDBStorage* pdb) {
     try {
@@ -74,12 +74,12 @@ void buildTipMessage(Player& player, PlotPos const& pps, PlayerNameDB* ndb, Plot
                 noOwner ? "未命名" : plot->getPlotName(),
                 noOwner ? "§a✔§r" :saleing ? "§a✔§r" : "§c✘§r",
                 noOwner ? Config::cfg.plotWorld.buyPlotPrice : saleing ? plot->getSalePrice() : 0,
-                noOwner ? "\n输入：/plo buy 打开购买菜单" : ""
+                noOwner ? "\n输入：/plot buy 打开购买菜单" : ""
             );
             // clang-format on
         } else {
             pkt.mMessage = fmt::format(
-                "{0} | 地皮世界\n输入: /plo 打开地皮菜单\n\nRoad: {1}\nCross: {2}",
+                "{0} | 地皮世界\n输入: /plot 打开地皮菜单\n\nRoad: {1}\nCross: {2}",
                 PLUGIN_TITLE,
                 PlotRoad(player.getPosition()).toString(),
                 PlotCross(player.getPosition()).toString()
@@ -143,4 +143,4 @@ void initPlotEventScheduler() {
     });
 }
 
-} // namespace plo::event
+} // namespace plot::event

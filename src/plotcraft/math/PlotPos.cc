@@ -22,7 +22,7 @@
 #include <vector>
 
 
-namespace plo {
+namespace plot {
 using TemplateManager = core::TemplateManager;
 
 
@@ -809,4 +809,4 @@ std::vector<PlotCross> PlotRoad::getAdjacentCrosses() const {
 }
 
 
-} // namespace plo
+} // namespace plot
