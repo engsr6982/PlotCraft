@@ -17,8 +17,7 @@
 #include "mc/world/level/levelgen/structure/VillageFeature.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 #include "plotcraft/Config.h"
-#include "plotcraft/core/Utils.h"
-
+#include "plotcraft/Global.h"
 
 
 namespace plo::core {
@@ -42,7 +41,7 @@ PlotDimension::createGenerator(br::worldgen::StructureSetRegistry const& /* stru
     auto&                           levelData = getLevel().getLevelData();
 
     // 实例化 地皮生成器
-    if (plo::config::cfg.generator.type == plo::config::PlotGeneratorType::Default) {
+    if (plo::Config::cfg.generator.type == plo::PlotGeneratorType::Default) {
         worldGenerator =
             std::make_unique<plo::core::DefaultGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
     } else {

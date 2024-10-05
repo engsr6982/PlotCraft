@@ -8,7 +8,7 @@ void MainGUI(Player& player) {
 
     fm.setContent("PlotCraft > 选择一个操作:");
 
-    if (player.getDimensionId() == getPlotDimensionId()) {
+    if (player.getDimensionId() == getPlotWorldDimensionId()) {
         fm.appendButton("前往主世界", "textures/ui/realmsIcon", "path", [](Player& pl) {
             mc::executeCommand("plo go overworld", &pl);
         });

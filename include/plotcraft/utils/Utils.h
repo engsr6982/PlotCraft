@@ -1,5 +1,5 @@
 #pragma once
-#include "plotcraft/Macro.h"
+#include "plotcraft/Global.h"
 #include <fmt/format.h>
 #include <iostream>
 #include <ll/api/form/CustomForm.h>
@@ -33,27 +33,21 @@ PLAPI inline bool some(std::vector<T> const& vec, T const& it) {
 PLAPI inline void DebugFormPrint(const ll::form::CustomFormResult& dt) {
 #ifdef DEBUG
     std::cout << "\033[0m\033[1;35m"
-              << "======================================================================================"
-              << "\033[0m" << std::endl;
+              << "======================================================================================" << "\033[0m"
+              << std::endl;
     for (auto [name, result] : *dt) {
         static auto logDebugResult = [&](const ll::form::CustomFormElementResult& var) {
             if (std::holds_alternative<uint64_t>(var)) {
-                std::cout << "\033[0m\033[1;33m"
-                          << "[CustomForm Debug] "
-                          << "\033[0m\033[1;32m" << name << "\033[0m\033[1;35m    " << std::get<uint64_t>(var)
-                          << "    \033[0m\033[1;36muint64_t"
+                std::cout << "\033[0m\033[1;33m" << "[CustomForm Debug] " << "\033[0m\033[1;32m" << name
+                          << "\033[0m\033[1;35m    " << std::get<uint64_t>(var) << "    \033[0m\033[1;36muint64_t"
                           << "\033[0m" << std::endl;
             } else if (std::holds_alternative<double>(var)) {
-                std::cout << "\033[0m\033[1;33m"
-                          << "[CustomForm Debug] "
-                          << "\033[0m\033[1;32m" << name << "\033[0m\033[1;35m    " << std::get<double>(var)
-                          << "    \033[0m\033[1;36mdouble"
+                std::cout << "\033[0m\033[1;33m" << "[CustomForm Debug] " << "\033[0m\033[1;32m" << name
+                          << "\033[0m\033[1;35m    " << std::get<double>(var) << "    \033[0m\033[1;36mdouble"
                           << "\033[0m" << std::endl;
             } else if (std::holds_alternative<std::string>(var)) {
-                std::cout << "\033[0m\033[1;33m"
-                          << "[CustomForm Debug] "
-                          << "\033[0m\033[1;32m" << name << "\033[0m\033[1;35m    " << std::get<std::string>(var)
-                          << "    \033[0m\033[1;36mstring"
+                std::cout << "\033[0m\033[1;33m" << "[CustomForm Debug] " << "\033[0m\033[1;32m" << name
+                          << "\033[0m\033[1;35m    " << std::get<std::string>(var) << "    \033[0m\033[1;36mstring"
                           << "\033[0m" << std::endl;
             }
         };

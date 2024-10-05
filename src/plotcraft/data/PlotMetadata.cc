@@ -31,6 +31,8 @@ PlotMetadataPtr PlotMetadata::make() { return make(PlotID{}, UUIDs{}, "", 0, 0);
 
 
 // API
+bool PlotMetadata::isMerged() const { return mMerged; }
+
 bool PlotMetadata::isOwner(UUIDs const& uuid) const { return mPlotOwner == uuid; }
 
 bool PlotMetadata::setPlotName(string const& name) {
@@ -189,6 +191,72 @@ PlotPermissionTable const& PlotMetadata::getPermissionTableConst() const { retur
 void PlotMetadata::save() { PlotDBStorage::getInstance().save(*this); }
 
 string PlotMetadata::toString() const { return JsonHelper::structToJson(*this).dump(); }
+
+
+void PlotMetadata::mergeData(PlotMetadataPtr const other, bool mergeComment, bool mergeSharedPlayer) {
+    if (!other) {
+        return;
+    }
+
+    if (mergeComment) {
+        for (auto const& i : other->mComments) {
+            this->mComments.push_back(PlotCommentItem{i}); // copy
+        }
+    }
+    if (mergeSharedPlayer) {
+        for (auto const& i : other->mSharedPlayers) {
+            if (this->isSharedPlayer(i.mSharedPlayer)) {
+                continue;
+            }
+            this->mSharedPlayers.push_back(PlotShareItem{i});
+        }
+    }
+}
+void PlotMetadata::updateMergeData(std::unique_ptr<PlotPos> const& pos) {
+    if (!pos->isValid()) {
+        return;
+    }
+    // fmt::print("updateMergeData: pos 地址 {}\n", fmt::ptr(std::addressof(*pos)));
+
+    this->mMerged = true;
+    auto& data    = this->mMergedData;
+
+    // 更新顶点
+    data.mCurrentVertexs.clear();
+    data.mCurrentVertexs.reserve(pos->mVertexs.size());
+    for (auto const& i : pos->mVertexs) {
+        data.mCurrentVertexs.push_back(VertexPos::fromBlockPos(i));
+    }
+
+    // 记录被合并的PlotID
+    auto plots = std::addressof(*pos)->getRangedPlots();
+    data.mMergedPlotIDs.clear();
+    data.mMergedPlotIDs.reserve(plots.size());
+    for (auto const& i : plots) {
+        if (i.getPlotID() == this->mPlotID) continue; // skip self
+        data.mMergedPlotIDs.push_back(i.getPlotID());
+    }
+
+    // 记录被合并的CrossID
+    auto corsses = std::addressof(*pos)->getRangedCrosses();
+    data.mMergedCrossIDs.clear();
+    data.mMergedCrossIDs.reserve(corsses.size());
+    for (auto const& i : corsses) {
+        data.mMergedCrossIDs.push_back(i.getCrossID());
+    }
+
+    // 记录被合并的RoadID
+    auto roads = std::addressof(*pos)->getRangedRoads();
+    data.mMergedRoadIDs.clear();
+    data.mMergedRoadIDs.reserve(roads.size());
+    for (auto const& i : roads) {
+        data.mMergedRoadIDs.push_back(i.getRoadID());
+    }
+}
+bool PlotMetadata::setMergeCount(int count) {
+    this->mMergedData.mMergeCount = count;
+    return true;
+}
 
 
 } // namespace plo::data

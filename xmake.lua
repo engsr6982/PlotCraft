@@ -8,8 +8,7 @@ add_repositories("engsr6982-repo https://github.com/engsr6982/xmake-repo.git")
 -- add_requires("levilamina develop") to use develop version
 -- please note that you should add bdslibrary yourself if using dev version
 add_requires(
-    "levilamina 0.13.5",
-    "legacymoney 0.8.3"
+    "levilamina 0.13.5"
 )
 add_requires("more_events 0.1.0")
 
@@ -44,7 +43,6 @@ target("PlotCraft")
     )
     add_packages(
         "levilamina",
-        "legacymoney",
         "more_events"
     )
     add_files("src/**.cpp", "src/**.cc")
@@ -66,12 +64,17 @@ target("PlotCraft")
         add_packages("more-dimensions")
     else
         add_defines("OVERWORLD")
-    end 
+    end
 
     add_defines("BuildVersionInfo=\"Overworld: " .. tostring(get_config("overworld")) .. "\"")
 
     add_defines("PLUGIN_NAME=\"PlotCraft\"")
     add_defines("PLUGIN_TITLE=\"§6[§aPlotCraft§6]§r \"")
+
+    -- Release 模式下开启最大性能优化
+    if is_mode("release") then
+        add_cxflags("/O2")
+    end
 
     after_build(function (target)
         local plugin_packer = import("scripts.after_build")

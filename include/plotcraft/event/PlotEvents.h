@@ -2,9 +2,10 @@
 #include "ll/api/event/Cancellable.h"
 #include "ll/api/event/Event.h"
 #include "mc/world/actor/player/Player.h"
-#include "plotcraft/Macro.h"
-#include "plotcraft/core/PPos.h"
+#include "plotcraft/Global.h"
 #include "plotcraft/data/PlotMetadata.h"
+#include "plotcraft/math/PlotPos.h"
+
 
 namespace plo::event {
 
@@ -13,28 +14,28 @@ using namespace data;
 // 玩家进入地皮
 class PlayerEnterPlot final : public ll::event::Event {
 private:
-    PPos const& mPos;    // 地皮坐标
-    Player*     mPlayer; // 玩家指针
+    PlotPos const& mPos;    // 地皮坐标
+    Player*        mPlayer; // 玩家指针
 
 public:
-    constexpr explicit PlayerEnterPlot(PPos const& pos, Player* player) : mPos(pos), mPlayer(player) {}
+    constexpr explicit PlayerEnterPlot(PlotPos const& pos, Player* player) : mPos(pos), mPlayer(player) {}
 
-    PLAPI Player*     getPlayer() const;
-    PLAPI PPos const& getPos() const;
+    PLAPI Player*        getPlayer() const;
+    PLAPI PlotPos const& getPos() const;
 };
 
 
 // 玩家离开地皮
 class PlayerLeavePlot final : public ll::event::Event {
 private:
-    PPos const& mPos;    // 地皮坐标
-    Player*     mPlayer; // 玩家指针
+    PlotPos const& mPos;    // 地皮坐标
+    Player*        mPlayer; // 玩家指针
 
 public:
-    constexpr explicit PlayerLeavePlot(const PPos& pos, Player* player) : mPos(pos), mPlayer(player) {}
+    constexpr explicit PlayerLeavePlot(const PlotPos& pos, Player* player) : mPos(pos), mPlayer(player) {}
 
-    PLAPI Player*     getPlayer() const;
-    PLAPI PPos const& getPos() const;
+    PLAPI Player*        getPlayer() const;
+    PLAPI PlotPos const& getPos() const;
 };
 
 

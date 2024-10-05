@@ -3,22 +3,13 @@
 #include "mc/math/Vec3.h"
 #include "mc/server/commands/CommandOrigin.h"
 #include "mc/server/commands/CommandOriginType.h"
-#include "mc/server/commands/CommandPositionFloat.h"
-#include "mc/server/commands/CommandVersion.h"
-#include "mc/util/FeatureTerrainAdjustmentsUtil.h"
 #include "mc/world/level/BlockPos.h"
-#include "mc/world/level/ChunkBlockPos.h"
-#include "mc/world/level/ChunkPos.h"
-#include "mc/world/level/chunk/ChunkSource.h"
-#include "mc/world/level/chunk/LevelChunk.h"
-#include "mc/world/level/dimension/VanillaDimensions.h"
 #include "plotcraft/Config.h"
-#include "plotcraft/core/Utils.h"
+#include "plotcraft/Global.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
 #include "plotcraft/gui/Global.h"
-#include <unordered_map>
 
 
 namespace plo::command {
@@ -70,12 +61,12 @@ const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, Par
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
 
-    auto& sw = config::cfg.switchDim;
+    auto& sw = Config::cfg.switchDim;
 
     if (param.dim == ParamGo::overworld) {
         player.teleport(Vec3{sw.overWorld[0], sw.overWorld[1], sw.overWorld[2]}, 0); // 传送到重生点
     } else {
-        player.teleport(Vec3{sw.plotWorld[0], sw.plotWorld[1], sw.plotWorld[2]}, core::getPlotDimensionId());
+        player.teleport(Vec3{sw.plotWorld[0], sw.plotWorld[1], sw.plotWorld[2]}, getPlotWorldDimensionId());
     }
 };
 #endif
@@ -84,12 +75,12 @@ const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, Par
 const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
-    if (player.getDimensionId() != core::getPlotDimensionId()) {
+    if (player.getDimensionId() != getPlotWorldDimensionId()) {
         sendText<LogLevel::Error>(player, "此命令只能在地皮世界使用!");
         return;
     }
 
-    PPos pos = PPos{player.getPosition()};
+    PlotPos pos = PlotPos{player.getPosition()};
     if (pos.isValid()) {
         std::shared_ptr<data::PlotMetadata> plot = data::PlotDBStorage::getInstance().getPlot(pos.getPlotID());
         if (plot == nullptr) {
@@ -127,124 +118,9 @@ const auto LambdaSetting = [](CommandOrigin const& origin, CommandOutput& output
     gui::PlayerSettingGUI(player);
 };
 
-/*
-namespace PlotMergeBindData {
-
-std::unordered_map<string, std::pair<PPos, PPos>> mBindData; // key: realName
-
-bool isStarted(Player& player) { return mBindData.find(player.getRealName()) != mBindData.end(); }
-
-const auto merge = [](CommandOrigin const& origin, CommandOutput& output) {
-    CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
-    Player& player = *static_cast<Player*>(origin.getEntity());
-    gui::PlotMergeGUI(player);
-};
-
-const auto start = [](CommandOrigin const& origin, CommandOutput& output) {
-    CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
-    Player& player = *static_cast<Player*>(origin.getEntity());
-    if (isStarted(player)) {
-        sendText<LogLevel::Error>(output, "请先完成当前操作!");
-        return;
-    }
-    auto sou                                = PPos(player.getPosition());
-    mBindData[string(player.getRealName())] = std::make_pair(sou, PPos());
-
-    sendText(player, "地皮合并已开启，前往目标地皮使用命令 /plo merge target 选择目标地皮");
-    sendText(player, "已自动选择当前位置为源地皮，如需修改使用 /plo merge source");
-};
-
-const auto source = [](CommandOrigin const& origin, CommandOutput& output) {
-    CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
-    Player& player = *static_cast<Player*>(origin.getEntity());
-    if (!isStarted(player)) {
-        sendText<LogLevel::Error>(output, "请先使用 /plo merge start 开启地皮合并功能!");
-        return;
-    }
-    auto sou = PPos(player.getPosition());
-
-    mBindData[player.getRealName()].first = sou;
-
-    sendText(player, "已更改源地皮为: {}", sou.toString());
-};
-
-const auto target = [](CommandOrigin const& origin, CommandOutput& output) {
-    CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
-    Player& player = *static_cast<Player*>(origin.getEntity());
-    if (!isStarted(player)) {
-        sendText<LogLevel::Error>(output, "请先使用 /plo merge start 开启地皮合并功能!");
-        return;
-    }
-    auto& dt = mBindData[player.getRealName()];
-
-    dt.second = PPos(player.getPosition());
-
-    sendText(player, "已选择目标地皮: {}", dt.second.toString());
-    sendText(player, "使用 /plo merge confirm 确认合并");
-};
-
-const auto confirm = [](CommandOrigin const& origin, CommandOutput& output) {
-    CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
-    Player& player = *static_cast<Player*>(origin.getEntity());
-    if (!isStarted(player)) {
-        sendText<LogLevel::Error>(output, "请先使用 /plo merge start 开启地皮合并功能!");
-        return;
-    }
-
-    auto& dt = mBindData[player.getRealName()];
-    if (!dt.first.isValid() || !dt.second.isValid()) {
-        sendText<LogLevel::Error>(output, "源地皮或目标地皮无效，请重新选择");
-        return;
-    }
-
-    auto firID = dt.first.getPlotID();
-    auto secID = dt.second.getPlotID();
-
-    if (!PPos::isAdjacent(dt.first, dt.second)) {
-        sendText<LogLevel::Error>(output, "{} 和 {} 不是相邻地皮", firID, secID);
-        return;
-    }
-
-    auto& db      = data::PlotDBStorage::getInstance();
-    auto  firMeta = db.getPlot(firID);
-    auto  secMeta = db.getPlot(secID);
-
-    if (!firMeta || !secMeta) {
-        sendText<LogLevel::Error>(output, "源地皮或目标地皮无主，请重新选择");
-        return;
-    }
-
-    auto uuid = player.getUuid().asString();
-    if (!firMeta->isOwner(uuid) || !secMeta->isOwner(uuid)) {
-        sendText<LogLevel::Error>(output, "您不是源地皮或目标地皮的主人，请重新选择");
-        return;
-    }
-
-    if (db.isMergedPlot(firID)) {
-        firID = db.getOwnerPlotID(firID);
-    }
-
-
-    const bool ok = db.tryMergePlot(dt.first, dt.second);
-};
-
-const auto cancel = [](CommandOrigin const& origin, CommandOutput& output) {
-    CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
-    Player& player = *static_cast<Player*>(origin.getEntity());
-    if (!isStarted(player)) {
-        sendText<LogLevel::Error>(output, "您未开启地皮合并功能，无需取消");
-        return;
-    }
-    mBindData.erase(player.getRealName());
-    sendText(player, "操作已取消");
-};
-
-}; // namespace PlotMergeBindData
- */
 
 bool registerCommand() {
-    auto& cmd = ll::command::CommandRegistrar::getInstance().getOrCreateCommand("plo", "PlotCraft");
-
+    auto& cmd = ll::command::CommandRegistrar::getInstance().getOrCreateCommand(COMMAND_NAME, "PlotCraft");
 
     cmd.overload<ParamOp>().required("op").required("name").execute(LambdaOP); // plo <op|deop> <name>
     cmd.overload().text("db").text("save").execute(LambdaDBSave);              // plo db save
@@ -254,14 +130,17 @@ bool registerCommand() {
     cmd.overload().text("setting").execute(LambdaSetting);                     // plo setting
     cmd.overload().execute(LambdaDefault);                                     // plo
 
-    // cmd.overload().text("merge").execute(PlotMergeBindData::merge);                   // plo merge
-    // cmd.overload().text("merge").text("start").execute(PlotMergeBindData::start);     // plo merge start
-    // cmd.overload().text("merge").text("source").execute(PlotMergeBindData::source);   // plo merge source
-    // cmd.overload().text("merge").text("target").execute(PlotMergeBindData::target);   // plo merge target
-    // cmd.overload().text("merge").text("confirm").execute(PlotMergeBindData::confirm); // plo merge confirm
-    // cmd.overload().text("merge").text("cancel").execute(PlotMergeBindData::cancel);   // plo merge cancel
-
     _setupTemplateCommand();
+
+    // MergeCommand.cc
+    extern void _SetUpMergeCommand();
+    _SetUpMergeCommand();
+
+#ifdef DEBUG
+    // DebugCommand.cc
+    extern void SetupDebugCommand();
+    SetupDebugCommand();
+#endif
 
 #ifndef OVERWORLD
     cmd.overload<ParamGo>().text("go").required("dim").execute(LambdaGo); // plo go <overworld|plot>

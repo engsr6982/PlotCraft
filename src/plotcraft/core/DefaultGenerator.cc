@@ -27,7 +27,7 @@ DefaultGenerator::DefaultGenerator(Dimension& dimension, uint seed, Json::Value 
     mBiome       = getLevel().getBiomeRegistry().lookupByHash(VanillaBiomeNames::Plains);
     mBiomeSource = std::make_unique<FixedBiomeSource>(*mBiome);
 
-    auto& gen = config::cfg.generator;
+    auto& gen = Config::cfg.generator;
 
 
     // 初始化方块指针
@@ -90,7 +90,7 @@ int positiveMod(int value, int modulus) {
 
 
 void DefaultGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateReplacementDataLoad */) {
-    auto& gen = config::cfg.generator;
+    auto& gen = Config::cfg.generator;
 
     auto blockSource = &mDimension->getBlockSourceFromMainChunkSource();
 

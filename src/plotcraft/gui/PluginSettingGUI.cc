@@ -4,7 +4,7 @@ namespace plo::gui {
 
 void PluginSettingGUI(Player& player) {
     auto* impl = &data::PlotDBStorage::getInstance();
-    auto* cfg  = &config::cfg.switchDim;
+    auto* cfg  = &Config::cfg.switchDim;
 
     if (!impl->isAdmin(player.getUuid().asString())) {
         sendText<LogLevel::Error>(player, "你没有权限执行此操作");
@@ -24,12 +24,12 @@ void PluginSettingGUI(Player& player) {
         cfg->overWorld[0] = ps.x;
         cfg->overWorld[1] = ps.y;
         cfg->overWorld[2] = ps.z;
-        config::updateConfig();
+        Config::updateConfig();
         sendText(pl, "设置成功");
     });
 
     fm.appendButton("设置当前位置为地皮世界安全坐标", "textures/ui/Wrenches1", "path", [cfg](Player& pl) {
-        if (pl.getDimensionId() != getPlotDimensionId()) {
+        if (pl.getDimensionId() != getPlotWorldDimensionId()) {
             sendText<LogLevel::Error>(pl, "你必须在地皮世界才能执行此操作");
             return;
         }
@@ -37,7 +37,7 @@ void PluginSettingGUI(Player& player) {
         cfg->plotWorld[0] = ps.x;
         cfg->plotWorld[1] = ps.y;
         cfg->plotWorld[2] = ps.z;
-        config::updateConfig();
+        Config::updateConfig();
         sendText(pl, "设置成功");
     });
 

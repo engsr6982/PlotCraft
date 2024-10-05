@@ -11,12 +11,12 @@
 #include "mc/world/gamemode/GameMode.h"
 #include "mc/world/level/Level.h"
 #include "plotcraft/Config.h"
-#include "plotcraft/core/PPos.h"
-#include "plotcraft/core/Utils.h"
+#include "plotcraft/Global.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
 #include "plotcraft/event/PlotEvents.h"
+#include "plotcraft/math/PlotPos.h"
 #include "plotcraft/utils/Mc.h"
 #include "plotcraft/utils/Utils.h"
 #include "plugin/MyPlugin.h"
@@ -29,23 +29,22 @@
 
 ll::schedule::GameTickScheduler mTickScheduler; // Tick调度
 
-using string = std::string;
 using ll::chrono_literals::operator""_tick;
 
 
 class CustomEventHelper {
 public:
-    //               player           PPos     Dimension
-    std::unordered_map<string, std::pair<plo::PPos, int>> mPlayerPos; // 玩家位置缓存
+    //               player           PlotPos     Dimension
+    std::unordered_map<string, std::pair<plo::PlotPos, int>> mPlayerPos; // 玩家位置缓存
 
     bool has(string const& uid) { return mPlayerPos.find(uid) != mPlayerPos.end(); }
 
-    void set(string uid, plo::PPos pps, int dim) { mPlayerPos[uid] = std::make_pair(pps, dim); }
+    void set(string uid, plo::PlotPos pps, int dim) { mPlayerPos[uid] = std::make_pair(pps, dim); }
 
-    std::pair<plo::PPos, int> const& get(string const& uid) {
+    std::pair<plo::PlotPos, int> const& get(string const& uid) {
         auto it = mPlayerPos.find(uid);
         if (it == mPlayerPos.end()) {
-            mPlayerPos[uid] = std::make_pair(plo::PPos{}, -1);
+            mPlayerPos[uid] = std::make_pair(plo::PlotPos{}, -1);
             return mPlayerPos[uid];
         }
         return it->second;
@@ -54,38 +53,40 @@ public:
 
 
 namespace plo::event {
-using namespace core;
 
-
-void buildTipMessage(Player& p, PPos const& pps, PlayerNameDB* ndb, PlotDBStorage* pdb) {
+void buildTipMessage(Player& player, PlotPos const& pps, PlayerNameDB* ndb, PlotDBStorage* pdb) {
     try {
         PlotMetadataPtr plot = pdb->getPlot(pps.getPlotID());
-        if (plot == nullptr) plot = PlotMetadata::make(pps.getPlotID(), pps.mX, pps.mZ);
+        // if (!plot) plot = PlotMetadata::make(pps.getPlotID(), pps.mX, pps.mZ);
 
         TextPacket pkt = TextPacket();
         pkt.mType      = TextPacketType::Tip;
+
         if (pps.isValid()) {
-            auto owner = plot->getPlotOwner();
+            bool const noValue = plot == nullptr;
+            bool const noOwner = noValue ? true : plot->getPlotOwner().empty();
+            bool const saleing = !noValue ? plot->isSale() : false;
             // clang-format off
             pkt.mMessage = fmt::format(
                 "地皮: {0}\n主人: {1}  |  名称: {2}\n出售: {3}  |  价格: {4}{5}",
                 pps.toString(),
-                owner.empty() ? "无主" : ndb->getPlayerName(owner),
-                plot->getPlotName(),
-                owner.empty() ? "§a✔§r" : plot->isSale() ? "§a✔§r" : "§c✘§r",
-                owner.empty() ? config::cfg.plotWorld.buyPlotPrice : plot->isSale() ? plot->getSalePrice() : 0,
-                owner.empty() ? "\n输入：/plo buy 打开购买菜单" : ""
+                noOwner ? "无主" : ndb->getPlayerName(plot->getPlotOwner()),
+                noOwner ? "未命名" : plot->getPlotName(),
+                noOwner ? "§a✔§r" :saleing ? "§a✔§r" : "§c✘§r",
+                noOwner ? Config::cfg.plotWorld.buyPlotPrice : saleing ? plot->getSalePrice() : 0,
+                noOwner ? "\n输入：/plo buy 打开购买菜单" : ""
             );
             // clang-format on
-        } else pkt.mMessage = fmt::format("{0} | 地皮世界\n输入: /plo 打开地皮菜单", PLUGIN_TITLE); // Tip3
+        } else {
+            pkt.mMessage = fmt::format(
+                "{0} | 地皮世界\n输入: /plo 打开地皮菜单\n\nRoad: {1}\nCross: {2}",
+                PLUGIN_TITLE,
+                PlotRoad(player.getPosition()).toString(),
+                PlotCross(player.getPosition()).toString()
+            ); // Tip3
+        }
 
-        p.sendNetworkPacket(pkt);
-    } catch (std::exception const& e) {
-        my_plugin::MyPlugin::getInstance().getSelf().getLogger().error(
-            "Fail in {}\nstd::exception: {}",
-            __FUNCTION__,
-            e.what()
-        );
+        pkt.sendTo(player);
     } catch (...) {
         my_plugin::MyPlugin::getInstance().getSelf().getLogger().error("Fail in {}\nunknown exception", __FUNCTION__);
     }
@@ -104,11 +105,11 @@ void initPlotEventScheduler() {
         lv->forEachPlayer([bus, pdb, ndb](Player& p) {
             if (p.isSimulatedPlayer() || p.isLoading()) return true; // skip simulated player
 
-            int const   playerDimid = p.getDimensionId();
-            int const   plotDimid   = getPlotDimensionId();
-            auto const  name        = p.getRealName();
-            auto const& pair        = helper.get(name);
-            PPos const  pps{p.getPosition()};
+            int const     playerDimid = p.getDimensionId();
+            int const     plotDimid   = getPlotWorldDimensionId();
+            auto const    name        = p.getRealName();
+            auto const&   pair        = helper.get(name);
+            PlotPos const pps{p.getPosition()};
 
             if (playerDimid != plotDimid) {
                 // 玩家通过传送离开地皮维度

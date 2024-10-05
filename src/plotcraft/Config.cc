@@ -9,11 +9,11 @@
 
 namespace fs = std::filesystem;
 
-namespace plo::config {
+namespace plo {
 
-_Config cfg;
+Config Config::cfg;
 
-void loadConfig() {
+void Config::loadConfig() {
     auto& mSelf  = my_plugin::MyPlugin::getInstance().getSelf();
     auto& logger = mSelf.getLogger();
 
@@ -38,7 +38,7 @@ void loadConfig() {
 }
 
 
-void updateConfig() {
+void Config::updateConfig() {
     fs::path dir    = my_plugin::MyPlugin::getInstance().getSelf().getConfigDir();
     fs::path source = dir / "Config.json";
     fs::path target = dir / "Config.json.bak";
@@ -52,13 +52,13 @@ void updateConfig() {
     }
 }
 
-// double calculateMergePlotPrice(int mergeCount) {
-//     if (mergeCount <= 0) {
-//         return cfg.plotWorld.baseMergePlotPrice;
-//     }
-//     double multiplier = std::max(1.0, cfg.plotWorld.mergePriceMultiplier);
-//     return cfg.plotWorld.baseMergePlotPrice * std::pow(multiplier, mergeCount);
-// }
+double Config::calculateMergePlotPrice(int mergeCount) {
+    if (mergeCount <= 0) {
+        return cfg.plotWorld.baseMergePlotPrice;
+    }
+    double multiplier = std::max(1.0, cfg.plotWorld.mergePriceMultiplier);
+    return cfg.plotWorld.baseMergePlotPrice * std::pow(multiplier, mergeCount);
+}
 
 
-} // namespace plo::config
+} // namespace plo

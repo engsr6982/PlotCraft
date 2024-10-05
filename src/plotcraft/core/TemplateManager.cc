@@ -125,7 +125,7 @@ bool TemplateManager::generatorBlockVolume(BlockVolume& volume) {
 int  TemplateManager::getCurrentTemplateVersion() { return mTemplateData.version; }
 int  TemplateManager::getCurrentTemplateChunkNum() { return mTemplateData.template_chunk_num; }
 int  TemplateManager::getCurrentTemplateRoadWidth() { return mTemplateData.template_road_width; }
-bool TemplateManager::isUseTemplate() { return config::cfg.generator.type == config::PlotGeneratorType::Template; }
+bool TemplateManager::isUseTemplate() { return Config::cfg.generator.type == PlotGeneratorType::Template; }
 
 // Tools
 void TemplateManager::toPositive(int& num) {
@@ -214,7 +214,7 @@ bool TemplateManager::_processChunk(const LevelChunk& chunk) {
                 auto& bl   = bs.getBlock(cur).getTypeName();
                 auto  iter = map.find(bl);
                 if (iter == map.end()) {
-                    map[bl] = map.size() + 1;
+                    map[bl] = (int)map.size() + 1;
                     buffer.push_back(map[bl]);
                 } else {
                     buffer.push_back(iter->second);

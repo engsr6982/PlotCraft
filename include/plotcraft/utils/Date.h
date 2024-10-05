@@ -1,6 +1,6 @@
 #pragma once
 #include "fmt/format.h"
-#include "plotcraft/Macro.h"
+#include "plotcraft/Global.h"
 #include <iomanip>
 #include <sstream>
 #include <string>

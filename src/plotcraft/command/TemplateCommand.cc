@@ -37,7 +37,7 @@ const auto start = [](CommandOrigin const& ori, CommandOutput& out, StartData co
         return;
     }
 
-    auto bl = data.defaultBlock.resolveBlock(data.defaultBlock.id).getBlock();
+    auto bl = data.defaultBlock.resolveBlock((int)data.defaultBlock.id).getBlock();
     if (bl == nullptr) {
         sendText<LogLevel::Error>(player, "获取默认方块失败");
         return;
@@ -158,7 +158,7 @@ const auto reset = [](CommandOrigin const& ori, CommandOutput& out) {
 
 
 void _setupTemplateCommand() {
-    auto& cmd = ll::command::CommandRegistrar::getInstance().getOrCreateCommand("plo");
+    auto& cmd = ll::command::CommandRegistrar::getInstance().getOrCreateCommand(COMMAND_NAME);
 
     // plo template record start <int start> <int end> <int road> <bool fillBedrock> <Block defaultBlock>
     cmd.overload<StartData>()

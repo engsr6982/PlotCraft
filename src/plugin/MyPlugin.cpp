@@ -18,7 +18,6 @@
 #include "mc/server/commands/ServerCommandOrigin.h"
 #include "mc/world/Minecraft.h"
 #include "plotcraft/Config.h"
-#include "plotcraft/EconomyQueue.h"
 #include "plotcraft/command/Command.h"
 #include "plotcraft/core/PlotDimension.h"
 #include "plotcraft/data/PlayerNameDB.h"
@@ -70,12 +69,11 @@ bool MyPlugin::load() {
     if (!fs::exists(dataDir)) fs::create_directories(dataDir);
 
     logger.info("加载数据...");
-    plo::config::loadConfig();
+    plo::Config::loadConfig();
     ll::i18n::load(langDir);
     plo::data::PlotDBStorage::getInstance().load();
     plo::data::PlayerNameDB::getInstance().initPlayerNameDB();
-    plo::EconomyQueue::getInstance().load();
-    plo::utils::EconomySystem::getInstance().updateConfig(plo::config::cfg.economy);
+    plo::EconomySystem::getInstance().update(&plo::Config::cfg.economy);
 
     return true;
 }
@@ -87,11 +85,11 @@ bool MyPlugin::enable() {
     logger.info("Enabling...");
     logger.info("注册 命令、事件...");
 
-    auto& cfg       = plo::config::cfg;
-    auto& configDir = self.getConfigDir();
-    if (cfg.generator.type == plo::config::PlotGeneratorType::Template) {
+    auto& cfg       = plo::Config::cfg;
+    auto& ConfigDir = self.getConfigDir();
+    if (cfg.generator.type == plo::PlotGeneratorType::Template) {
         logger.info("检测到使用模板生成器，加载地皮模板...");
-        if (plo::core::TemplateManager::loadTemplate((configDir / cfg.generator.templateFile).string())) {
+        if (plo::core::TemplateManager::loadTemplate((ConfigDir / cfg.generator.templateFile).string())) {
             logger.info("模板 \"{}\" 已加载", cfg.generator.templateFile);
         } else {
             logger.error("加载模板 \"{}\" 失败，请检查配置文件", cfg.generator.templateFile);
@@ -108,9 +106,9 @@ bool MyPlugin::enable() {
     more_dimensions::CustomDimensionManager::getInstance().addDimension<plo::core::PlotDimension>("plot");
 #endif
 
-    plo::event::registerEventListener();                          // 注册事件监听器
-    plo::command::registerCommand();                              // 注册命令
-    plo::data::PlotDBStorage::getInstance().tryStartSaveThread(); // 尝试启动自动保存线程
+    plo::event::registerEventListener();                      // 注册事件监听器
+    plo::command::registerCommand();                          // 注册命令
+    plo::data::PlotDBStorage::getInstance().initSaveThread(); // 尝试启动自动保存线程
 
     return true;
 }

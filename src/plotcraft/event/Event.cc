@@ -25,18 +25,18 @@
 #include "mc/world/level/material/Material.h"
 #include "mc/world/phys/HitResult.h"
 #include "plotcraft/Config.h"
-#include "plotcraft/EconomyQueue.h"
-#include "plotcraft/core/PPos.h"
-#include "plotcraft/core/Utils.h"
+#include "plotcraft/Global.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/data/PlotMetadata.h"
 #include "plotcraft/event/PlotEvents.h"
+#include "plotcraft/math/PlotPos.h"
 #include "plotcraft/utils/Mc.h"
 #include "plotcraft/utils/Utils.h"
 #include "plugin/MyPlugin.h"
 #include <memory>
 #include <string>
+
 
 #include "EventHook.h"
 #include "RuntimeMap.h"
@@ -75,8 +75,6 @@ ll::event::ListenerPtr mPlayerAttackBlockEvent;   // 玩家攻击方块
 ll::event::ListenerPtr mPlayerDropItemEvent;      // 玩家丢弃物品
 
 namespace plo::event {
-using namespace core;
-
 bool CheckPerm(PlotDBStorage* pdb, PlotID const& id, UUIDs const& uuid, bool ignoreAdmin) {
     PlotDBStorage* db = pdb ? pdb : &PlotDBStorage::getInstance();
     return db->getPlayerPermission(uuid, id, ignoreAdmin) != PlotPermission::None;
@@ -91,7 +89,7 @@ bool registerEventListener() {
 
     // My events
     initPlotEventScheduler(); // 初始化地皮事件调度器
-    if (config::cfg.plotWorld.inPlotCanFly) {
+    if (Config::cfg.plotWorld.inPlotCanFly) {
         mPlayerEnterPlotEvent = bus->emplaceListener<PlayerEnterPlot>([pdb](PlayerEnterPlot& e) {
             auto pl = e.getPlayer();
             if (pl == nullptr) return;
@@ -99,7 +97,7 @@ bool registerEventListener() {
             auto const gamemode = pl->getPlayerGameType();
             if (gamemode == GameType::Creative || gamemode == GameType::Spectator) return; // 不处理创造模式和旁观模式
 
-            auto pps   = PPos(pl->getPosition());
+            auto pps   = PlotPos(pl->getPosition());
             auto level = pdb->getPlayerPermission(pl->getUuid().asString(), pps.toString(), true);
 
             if (level == PlotPermission::Owner || level == PlotPermission::Shared) {
@@ -128,7 +126,6 @@ bool registerEventListener() {
     mPlayerJoinEvent = bus->emplaceListener<ll::event::PlayerJoinEvent>([ndb, pdb](ll::event::PlayerJoinEvent& e) {
         if (e.self().isSimulatedPlayer()) return true; // skip simulated player
         ndb->insertPlayer(e.self());
-        EconomyQueue::getInstance().transfer(e.self());
         pdb->initPlayerSetting(e.self().getUuid().asString());
         return true;
     });
@@ -136,10 +133,10 @@ bool registerEventListener() {
     mPlayerDestroyBlockEvent =
         bus->emplaceListener<ll::event::PlayerDestroyBlockEvent>([pdb](ll::event::PlayerDestroyBlockEvent& ev) {
             auto& player = ev.self();
-            if (player.getDimensionId() != getPlotDimensionId()) return true; // 被破坏的方块不在地皮世界
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true; // 被破坏的方块不在地皮世界
 
             auto const& blockPos = ev.pos();
-            auto        pps      = PPos(blockPos);
+            auto        pps      = PlotPos(blockPos);
 
             debugger("[DestroyBlock]: " << blockPos.toString());
 
@@ -160,10 +157,10 @@ bool registerEventListener() {
     mPlayerPlaceingBlockEvent =
         bus->emplaceListener<ll::event::PlayerPlacingBlockEvent>([pdb](ll::event::PlayerPlacingBlockEvent& ev) {
             auto& player = ev.self();
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& blockPos = mc::face2Pos(ev.pos(), ev.face()); // 计算实际放置位置
-            auto        pps      = PPos(blockPos);
+            auto        pps      = PlotPos(blockPos);
 
             debugger("[PlaceingBlock]: " << blockPos.toString());
 
@@ -183,10 +180,10 @@ bool registerEventListener() {
     mPlayerUseItemOnEvent =
         bus->emplaceListener<ll::event::PlayerInteractBlockEvent>([pdb](ll::event::PlayerInteractBlockEvent& e) {
             auto& player = e.self();
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& vec3 = e.clickPos();
-            auto        pps  = PPos(vec3);
+            auto        pps  = PlotPos(vec3);
 
             debugger("[UseItemOn]: " << e.item().getTypeName() << ", 位置: " << vec3.toString());
 
@@ -248,7 +245,7 @@ bool registerEventListener() {
 
     mFireSpreadEvent = bus->emplaceListener<ll::event::FireSpreadEvent>([pdb](ll::event::FireSpreadEvent& e) {
         auto const& pos  = e.pos();
-        auto        pps  = PPos(pos);
+        auto        pps  = PlotPos(pos);
         auto const  meta = pdb->getPlot(pps.getPlotID());
 
         if (meta) {
@@ -262,10 +259,10 @@ bool registerEventListener() {
     mPlayerAttackEntityEvent =
         bus->emplaceListener<ll::event::PlayerAttackEvent>([pdb](ll::event::PlayerAttackEvent& e) {
             auto& player = e.self();
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& pos = e.target().getPosition();
-            auto        pps = PPos(pos);
+            auto        pps = PlotPos(pos);
 
             debugger("[AttackEntity]: " << e.target().getTypeName() << ", 位置: " << pos.toString());
 
@@ -292,10 +289,10 @@ bool registerEventListener() {
     mPlayerPickUpItemEvent =
         bus->emplaceListener<ll::event::PlayerPickUpItemEvent>([pdb](ll::event::PlayerPickUpItemEvent& e) {
             auto& player = e.self();
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& pos = e.itemActor().getPosition();
-            auto        pps = PPos(pos);
+            auto        pps = PlotPos(pos);
 
             debugger("[PickUpItem]: " << e.itemActor().getTypeName() << ", 位置: " << pos.toString());
 
@@ -317,10 +314,10 @@ bool registerEventListener() {
     mPlayerInteractBlockEvent =
         bus->emplaceListener<ll::event::PlayerInteractBlockEvent>([pdb](ll::event::PlayerInteractBlockEvent& e) {
             auto& player = e.self();
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             auto const& pos = e.blockPos(); // 交互的方块位置
-            auto        pps = PPos(pos);
+            auto        pps = PlotPos(pos);
             auto const& bn  = e.block()->getTypeName();
 
             debugger("[InteractBlock]: " << pos.toString());
@@ -355,7 +352,7 @@ bool registerEventListener() {
         });
 
     mPlayerUseItemEvent = bus->emplaceListener<ll::event::PlayerUseItemEvent>([](ll::event::PlayerUseItemEvent& ev) {
-        if (ev.self().getDimensionId() != getPlotDimensionId()) return true;
+        if (ev.self().getDimensionId() != getPlotWorldDimensionId()) return true;
         if (!StringFind(ev.item().getTypeName(), "bucket")) return true;
 
         auto& player = ev.self();
@@ -371,7 +368,7 @@ bool registerEventListener() {
 
         debugger("[UseItem]: " << item.getTypeName() << ", 位置: " << pos.toString() << ", 方块: " << bl.getTypeName());
 
-        auto pps = PPos(pos);
+        auto pps = PlotPos(pos);
         if (pps.isValid() && pps.isPosOnBorder(pos)) {
             ev.cancel();
             UpdateBlockPacket(
@@ -392,11 +389,11 @@ bool registerEventListener() {
             if (!pl.has_value()) return true;
             Player& player = pl.value();
 
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             debugger("[AttackBlock]: Pos: " << ev.getPos().toString());
 
-            auto pps = PPos(ev.getPos());
+            auto pps = PlotPos(ev.getPos());
             if (!pps.isValid()) return true;
             if (CheckPerm(nullptr, pps.getPlotID(), player.getUuid().asString())) return true;
 
@@ -413,11 +410,11 @@ bool registerEventListener() {
     mArmorStandSwapItemEvent =
         bus->emplaceListener<more_events::ArmorStandSwapItemEvent>([](more_events::ArmorStandSwapItemEvent& ev) {
             Player& player = ev.getPlayer();
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             debugger("[ArmorStandSwapItem]: executed");
 
-            auto pps = PPos(player.getPosition());
+            auto pps = PlotPos(player.getPosition());
             if (!pps.isValid()) return true;
             if (CheckPerm(nullptr, pps.getPlotID(), player.getUuid().asString())) return true;
 
@@ -433,11 +430,11 @@ bool registerEventListener() {
     mPlayerDropItemEvent =
         bus->emplaceListener<more_events::PlayerDropItemEvent>([](more_events::PlayerDropItemEvent& ev) {
             Player& player = ev.getPlayer();
-            if (player.getDimensionId() != getPlotDimensionId()) return true;
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return true;
 
             debugger("[PlayerDropItem]: executed");
 
-            auto pps = PPos(player.getPosition());
+            auto pps = PlotPos(player.getPosition());
             if (!pps.isValid()) return true;
 
             if (CheckPerm(nullptr, pps.getPlotID(), player.getUuid().asString())) return true;
@@ -451,33 +448,33 @@ bool registerEventListener() {
 
     // 可开关事件（作用于地皮世界）
     mSpawningMobEvent = bus->emplaceListener<ll::event::SpawningMobEvent>([](ll::event::SpawningMobEvent& e) {
-        if (e.blockSource().getDimensionId() != getPlotDimensionId()) return true;
+        if (e.blockSource().getDimensionId() != getPlotWorldDimensionId()) return true;
 
-        auto const& type = e.identifier().getFullName();
+        // auto const& type = e.identifier().getFullName();
 
-        debugger("[SpawningMob]: " << type);
+        // debugger("[SpawningMob]: " << type);
 
-        if (config::cfg.plotWorld.spawnMob) return true;
+        if (Config::cfg.plotWorld.spawnMob) return true;
 
         e.cancel();
         return true;
     });
 
-    if (config::cfg.plotWorld.eventListener.onSculkSpreadListener) {
+    if (Config::cfg.plotWorld.eventListener.onSculkSpreadListener) {
         mSculkSpreadEvent = bus->emplaceListener<more_events::SculkSpreadEvent>([](more_events::SculkSpreadEvent& ev) {
             auto bs = ev.getBlockSource();
             if (bs.has_value())
-                if (bs->getDimensionId() == getPlotDimensionId()) ev.cancel(); // 地皮世界
+                if (bs->getDimensionId() == getPlotWorldDimensionId()) ev.cancel(); // 地皮世界
             return true;
         });
     }
 
-    if (config::cfg.plotWorld.eventListener.onSculkBlockGrowthListener) {
+    if (Config::cfg.plotWorld.eventListener.onSculkBlockGrowthListener) {
         mSculkBlockGrowthEvent =
             bus->emplaceListener<more_events::SculkBlockGrowthEvent>([](more_events::SculkBlockGrowthEvent& ev) {
                 auto bs = ev.getBlockSource();
                 if (bs.has_value())
-                    if (bs->getDimensionId() == getPlotDimensionId()) ev.cancel(); // 地皮世界
+                    if (bs->getDimensionId() == getPlotWorldDimensionId()) ev.cancel(); // 地皮世界
                 return true;
             });
     }

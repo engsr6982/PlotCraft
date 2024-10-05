@@ -3,13 +3,13 @@
 namespace plo::event {
 
 // 玩家进入地皮
-Player*     PlayerEnterPlot::getPlayer() const { return mPlayer; }
-PPos const& PlayerEnterPlot::getPos() const { return mPos; }
+Player*        PlayerEnterPlot::getPlayer() const { return mPlayer; }
+PlotPos const& PlayerEnterPlot::getPos() const { return mPos; }
 
 
 // 玩家离开地皮
-Player*     PlayerLeavePlot::getPlayer() const { return mPlayer; }
-PPos const& PlayerLeavePlot::getPos() const { return mPos; }
+Player*        PlayerLeavePlot::getPlayer() const { return mPlayer; }
+PlotPos const& PlayerLeavePlot::getPos() const { return mPos; }
 
 
 // 玩家评论地皮之前

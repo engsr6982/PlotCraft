@@ -27,7 +27,7 @@ void PlotGUI(Player& player, PlotMetadataPtr pt, bool ret) {
     SimpleForm fm{PLUGIN_TITLE};
 
     auto& ndb = PlayerNameDB::getInstance();
-    auto& cfg = config::cfg;
+    auto& cfg = Config::cfg;
 
     bool const hasOwner       = !pt->getPlotOwner().empty();                                   // 是否有主人
     bool const hasSale        = pt->isSale();                                                  // 是否出售
@@ -42,7 +42,7 @@ void PlotGUI(Player& player, PlotMetadataPtr pt, bool ret) {
         pt->getPlotName(),
         hasOwner ? hasSale ? "是" : "否" : "是",
         hasOwner ? hasSale ? std::to_string(pt->getSalePrice()) : "null"
-                 : std::to_string(config::cfg.plotWorld.buyPlotPrice)
+                 : std::to_string(Config::cfg.plotWorld.buyPlotPrice)
     ));
 
 
@@ -51,8 +51,8 @@ void PlotGUI(Player& player, PlotMetadataPtr pt, bool ret) {
 
     if (((isOwner || isSharedMember) && utils::some(cfg.allowedPlotTeleportDim, player.getDimensionId().id)) || isAdmin)
         fm.appendButton("传送到此地皮", "textures/ui/move", "path", [pt](Player& pl) {
-            auto const v3 = PPos{pt->getX(), pt->getZ()}.getSafestPos();
-            pl.teleport(v3, getPlotDimensionId());
+            auto const v3 = PlotPos{pt->getX(), pt->getZ()}.getSafestPos();
+            pl.teleport(v3, getPlotWorldDimensionId());
             sendText(pl, "传送成功");
         });
 
