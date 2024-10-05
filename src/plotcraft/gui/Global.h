@@ -10,7 +10,6 @@
 #include "mc/world/item/ItemStackBase.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "plotcraft/Config.h"
-#include "plotcraft/EconomyQueue.h"
 #include "plotcraft/Global.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotDBStorage.h"

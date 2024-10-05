@@ -412,4 +412,32 @@ bool EconomySystem::reduce(mce::UUID const& uuid, llong amount) const {
 }
 
 
+bool EconomySystem::transfer(Player& player, Player& target, llong amount) const {
+    PreCheckConfig;
+    if (!mConfig->enabled) return true; // 未启用经济系统
+
+    if (reduce(player, amount)) {  // 先扣钱
+        if (add(target, amount)) { // 再加钱
+            return true;
+        } else {
+            add(player, amount); // 失败，加回来
+        }
+    }
+    return false; // 扣钱失败
+}
+bool EconomySystem::transfer(mce::UUID const& uuid, mce::UUID const& target, llong amount) const {
+    PreCheckConfig;
+    if (!mConfig->enabled) return true; // 未启用经济系统
+
+    if (reduce(uuid, amount)) {    // 先扣钱
+        if (add(target, amount)) { // 再加钱
+            return true;
+        } else {
+            add(uuid, amount); // 失败，加回来
+        }
+    }
+    return false; // 扣钱失败
+}
+
+
 } // namespace plo

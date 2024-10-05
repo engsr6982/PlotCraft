@@ -18,7 +18,6 @@
 #include "mc/server/commands/ServerCommandOrigin.h"
 #include "mc/world/Minecraft.h"
 #include "plotcraft/Config.h"
-#include "plotcraft/EconomyQueue.h"
 #include "plotcraft/command/Command.h"
 #include "plotcraft/core/PlotDimension.h"
 #include "plotcraft/data/PlayerNameDB.h"
@@ -74,7 +73,6 @@ bool MyPlugin::load() {
     ll::i18n::load(langDir);
     plo::data::PlotDBStorage::getInstance().load();
     plo::data::PlayerNameDB::getInstance().initPlayerNameDB();
-    plo::EconomyQueue::getInstance().load();
     plo::EconomySystem::getInstance().update(&plo::Config::cfg.economy);
 
     return true;

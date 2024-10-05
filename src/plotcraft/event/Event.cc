@@ -25,7 +25,6 @@
 #include "mc/world/level/material/Material.h"
 #include "mc/world/phys/HitResult.h"
 #include "plotcraft/Config.h"
-#include "plotcraft/EconomyQueue.h"
 #include "plotcraft/Global.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotDBStorage.h"
@@ -127,7 +126,6 @@ bool registerEventListener() {
     mPlayerJoinEvent = bus->emplaceListener<ll::event::PlayerJoinEvent>([ndb, pdb](ll::event::PlayerJoinEvent& e) {
         if (e.self().isSimulatedPlayer()) return true; // skip simulated player
         ndb->insertPlayer(e.self());
-        EconomyQueue::getInstance().transfer(e.self());
         pdb->initPlayerSetting(e.self().getUuid().asString());
         return true;
     });

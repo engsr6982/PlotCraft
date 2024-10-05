@@ -234,7 +234,7 @@ void _SetUpMergeCommand() {
             return;
         }
 
-        int   price = Config::calculateMergePlotPrice(count);
+        int   price = (int)Config::calculateMergePlotPrice(count);
         auto& eco   = EconomySystem::getInstance();
         if (!eco.reduce(*player, price)) {
             eco.sendNotEnoughMessage(*player, price);

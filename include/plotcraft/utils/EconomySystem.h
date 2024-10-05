@@ -56,6 +56,12 @@ public:
     bool reduce(mce::UUID const& uuid, llong amount) const;
 
     /**
+     * @brief 转移玩家余额
+     */
+    bool transfer(Player& player, Player& target, llong amount) const;
+    bool transfer(mce::UUID const& uuid, mce::UUID const& target, llong amount) const;
+
+    /**
      * @brief 生成经济花费提示模板
      */
     string getCostMessage(Player& player, llong cost) const;

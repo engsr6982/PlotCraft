@@ -1,4 +1,5 @@
 #include "Global.h"
+#include "plotcraft/utils/Mc.h"
 
 
 namespace plo::gui {
@@ -53,15 +54,15 @@ void _plotShopShowPlot(Player& player, PlotMetadataPtr pt) {
 
 void _buyPlot(Player& player, PlotMetadataPtr pt) {
 
-    auto* impl = &data::PlotDBStorage::getInstance();
-    auto& cfg  = Config::cfg.plotWorld;
+    auto* db  = &data::PlotDBStorage::getInstance();
+    auto& cfg = Config::cfg.plotWorld;
 
-    if (static_cast<int>(impl->getPlots(player.getUuid().asString()).size()) >= cfg.maxBuyPlotCount) {
+    if (static_cast<int>(db->getPlots(player.getUuid().asString()).size()) >= cfg.maxBuyPlotCount) {
         sendText<LogLevel::Warn>(player, "你已经购买了太多地皮，无法购买新的地皮。");
         return;
     }
 
-    auto*      ms       = &EconomySystem::getInstance();
+    auto*      economy  = &EconomySystem::getInstance();
     bool const hasOwner = !pt->getPlotOwner().empty();
     bool const hasSale  = pt->isSale();
     bool const fromSale = hasOwner && hasSale; // 是否从出售地皮购买(玩家)
@@ -82,11 +83,11 @@ void _buyPlot(Player& player, PlotMetadataPtr pt) {
 
     ModalForm{
         PLUGIN_TITLE,
-        fmt::format("是否确认购买地皮 {} ?\n{}", pt->getPlotID(), ms->getCostMessage(player, price)),
+        fmt::format("是否确认购买地皮 {} ?\n{}", pt->getPlotID(), economy->getCostMessage(player, price)),
         "确认",
         "返回"
     }
-        .sendTo(player, [pt, price, fromSale, ms, impl, cfg](Player& pl, ModalFormResult const& dt, FormCancelReason) {
+        .sendTo(player, [pt, fromSale, economy, db, cfg](Player& pl, ModalFormResult const& dt, FormCancelReason) {
             if (!dt) {
                 sendText(pl, "表单已放弃");
                 return;
@@ -96,42 +97,39 @@ void _buyPlot(Player& player, PlotMetadataPtr pt) {
                 return;
             }
 
-            if (ms->reduce(pl, price)) {
-                pev::PlayerBuyPlotAfter ev{&pl, pt, price};
-                auto&                   bus = ll::event::EventBus::getInstance();
-                if (fromSale) {
-                    bool const ok = impl->buyPlotFromSale(pt->getPlotID(), pl.getUuid().asString());
-                    if (ok) {
-                        // 计算税率
-                        int const tax      = (int)(cfg.playerSellPlotTax * (double)price / 100);
-                        int       newPrice = price - tax;
-                        if (newPrice < 0) newPrice = 0;
-                        // 把扣除的经济转移给出售者
-                        auto plptr = ll::service::getLevel()->getPlayer(pt->getPlotOwner());
-                        if (plptr) {
-                            ms->add(*plptr, newPrice); // 出售者(当前地皮主人)在线
-                            sendText(
-                                plptr,
-                                "玩家 {} 购买了您出售的地皮 {}, 经济 +{}",
-                                pl.getRealName(),
-                                pt->getPlotName(),
-                                newPrice
-                            );
-                        } else {
-                            EconomyQueue::getInstance().set(pt->getPlotOwner(), newPrice); // 出售者(当前地皮主人)离线
-                        }
+            if (fromSale) {
+                int _tax     = (int)(cfg.playerSellPlotTax * (double)pt->getSalePrice() / 100);
+                int newPrice = pt->getSalePrice() - _tax;
+                if (newPrice < 0) newPrice = 0;
 
-                        bus.publish(ev);
-                        sendText(pl, "地皮购买成功");
-                    } else sendText<LogLevel::Error>(pl, "地皮购买失败");
-                } else {
-                    PlotPos    ps{pt->getX(), pt->getZ()};
-                    bool const ok = impl->addPlot(ps.getPlotID(), pl.getUuid().asString(), pt->getX(), pt->getZ());
-                    if (ok) {
-                        bus.publish(ev);
-                        sendText(pl, "地皮购买成功");
-                    } else sendText<LogLevel::Error>(pl, "地皮购买失败");
+                if (!economy->transfer(pl.getUuid(), pt->getPlotOwner(), newPrice)) {
+                    sendText<LogLevel::Error>(pl, "购买地皮 {} 失败，转移经济失败", pt->getPlotID());
+                    return;
                 }
+
+                if (!db->buyPlotFromSale(pt->getPlotID(), pl.getUuid().asString())) {
+                    sendText<LogLevel::Error>(pl, "购买地皮 {} 失败", pt->getPlotID());
+                    return;
+                }
+
+                pev::PlayerBuyPlotAfter ev{&pl, pt, newPrice};
+                ll::event::EventBus::getInstance().publish(ev);
+                sendText(pl, "购买地皮 {} 成功", pt->getPlotID());
+
+            } else {
+                if (!economy->reduce(pl, cfg.buyPlotPrice)) {
+                    sendText<LogLevel::Error>(pl, "购买地皮 {} 失败", pt->getPlotID());
+                    return;
+                }
+
+                if (db->addPlot(pt->getPlotID(), pl.getUuid().asString(), pt->getX(), pt->getZ())) {
+                    pev::PlayerBuyPlotAfter ev{&pl, pt, cfg.buyPlotPrice};
+                    ll::event::EventBus::getInstance().publish(ev);
+                    sendText(pl, "购买地皮 {} 成功", pt->getPlotID());
+                    return;
+                }
+
+                sendText<LogLevel::Error>(pl, "购买地皮 {} 失败", pt->getPlotID());
             }
         });
 }
