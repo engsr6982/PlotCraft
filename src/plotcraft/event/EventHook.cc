@@ -58,7 +58,6 @@
 
 #include "Event.h"
 #include "RuntimeMap.h"
-#include "Scheduler.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/Global.h"
 #include "plotcraft/data/PlayerNameDB.h"

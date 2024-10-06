@@ -40,7 +40,6 @@
 
 #include "EventHook.h"
 #include "RuntimeMap.h"
-#include "Scheduler.h"
 #include "plotcraft/utils/Debugger.h"
 
 
@@ -87,8 +86,10 @@ bool registerEventListener() {
     auto* pdb = &data::PlotDBStorage::getInstance();
     auto* ndb = &data::PlayerNameDB::getInstance();
 
+    extern void _SetupPlotEventScheduler();
+    _SetupPlotEventScheduler(); // 初始化地皮事件调度器
+
     // My events
-    initPlotEventScheduler(); // 初始化地皮事件调度器
     if (Config::cfg.plotWorld.inPlotCanFly) {
         mPlayerEnterPlotEvent = bus->emplaceListener<PlayerEnterPlot>([pdb](PlayerEnterPlot& e) {
             auto pl = e.getPlayer();

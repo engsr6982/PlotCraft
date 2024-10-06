@@ -12,4 +12,6 @@ int getPlotWorldDimensionId() {
 #endif
 }
 
+ll::schedule::GameTickScheduler GlobalPlotScheduler;
+
 } // namespace plot

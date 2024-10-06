@@ -1,4 +1,5 @@
 #pragma once
+#include "ll/api/schedule/Scheduler.h"
 #include "mc/deps/core/mce/UUID.h"
 #include "mc/world/level/BlockPos.h"
 #include <nlohmann/json.hpp>
@@ -40,6 +41,10 @@ using CommentID = int;
 
 
 PLAPI int getPlotWorldDimensionId();
+
+
+using ll::chrono_literals::operator""_tick;
+PLAPI extern ll::schedule::GameTickScheduler GlobalPlotScheduler;
 
 
 } // namespace plot
