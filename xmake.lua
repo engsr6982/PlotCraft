@@ -10,7 +10,7 @@ add_repositories("engsr6982-repo https://github.com/engsr6982/xmake-repo.git")
 add_requires(
     "levilamina 0.13.5"
 )
-add_requires("more_events 0.1.0")
+add_requires("more_events 0.2.0")
 
 if not has_config("vs_runtime") then
     set_runtimes("MD")
