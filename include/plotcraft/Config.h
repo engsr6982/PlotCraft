@@ -7,7 +7,6 @@
 #include <vector>
 
 
-
 namespace plot {
 
 enum class PlotGeneratorType : int { Default, Template };
@@ -42,11 +41,6 @@ struct Config {
         int    maxMergePlotCount    = 4;    // 最大合并地皮数量
         int    baseMergePlotPrice   = 1000; // 基础合并地皮价格
         double mergePriceMultiplier = 1.1;  // 合并价格倍率，默认为1.0（保持基础价格不变）
-
-        struct {
-            bool onSculkSpreadListener{true};
-            bool onSculkBlockGrowthListener{true};
-        } eventListener;
     } plotWorld;
 
     struct {

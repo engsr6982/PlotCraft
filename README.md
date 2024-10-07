@@ -15,6 +15,7 @@
     - 按模板生成地皮
   - [x] 模板记录器
     - 制作地皮模板
+- [x] 地皮合并
 
 ## 安装
 
@@ -119,22 +120,17 @@ package("xxx")
     "templateFile": "TestTemplate.json" // 模板文件名，模板文件必须放置在 config 目录下
   },
   "economy": {
-    "enable": false, // 是否启用经济系统
-    "type": "LegacyMoney", // 经济系统类型 LegacyMoney / ScoreBoard
-    "scoreName": "", // 计分板名称
-    "economicName": "金币" // 经济名称
+    "enabled": false, // 是否启用经济系统
+    "kit": "LegacyMoney", // 经济系统类型 LegacyMoney / ScoreBoard (如果设置 LegacyMoney 则需要安装 LegacyMoney)
+    "scoreboard": "", // 计分板名称
+    "currency": "金币" // 经济名称
   },
   "plotWorld": {
     "maxBuyPlotCount": 25, // 玩家最大持有地皮数量
     "buyPlotPrice": 1000, // 购买地皮价格
     "inPlotCanFly": true, // 是否启用地皮飞行
     "playerSellPlotTax": 0.1, // 玩家出售地皮税率
-    "spawnMob": false, // 地皮世界是否生成实体
-
-    "eventListener": {
-      "onSculkSpreadListener": true, // 禁止幽匿块蔓延（地皮维度）
-      "onSculkBlockGrowthListener": true // 禁止幽匿尖啸体生成（地皮维度）
-    }
+    "spawnMob": false // 地皮世界是否生成实体
   },
   "switchDim": {
     // 地皮维度和主世界切换传送坐标，此项可在游戏中设置
