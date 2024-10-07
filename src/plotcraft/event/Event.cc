@@ -24,6 +24,7 @@
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/material/Material.h"
+#include "mc/world/phys/AABB.h"
 #include "mc/world/phys/HitResult.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/Global.h"
@@ -488,6 +489,337 @@ bool registerEventListener() {
             ev.cancel();
         });
 
+    // MoreEvents
+    mActorRideEvent = bus->emplaceListener<more_events::ActorRideEvent>([logger](more_events::ActorRideEvent& ev) {
+        if (ev.getPassenger().getDimensionId() != getPlotWorldDimensionId()) return;
+
+        logger->debug("[生物骑乘] executed!");
+
+        if (!ev.getPassenger().isPlayer()) return;
+
+        auto pps = PlotPos(ev.getPassenger().getPosition());
+        if (!pps.isValid()) return;
+
+        auto const& type = ev.getRided().getTypeName();
+        auto const  meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
+        if (meta) {
+            auto const& tab = meta->getPermissionTableConst();
+            if (type == "minecraft:minecart" || type == "minecraft:boat") {
+                if (tab.allowRideTrans) return;
+            } else {
+                if (tab.allowRideEntity) return;
+            }
+        }
+
+        if (ev.getPassenger().isPlayer()) {
+            auto pl = ev.getPassenger().getWeakEntity().tryUnwrap<Player>();
+            if (pl.has_value()) {
+                if (PreCheck(meta, pl->getUuid().asString())) return;
+            }
+        }
+
+        return;
+    });
+
+    mExplodeEvent = bus->emplaceListener<more_events::ExplodeEvent>([logger](more_events::ExplodeEvent& ev) {
+        auto& bs  = ev.getRegion();
+        auto& pos = ev.getPos();
+        auto& exp = ev.getExplosionRadius();
+
+        if (bs.getDimensionId() != getPlotWorldDimensionId()) return;
+
+        logger->debug("[Explode] pos: {}", pos.toString());
+
+        int   r    = (int)(exp + 1.0f);
+        auto  land = PlotPos::getPlotPosAt(pos, r);
+        auto& db   = PlotDBStorage::getInstance();
+
+        for (auto& p : land) {
+            if (p.isRadiusOnBorder(pos, r)) {
+                ev.cancel(); // 禁止破坏边框
+                return;
+            }
+
+            auto meta = db.getPlot(p.getPlotID());
+            if (meta) {
+                if (meta->getPermissionTableConst().allowExplode) {
+                    return; // 允许爆炸
+                }
+            }
+        }
+
+        ev.cancel(); // 地皮世界禁止爆炸
+    });
+
+    mFarmDecayEvent = bus->emplaceListener<more_events::FarmDecayEvent>([logger](more_events::FarmDecayEvent& ev) {
+        auto& region = ev.getBlockSource();
+        if (region.getDimensionId() != getPlotWorldDimensionId()) return;
+
+        logger->debug("[耕地退化] pos: {}", ev.getPos().toString());
+
+        auto pps = PlotPos(ev.getPos());
+        if (!pps.isValid()) return;
+
+        auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
+        if (meta) {
+            if (meta->getPermissionTableConst().allowFarmDecay) return;
+        }
+
+        ev.cancel();
+    });
+
+    mMobHurtEffectEvent =
+        bus->emplaceListener<more_events::MobHurtEffectEvent>([logger](more_events::MobHurtEffectEvent& ev) {
+            if (ev.getSelf().getDimensionId() != getPlotWorldDimensionId()) return;
+
+            logger->debug("[MobHurt] mob: {}", ev.getSelf().getTypeName());
+
+            auto pps = PlotPos(ev.getSelf().getPosition());
+            if (!pps.isValid()) return;
+
+            auto meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
+            if (meta) {
+                auto const& et  = ev.getSelf().getTypeName();
+                auto const& tab = meta->getPermissionTableConst();
+                if (tab.allowAttackPlayer && ev.getSelf().isPlayer()) return;
+                if (tab.allowAttackAnimal && TypeNameMap::AnimalEntityMap.contains(et)) return;
+                if (tab.allowAttackMob && !TypeNameMap::AnimalEntityMap.contains(et)) return;
+            }
+
+            if (ev.getSelf().isPlayer()) {
+                auto const pl = ev.getSelf().getWeakEntity().tryUnwrap<Player>();
+                if (pl.has_value()) {
+                    if (PreCheck(meta, pl->getUuid().asString())) return;
+                }
+            }
+
+            ev.cancel();
+        });
+
+    mPistonTryPushEvent =
+        bus->emplaceListener<more_events::PistonTryPushEvent>([logger](more_events::PistonTryPushEvent& ev) {
+            auto& region = ev.getRegion();
+            if (region.getDimensionId() != getPlotWorldDimensionId()) return;
+
+            logger->debug("[活塞推动方块] 目标: {}", ev.getPushPos().toString());
+
+            auto sou = PlotPos(ev.getPistonPos());
+            auto tar = PlotPos(ev.getPushPos());
+
+            if (sou.isValid() && tar.isValid() && sou == tar) {
+                if (!sou.isPosOnBorder(ev.getPushPos()) && !tar.isPosOnBorder(ev.getPushPos())) {
+                    auto const meta = PlotDBStorage::getInstance().getPlot(sou.getPlotID());
+                    if (meta) {
+                        if (meta->getPermissionTableConst().allowPistonPush) return;
+                    }
+                }
+            }
+
+            ev.cancel();
+        });
+
+    mPlayerUseItemFrameEvent =
+        bus->emplaceListener<more_events::PlayerUseItemFrameEvent>([logger](more_events::PlayerUseItemFrameEvent& ev) {
+            auto player = ev.getPlayer();
+            if (!player) return;
+            if (player->getDimensionId() != getPlotWorldDimensionId()) return;
+
+            logger->debug("[物品展示框] pos: {}", ev.getPos().toString());
+
+            auto pps = PlotPos(ev.getPos());
+            if (!pps.isValid()) return;
+
+            auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
+            if (meta) {
+                if (meta->getPermissionTableConst().useItemFrame) return;
+            }
+            if (PreCheck(meta, player->getUuid().asString())) return;
+
+            ev.cancel();
+        });
+
+    mPressurePlateTriggerEvent =
+        bus->emplaceListener<more_events::PressurePlateTriggerEvent>([logger](more_events::PressurePlateTriggerEvent& ev
+                                                                     ) {
+            auto& region = ev.getRegion();
+            auto& pos    = ev.getPos();
+            auto& entity = ev.getEntity();
+
+            if (region.getDimensionId() != getPlotWorldDimensionId()) return;
+
+            logger->debug("[压力板] pos: {} entity: {}", pos.toString(), entity.getTypeName());
+
+            auto pps = PlotPos(pos);
+            if (!pps.isValid()) return;
+
+            auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
+            if (meta) {
+                if (meta->getPermissionTableConst().usePressurePlate) return;
+            }
+
+            if (entity.isPlayer()) {
+                auto pl = entity.getWeakEntity().tryUnwrap<Player>();
+                if (pl.has_value()) {
+                    if (PreCheck(meta, pl->getUuid().asString())) return;
+                }
+            }
+
+            ev.cancel();
+        });
+
+    mProjectileSpawnEvent =
+        bus->emplaceListener<more_events::ProjectileSpawnEvent>([logger](more_events::ProjectileSpawnEvent& ev) {
+            auto actor = ev.getSpawner();
+            if (!actor) return;
+            if (actor->getDimensionId() != getPlotWorldDimensionId()) return;
+
+            logger->debug("[弹射物生成] type: {}", ev.getProjectileType());
+
+            auto pps = PlotPos(actor->getPosition());
+            if (!pps.isValid()) return;
+
+            auto const& type = ev.getProjectileType();
+
+            auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
+            if (meta) {
+                auto const& tab = meta->getPermissionTableConst();
+                if (type == "minecraft:fishing_hook" && tab.useFishingHook) return;       // 钓鱼竿
+                if (type == "minecraft:splash_potion" && tab.allowThrowPotion) return;    // 喷溅药水
+                if (type == "minecraft:lingering_potion" && tab.allowThrowPotion) return; // 滞留药水
+                if (type == "minecraft:thrown_trident" && tab.allowThrowTrident) return;  // 三叉戟
+                if (type == "minecraft:arrow" && tab.allowShoot) return;                  // 箭
+                if (type == "minecraft:crossbow" && tab.allowShoot) return;               // 弩射烟花
+                if (type == "minecraft:snowball" && tab.allowThrowSnowball) return;       // 雪球
+                if (type == "minecraft:ender_pearl" && tab.allowThrowEnderPearl) return;  // 末影珍珠
+                if (type == "minecraft:egg" && tab.allowThrowEgg) return;                 // 鸡蛋
+            }
+
+            if (actor->isPlayer()) {
+                auto pl = actor->getWeakEntity().tryUnwrap<Player>();
+                if (pl.has_value()) {
+                    if (PreCheck(meta, pl->getUuid().asString())) return;
+                }
+            }
+
+            ev.cancel();
+        });
+
+    mRedstoneUpdateEvent =
+        bus->emplaceListener<more_events::RedstoneUpdateEvent>([logger](more_events::RedstoneUpdateEvent& ev) {
+            auto& region = ev.getBlockSource();
+            if (region.getDimensionId() != getPlotWorldDimensionId()) return;
+
+            logger->debug("[RedstoneUpdate] pos: {}", ev.getPos().toString());
+
+            auto pps = PlotPos(ev.getPos());
+            if (!pps.isValid()) return;
+
+            auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
+            if (meta) {
+                if (meta->getPermissionTableConst().allowRedstoneUpdate) return;
+            }
+
+            ev.cancel();
+        });
+
+    mWitherDestroyBlockEvent =
+        bus->emplaceListener<more_events::WitherDestroyBlockEvent>([logger](more_events::WitherDestroyBlockEvent& ev) {
+            auto& region = ev.getRegion();
+            if (region.getDimensionId() != getPlotWorldDimensionId()) return;
+
+            logger->debug("[凋零破坏方块] executed!");
+
+            auto& bb   = ev.getAABB();
+            auto  land = PlotPos::getPlotPosAt(bb.min, bb.max);
+            auto& db   = PlotDBStorage::getInstance();
+
+            for (auto const& p : land) {
+                if (p.isAABBOnBorder(bb.min, bb.max)) {
+                    my_plugin::MyPlugin::getInstance().getSelf().getLogger().warn(
+                        "Wither try to destroy block on border of plot {} at {}",
+                        p.getPlotID(),
+                        bb.toString()
+                    );
+                    ev.cancel();
+                    return; // 禁止破坏边框
+                }
+
+                auto meta = db.getPlot(p.getPlotID());
+                if (meta) {
+                    if (!meta->getPermissionTableConst().allowWitherDestroy) {
+                        ev.cancel();
+                        return;
+                    }
+                } else {
+                    ev.cancel();
+                    return;
+                }
+            }
+        });
+
+    mMossFertilizerEvent =
+        bus->emplaceListener<more_events::MossFertilizerEvent>([logger, db](more_events::MossFertilizerEvent& ev) {
+            if (ev.getRegion().getDimensionId() != getPlotWorldDimensionId()) return;
+
+            logger->debug("[MossSpread] {}", ev.getPos().toString());
+
+            auto const& pos = ev.getPos();
+            auto        pps = PlotPos(pos);
+
+            auto land = db->getPlot(pps.getPlotID());
+            if (!land || !land->getPermissionTableConst().useBoneMeal) {
+                ev.cancel();
+                return;
+            }
+
+            auto lds = PlotPos::getPlotPosAt(pos - 2, pos + 2);
+            for (auto const& p : lds) {
+                if (p.isRadiusOnBorder(pos, 2)) {
+                    ev.cancel();
+                    return;
+                }
+            }
+        });
+
+    mLiquidFlowEvent = bus->emplaceListener<more_events::LiquidFlowEvent>([](more_events::LiquidFlowEvent& ev) {
+        auto& bs = ev.getBlockSource();
+        if (bs.getDimensionId() != getPlotWorldDimensionId()) return;
+
+        auto& sou = ev.getLiquidPos();
+        auto  pps = PlotPos(sou);
+        if (!pps.isValid()) {
+            ev.cancel(); // 禁止在非领地流动
+            return;
+        }
+
+        if (pps.isPosOnBorder(sou)) {
+            ev.cancel(); // 禁止在边框流动
+            return;
+        }
+    });
+
+    mSculkCatalystAbsorbExperienceEvent = bus->emplaceListener<more_events::SculkCatalystAbsorbExperienceEvent>(
+        [logger](more_events::SculkCatalystAbsorbExperienceEvent& ev) {
+            auto& actor  = ev.getDiedActor();
+            auto& region = actor.getDimensionBlockSource();
+            if (region.getDimensionId() != getPlotWorldDimensionId()) return;
+
+            auto pos = actor.getBlockPosCurrentlyStandingOn(&actor);
+
+            logger->debug("[SculkCatalystAbsorbExperience] Pos: {}", pos.toString());
+
+            auto pps = PlotPos(pos);
+            if (!pps.isValid()) {
+                ev.cancel(); // 禁止在非领地蔓延
+                return;
+            }
+
+            if (pps.isAABBOnBorder(pos - 9, pos + 9)) {
+                ev.cancel(); // 禁止在边框蔓延
+                return;
+            }
+        }
+    );
     return true;
 }
 
@@ -517,7 +849,9 @@ bool unRegisterEventListener() {
     bus.removeListener(mProjectileSpawnEvent);
     bus.removeListener(mRedstoneUpdateEvent);
     bus.removeListener(mWitherDestroyBlockEvent);
-
+    bus.removeListener(mMossFertilizerEvent);
+    bus.removeListener(mLiquidFlowEvent);
+    bus.removeListener(mSculkCatalystAbsorbExperienceEvent);
     return true;
 }
 

@@ -52,6 +52,7 @@ struct PlotPermissionTable {
     bool allowAxePeeled{false};          // 允许斧头去皮
     bool allowAttackEnderCrystal{false}; // 允许攻击末地水晶
     bool allowDestroyArmorStand{false};  // 允许破坏盔甲架
+    // bool allowLiquidFlow{true};          // 允许液体流动
 
     bool useAnvil{false};            // 使用铁砧
     bool useBarrel{false};           // 使用木桶
