@@ -1,32 +1,28 @@
 #include "plotcraft/math/PlotPos.h"
 #include "fmt/core.h"
-#include "fmt/format.h"
 #include "ll/api/service/Bedrock.h"
-#include "magic_enum.hpp"
 #include "mc/enums/BlockUpdateFlag.h"
 #include "mc/math/Vec3.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
-#include "mc/world/level/block/registry/BlockTypeRegistry.h"
 #include "mc/world/level/dimension/Dimension.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/Global.h"
 #include "plotcraft/core/TemplateManager.h"
 #include "plotcraft/data/PlotDBStorage.h"
+#include "plotcraft/math/PlotCross.h"
+#include "plotcraft/math/PlotDirection.h"
+#include "plotcraft/math/PlotRoad.h"
 #include "plotcraft/math/Polygon.h"
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
-#include <stdexcept>
-#include <utility>
 #include <vector>
 
 
-namespace plo {
-using TemplateManager = core::TemplateManager;
+namespace plot {
 
 
-// !Class: PlotPos
 PlotPos::PlotPos(int x, int z) : mX(x), mZ(z) {
     if (data::PlotDBStorage::getInstance()._initClass(*this)) {
         return; // 从数据库中加载数据
@@ -37,7 +33,7 @@ PlotPos::PlotPos(int x, int z) : mX(x), mZ(z) {
     Vec3 min, max;
 
     // 计算地皮的四个顶点
-    if (!TemplateManager::isUseTemplate()) {
+    if (!core::TemplateManager::isUseTemplate()) {
         // DefaultGenerator
         int total = cfg.plotWidth + cfg.roadWidth;
         min       = Vec3{x * total, -64, z * total};
@@ -45,8 +41,8 @@ PlotPos::PlotPos(int x, int z) : mX(x), mZ(z) {
 
     } else {
         // TemplateGenerator
-        int r     = TemplateManager::getCurrentTemplateRoadWidth();
-        int total = TemplateManager::getCurrentTemplateChunkNum() * 16;
+        int r     = core::TemplateManager::getCurrentTemplateRoadWidth();
+        int total = core::TemplateManager::getCurrentTemplateChunkNum() * 16;
         min       = Vec3{x * total + r, -64, z * total + r};
         max       = Vec3{min.x + total - r, 320, min.z + total - r};
     }
@@ -64,9 +60,10 @@ PlotPos::PlotPos(const Vec3& vec3) {
     auto& cfg = Config::cfg.generator;
 
     // 计算总长度
-    bool const isUseTemplate = TemplateManager::isUseTemplate();
-    int const  roadWidth     = isUseTemplate ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
-    int total  = isUseTemplate ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
+    bool const isUseTemplate = core::TemplateManager::isUseTemplate();
+    int const  roadWidth     = isUseTemplate ? core::TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
+    int        total =
+        isUseTemplate ? (core::TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
     int width  = isUseTemplate ? (total - (roadWidth * 2)) : cfg.plotWidth;
     int localX = static_cast<int>(std::floor(vec3.x)) % total;
     int localZ = static_cast<int>(std::floor(vec3.z)) % total;
@@ -79,7 +76,7 @@ PlotPos::PlotPos(const Vec3& vec3) {
     Vec3 min, max;
     bool isValid = true;
 
-    if (!TemplateManager::isUseTemplate()) {
+    if (!core::TemplateManager::isUseTemplate()) {
         // DefaultGenerator
         if (localX < 0) localX += total;
         if (localZ < 0) localZ += total;
@@ -156,7 +153,7 @@ bool PlotPos::isRadiusOnBorder(BlockPos const& center, int radius) const {
     if (!isValid()) {
         return false;
     }
-    return Polygon::isCircleOnEdge(mVertexs, center, radius);
+    return Polygon::isCircleOnEdge(mVertexs, center, (float)radius);
 }
 string PlotPos::toString() const {
 #if !defined(DEBUG)
@@ -382,8 +379,8 @@ bool PlotPos::isPointInPolygon(const Vec3& point, Vertexs const& polygon) {
     return Polygon::isPointInPolygon(polygon, point);
 }
 int PlotPos::getSurfaceYStatic() {
-    return TemplateManager::isUseTemplate() ? (TemplateManager::mTemplateData.template_offset + 1)
-                                            : -64 + (Config::cfg.generator.subChunkNum * 16);
+    return core::TemplateManager::isUseTemplate() ? (core::TemplateManager::mTemplateData.template_offset + 1)
+                                                  : -64 + (Config::cfg.generator.subChunkNum * 16);
 }
 Vertexs PlotPos::getAABBVertexs(BlockPos const& min, BlockPos const& max) {
     return Polygon::getAABBAroundVertexs(min, max);
@@ -393,8 +390,9 @@ std::vector<PlotPos> PlotPos::getPlotPosAt(BlockPos const& min, BlockPos const& 
 
     // 获取配置信息
     auto& cfg           = Config::cfg.generator;
-    bool  isUseTemplate = TemplateManager::isUseTemplate();
-    int total = isUseTemplate ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
+    bool  isUseTemplate = core::TemplateManager::isUseTemplate();
+    int   total =
+        isUseTemplate ? (core::TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
 
     // 计算可能涉及的地皮范围
     int minPlotX = (int)std::floor(static_cast<double>(min.x) / total);
@@ -432,8 +430,9 @@ std::vector<PlotPos> PlotPos::getPlotPosAt(BlockPos const& center, int radius) {
 
     // 获取配置信息
     auto& cfg           = Config::cfg.generator;
-    bool  isUseTemplate = TemplateManager::isUseTemplate();
-    int total = isUseTemplate ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
+    bool  isUseTemplate = core::TemplateManager::isUseTemplate();
+    int   total =
+        isUseTemplate ? (core::TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
 
     // 计算可能涉及的地皮范围
     int minPlotX = (int)std::floor((center.x - radius) / static_cast<double>(total));
@@ -487,326 +486,4 @@ void PlotPos::fillAABB(const BlockPos& min, const BlockPos& max, const Block& bl
 }
 
 
-// !Class: PlotCross
-PlotCross::PlotCross(int x, int z) : mX(x), mZ(z) {
-    data::PlotDBStorage::getInstance()._initClass(*this);
-    auto const& cfg = Config::cfg.generator;
-
-    auto& min = mDiagonPos.first;
-    auto& max = mDiagonPos.second;
-
-    bool const temp  = TemplateManager::isUseTemplate();
-    int const  road  = temp ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
-    int const  width = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
-
-    min.x = mX * width + width - road;
-    min.z = mZ * width + width - road;
-
-    max.x = min.x + road - 1;
-    max.z = min.z + road - 1;
-
-    min.y  = -64;
-    max.y  = 320;
-    mValid = true;
-}
-PlotCross::PlotCross(Vec3 const& vec3) {
-    data::PlotDBStorage::getInstance()._initClass(*this);
-    auto const& cfg = Config::cfg.generator;
-
-    auto& min = mDiagonPos.first;
-    auto& max = mDiagonPos.second;
-
-    bool const temp  = TemplateManager::isUseTemplate();
-    int const  road  = temp ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
-    int const  width = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
-
-    // 计算全局坐标在哪个大区域内
-    mX = (int)std::floor(vec3.x / width);
-    mZ = (int)std::floor(vec3.z / width);
-
-    // 计算在大区域内的局部坐标
-    int localX = (int)std::floor(vec3.x) - (mX * width);
-    int localZ = (int)std::floor(vec3.z) - (mZ * width);
-
-    bool isValid = true;
-    if (!temp) {
-        // DefaultGenerator
-        if (localX < cfg.plotWidth || localX > width - 1 || localZ < cfg.plotWidth || localZ > width - 1) {
-            isValid = false;
-        }
-    } else {
-        // TemplateGenerator
-        throw std::runtime_error("TemplateGenerator not implemented yet");
-    }
-
-    if (isValid) {
-        min.x = mX * width + width - road;
-        min.z = mZ * width + width - road;
-
-        max.x = min.x + road - 1;
-        max.z = min.z + road - 1;
-
-        min.y = -64;
-        max.y = 320;
-    } else {
-        mX  = 0;
-        mZ  = 0;
-        min = Vec3{0, 0, 0};
-        max = Vec3{0, 0, 0};
-    }
-    mValid = isValid;
-}
-
-bool    PlotCross::isValid() const { return mValid; }
-CrossID PlotCross::getCrossID() const { return fmt::format("({}, {})", mX, mZ); }
-string  PlotCross::toString() const {
-    return fmt::format("{} | {} => {}", getCrossID(), mDiagonPos.first.toString(), mDiagonPos.second.toString());
-}
-bool PlotCross::hasPoint(BlockPos const& pos) const {
-    return Polygon::isPointInAABB(pos, mDiagonPos.first, mDiagonPos.second);
-}
-void PlotCross::fill(Block const& block, bool removeBorder) {
-    auto min = removeBorder ? mDiagonPos.first - 1 : mDiagonPos.first;
-    auto max = removeBorder ? mDiagonPos.second + 1 : mDiagonPos.second;
-    Polygon::fixAABB(min, max);
-
-    auto dim = ll::service::getLevel()->getDimension(getPlotWorldDimensionId());
-    if (!dim) {
-        return;
-    }
-
-    auto&        bs  = dim->getBlockSourceFromMainChunkSource();
-    Block const& air = Block::tryGetFromRegistry("minecraft:air").value();
-    int const    y   = PlotPos::getSurfaceYStatic() - 1;
-
-    for (int x = min.x; x <= max.x; x++) {
-        for (int z = min.z; z <= max.z; z++) {
-            auto& bl = bs.getBlock(x, y, z);
-
-            if (!bl.isAir()) {
-                bs.setBlock(x, y, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
-            }
-
-            auto& borderBlock = bs.getBlock(x, y + 1, z);
-            if ((removeBorder && !borderBlock.isAir()) && (x == min.x || x == max.x || z == min.z || z == max.z)) {
-                bs.setBlock(x, y + 1, z, air, (int)BlockUpdateFlag::AllPriority, nullptr);
-            }
-        }
-    }
-}
-bool PlotCross::isAdjacent(PlotRoad const& road) const {
-    if (!isValid() || !road.isValid()) {
-        return false;
-    }
-
-    // 检查道路是否与路口相邻
-    if (road.mDirection == PlotDirection::East) {
-        return (road.mX == mX && road.mZ == mZ) || (road.mX == mX && road.mZ == mZ + 1);
-    } else { // South
-        return (road.mX == mX && road.mZ == mZ) || (road.mX == mX + 1 && road.mZ == mZ);
-    }
-}
-
-std::vector<PlotRoad> PlotCross::getAdjacentRoads() const {
-    std::vector<PlotRoad> roads;
-    if (!isValid()) {
-        return roads;
-    }
-
-    // 添加四个相邻道路
-    roads.push_back(PlotRoad(mX, mZ, PlotDirection::East));
-    roads.push_back(PlotRoad(mX, mZ + 1, PlotDirection::East));
-    roads.push_back(PlotRoad(mX, mZ, PlotDirection::South));
-    roads.push_back(PlotRoad(mX + 1, mZ, PlotDirection::South));
-
-    // 移除无效的道路
-    roads.erase(
-        std::remove_if(roads.begin(), roads.end(), [](const PlotRoad& road) { return !road.isValid(); }),
-        roads.end()
-    );
-
-    return roads;
-}
-
-
-// !Class: PlotRoad
-PlotRoad::PlotRoad(int x, int z, PlotDirection direction) : mX(x), mZ(z) {
-    if (direction != PlotDirection::East && direction != PlotDirection::South) {
-        throw std::runtime_error("PlotRoad::PlotRoad: Invalid direction");
-    }
-
-    data::PlotDBStorage::getInstance()._initClass(*this);
-    auto const& cfg = Config::cfg.generator;
-
-    auto&      min   = mDiagonPos.first;
-    auto&      max   = mDiagonPos.second;
-    bool const temp  = TemplateManager::isUseTemplate();
-    int const  road  = temp ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
-    int const  width = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
-    int        plot_size = width - road;
-
-    if (direction == PlotDirection::East) {
-        // x+
-        min.x = mX * width + plot_size;
-        max.x = min.x + road - 1;
-        min.z = mZ * width;
-        max.z = min.z + plot_size - 1;
-
-    } else {
-        // z+
-        min.x = mX * width;
-        max.x = min.x + plot_size - 1;
-        min.z = mZ * width + plot_size;
-        max.z = min.z + road - 1;
-    }
-    mDirection = direction;
-}
-
-PlotRoad::PlotRoad(Vec3 const& vec3) {
-    data::PlotDBStorage::getInstance()._initClass(*this);
-    auto const& cfg = Config::cfg.generator;
-
-    auto& min = mDiagonPos.first;
-    auto& max = mDiagonPos.second;
-    min.y     = -64;
-    max.y     = 320;
-
-    bool const temp  = TemplateManager::isUseTemplate();
-    int const  road  = temp ? TemplateManager::getCurrentTemplateRoadWidth() : cfg.roadWidth;
-    int const  width = temp ? (TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
-
-    int plot_size = width - road;
-
-    // 使用 floor 来处理负坐标
-    mX = (int)std::floor(vec3.x / (double)width);
-    mZ = (int)std::floor(vec3.z / (double)width);
-
-    // 使用 fmod 来正确处理负坐标的本地坐标
-    double localX = std::fmod(vec3.x, width);
-    double localZ = std::fmod(vec3.z, width);
-    if (localX < 0) localX += width;
-    if (localZ < 0) localZ += width;
-
-    mValid = true;
-
-    // 判断是纵向道路还是横向道路
-    if (localX >= plot_size && localX < width && localZ < plot_size) {
-        // 纵向道路
-        min.x      = mX * width + plot_size;
-        max.x      = min.x + road - 1;
-        min.z      = mZ * width;
-        max.z      = min.z + plot_size - 1;
-        mDirection = PlotDirection::East;
-
-    } else if (localZ >= plot_size && localZ < width && localX < plot_size) {
-        // 横向道路
-        min.x      = mX * width;
-        max.x      = min.x + plot_size - 1;
-        min.z      = mZ * width + plot_size;
-        max.z      = min.z + road - 1;
-        mDirection = PlotDirection::South;
-
-    } else {
-        mValid = false; // 不在道路上
-        min    = Vec3{0, 0, 0};
-        max    = Vec3{0, 0, 0};
-        mX     = 0;
-        mZ     = 0;
-    }
-}
-
-bool   PlotRoad::isValid() const { return mValid; }
-RoadID PlotRoad::getRoadID() const { return fmt::format("{}({}, {})", magic_enum::enum_name(mDirection), mX, mZ); }
-string PlotRoad::toString() const {
-    return fmt::format("{} | {} => {}", getRoadID(), mDiagonPos.first.toString(), mDiagonPos.second.toString());
-}
-bool PlotRoad::hasPoint(BlockPos const& pos) const {
-    return Polygon::isPointInAABB(pos, mDiagonPos.first, mDiagonPos.second);
-}
-void PlotRoad::fill(Block const& block, bool removeBorder) {
-    bool const isX = mDirection == PlotDirection::East;
-
-    auto& min = mDiagonPos.first;
-    auto& max = mDiagonPos.second;
-    Polygon::fixAABB(min, max);
-
-    auto dim = ll::service::getLevel()->getDimension(getPlotWorldDimensionId());
-    if (!dim) {
-        return;
-    }
-
-    auto& bs  = dim->getBlockSourceFromMainChunkSource();
-    auto& air = Block::tryGetFromRegistry("minecraft:air").value();
-
-    int const y_border = PlotPos::getSurfaceYStatic();
-    int const y_road   = y_border - 1;
-
-    int min_x = min.x - 1;
-    int max_x = max.x + 1;
-    int min_z = min.z - 1;
-    int max_z = max.z + 1;
-
-    for (int x = min.x; x <= max.x; x++) {
-        for (int z = min.z; z <= max.z; z++) {
-            auto& bl = bs.getBlock(x, y_road, z);
-
-            if (!bl.isAir()) {
-                bs.setBlock(x, y_road, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
-            }
-
-            if (removeBorder) {
-                if (isX && x - 1 == min_x) {
-                    bs.setBlock(x - 1, y_border, z, air, (int)BlockUpdateFlag::AllPriority, nullptr);
-
-                } else if (isX && x + 1 == max_x) {
-                    bs.setBlock(x + 1, y_border, z, air, (int)BlockUpdateFlag::AllPriority, nullptr);
-
-                } else if (!isX && z - 1 == min_z) {
-                    bs.setBlock(x, y_border, z - 1, air, (int)BlockUpdateFlag::AllPriority, nullptr);
-
-                } else if (!isX && z + 1 == max_z) {
-                    bs.setBlock(x, y_border, z + 1, air, (int)BlockUpdateFlag::AllPriority, nullptr);
-                }
-            }
-        }
-    }
-}
-bool PlotRoad::isAdjacent(PlotCross const& cross) const {
-    if (!isValid() || !cross.isValid()) {
-        return false;
-    }
-
-    // 检查路口是否与道路相邻
-    if (mDirection == PlotDirection::East) {
-        return (cross.mX == mX && cross.mZ + 1 == mZ) || (cross.mX == mX && cross.mZ == mZ);
-    } else { // South
-        return (cross.mX + 1 == mX && cross.mZ == mZ) || (cross.mX == mX && cross.mZ == mZ);
-    }
-}
-
-std::vector<PlotCross> PlotRoad::getAdjacentCrosses() const {
-    std::vector<PlotCross> crosses;
-    if (!isValid()) {
-        return crosses;
-    }
-
-    // 添加两个相邻路口
-    if (mDirection == PlotDirection::East) {
-        crosses.push_back(PlotCross(mX, mZ - 1));
-        crosses.push_back(PlotCross(mX, mZ));
-    } else { // South
-        crosses.push_back(PlotCross(mX - 1, mZ));
-        crosses.push_back(PlotCross(mX, mZ));
-    }
-
-    // 移除无效的路口
-    crosses.erase(
-        std::remove_if(crosses.begin(), crosses.end(), [](const PlotCross& cross) { return !cross.isValid(); }),
-        crosses.end()
-    );
-
-    return crosses;
-}
-
-
-} // namespace plo
+} // namespace plot

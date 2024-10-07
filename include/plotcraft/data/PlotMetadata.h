@@ -8,7 +8,7 @@
 #include <vector>
 
 
-namespace plo::data {
+namespace plot::data {
 
 
 enum class PlotPermission : int { None = 0, Shared = 1, Owner = 2, Admin = 3 };
@@ -52,6 +52,7 @@ struct PlotPermissionTable {
     bool allowAxePeeled{false};          // 允许斧头去皮
     bool allowAttackEnderCrystal{false}; // 允许攻击末地水晶
     bool allowDestroyArmorStand{false};  // 允许破坏盔甲架
+    // bool allowLiquidFlow{true};          // 允许液体流动
 
     bool useAnvil{false};            // 使用铁砧
     bool useBarrel{false};           // 使用木桶
@@ -103,11 +104,11 @@ struct PlotPermissionTable {
 struct VertexPos {
     int x, y, z;
 
-    BlockPos         toBlockPos() const { return BlockPos(x, y, z); }
-    Vec3             toVec3() const { return Vec3(x, y, z); }
-    static VertexPos fromBlockPos(BlockPos const& pos) { return VertexPos{pos.x, pos.y, pos.z}; }
-    operator BlockPos() const { return toBlockPos(); }
-    operator Vec3() const { return toVec3(); }
+    PLAPI BlockPos         toBlockPos() const { return BlockPos(x, y, z); }
+    PLAPI Vec3             toVec3() const { return Vec3(x, y, z); }
+    PLAPI static VertexPos fromBlockPos(BlockPos const& pos) { return VertexPos{pos.x, pos.y, pos.z}; }
+    PLAPI                  operator BlockPos() const { return toBlockPos(); }
+    PLAPI                  operator Vec3() const { return toVec3(); }
 };
 
 
@@ -224,4 +225,4 @@ public:
 };
 
 
-} // namespace plo::data
+} // namespace plot::data

@@ -1,5 +1,8 @@
 #include "plotcraft/data/PlotMetadata.h"
 #include "plotcraft/data/PlotDBStorage.h"
+#include "plotcraft/math/PlotCross.h"
+#include "plotcraft/math/PlotPos.h"
+#include "plotcraft/math/PlotRoad.h"
 #include "plotcraft/utils/Date.h"
 #include "plotcraft/utils/JsonHelper.h"
 #include <algorithm>
@@ -8,9 +11,9 @@
 #include <vector>
 
 
-using namespace plo::utils;
+using namespace plot::utils;
 
-namespace plo::data {
+namespace plot::data {
 
 
 // 构造
@@ -259,4 +262,4 @@ bool PlotMetadata::setMergeCount(int count) {
 }
 
 
-} // namespace plo::data
+} // namespace plot::data

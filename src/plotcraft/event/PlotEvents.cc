@@ -1,6 +1,6 @@
 #include "plotcraft/event/PlotEvents.h"
 
-namespace plo::event {
+namespace plot::event {
 
 // 玩家进入地皮
 Player*        PlayerEnterPlot::getPlayer() const { return mPlayer; }
@@ -64,4 +64,4 @@ Player*                PlayerChangePlotNameAfter::getPlayer() const { return mPl
 PlotMetadataPtr const& PlayerChangePlotNameAfter::getPlot() const { return mPlot; }
 string const&          PlayerChangePlotNameAfter::getNewName() const { return mNewName; }
 
-} // namespace plo::event
+} // namespace plot::event

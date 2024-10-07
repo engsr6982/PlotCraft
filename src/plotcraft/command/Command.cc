@@ -12,9 +12,9 @@
 #include "plotcraft/gui/Global.h"
 
 
-namespace plo::command {
-using namespace plo::utils;
-using namespace plo::mc;
+namespace plot::command {
+using namespace plot::utils;
+using namespace plot::mc;
 
 struct ParamOp {
     enum OperationOP { Op, Deop } op;
@@ -122,13 +122,13 @@ const auto LambdaSetting = [](CommandOrigin const& origin, CommandOutput& output
 bool registerCommand() {
     auto& cmd = ll::command::CommandRegistrar::getInstance().getOrCreateCommand(COMMAND_NAME, "PlotCraft");
 
-    cmd.overload<ParamOp>().required("op").required("name").execute(LambdaOP); // plo <op|deop> <name>
-    cmd.overload().text("db").text("save").execute(LambdaDBSave);              // plo db save
-    cmd.overload().text("this").execute(LambdaPlot);                           // plo this
-    cmd.overload().text("buy").execute(LambdaPlot);                            // plo buy
-    cmd.overload().text("mgr").execute(LambdaMgr);                             // plo mgr
-    cmd.overload().text("setting").execute(LambdaSetting);                     // plo setting
-    cmd.overload().execute(LambdaDefault);                                     // plo
+    cmd.overload<ParamOp>().required("op").required("name").execute(LambdaOP); // plot <op|deop> <name>
+    cmd.overload().text("db").text("save").execute(LambdaDBSave);              // plot db save
+    cmd.overload().text("this").execute(LambdaPlot);                           // plot this
+    cmd.overload().text("buy").execute(LambdaPlot);                            // plot buy
+    cmd.overload().text("mgr").execute(LambdaMgr);                             // plot mgr
+    cmd.overload().text("setting").execute(LambdaSetting);                     // plot setting
+    cmd.overload().execute(LambdaDefault);                                     // plot
 
     _setupTemplateCommand();
 
@@ -143,10 +143,10 @@ bool registerCommand() {
 #endif
 
 #ifndef OVERWORLD
-    cmd.overload<ParamGo>().text("go").required("dim").execute(LambdaGo); // plo go <overworld|plot>
+    cmd.overload<ParamGo>().text("go").required("dim").execute(LambdaGo); // plot go <overworld|plot>
 #endif
 
     return true;
 }
 
-} // namespace plo::command
+} // namespace plot::command

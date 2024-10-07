@@ -8,7 +8,7 @@
 
 using string = std::string;
 
-namespace plo::utils {
+namespace plot::utils {
 
 template <class T>
 concept TData =
@@ -58,4 +58,4 @@ public:
 };
 
 
-} // namespace plo::utils
+} // namespace plot::utils

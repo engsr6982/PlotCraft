@@ -1,4 +1,4 @@
-#include "plotcraft/utils/EconomySystem.h"
+#include "plotcraft/EconomySystem.h"
 #include "fmt/core.h"
 #include "ll/api/service/Bedrock.h"
 #include "mc/deps/core/mce/UUID.h"
@@ -20,7 +20,7 @@
 #include <Windows.h>
 #include <winuser.h>
 
-namespace plo {
+namespace plot {
 
 // 在线计分板
 int ScoreBoard_Get_Online(Player& player, string const& scoreName) {
@@ -440,4 +440,4 @@ bool EconomySystem::transfer(mce::UUID const& uuid, mce::UUID const& target, llo
 }
 
 
-} // namespace plo
+} // namespace plot

@@ -3,7 +3,9 @@
 #include "ll/api/data/KeyValueDB.h"
 #include "nlohmann/json_fwd.hpp"
 #include "plotcraft/Global.h"
+#include "plotcraft/math/PlotCross.h"
 #include "plotcraft/math/PlotPos.h"
+#include "plotcraft/math/PlotRoad.h"
 #include "plotcraft/utils/JsonHelper.h"
 #include "plugin/MyPlugin.h"
 #include <memory>
@@ -12,9 +14,9 @@
 #include <vector>
 
 
-using namespace plo::utils;
+using namespace plot::utils;
 
-namespace plo::data {
+namespace plot::data {
 
 bool PlotDBStorage::isSaveThreadRunning() const { return mThreadRunning; }
 void PlotDBStorage::stopSaveThread() { mThreadRequiredExit = true; }
@@ -325,4 +327,4 @@ bool PlotDBStorage::refreshMergeMap() {
 }
 
 
-} // namespace plo::data
+} // namespace plot::data

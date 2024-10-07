@@ -11,7 +11,7 @@
 
 using string = std::string;
 
-namespace plo::utils {
+namespace plot::utils {
 
 template <typename T>
 PLAPI inline string join(std::vector<T> const& vec, string const& splitter = ", ") {
@@ -56,4 +56,4 @@ PLAPI inline void DebugFormPrint(const ll::form::CustomFormResult& dt) {
 #endif
 }
 
-} // namespace plo::utils
+} // namespace plot::utils

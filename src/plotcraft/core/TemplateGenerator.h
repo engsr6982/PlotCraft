@@ -2,7 +2,7 @@
 #include "mc/world/level/levelgen/flat/FlatWorldGenerator.h"
 
 
-namespace plo::core {
+namespace plot::core {
 
 
 class TemplateGenerator : public FlatWorldGenerator {
@@ -13,4 +13,4 @@ public:
 };
 
 
-} // namespace plo::core
+} // namespace plot::core

@@ -1,6 +1,6 @@
 #include "Global.h"
 
-namespace plo::gui {
+namespace plot::gui {
 
 
 void PlayerSettingGUI(Player& player) {
@@ -39,4 +39,4 @@ void PlayerSettingGUI(Player& player) {
 }
 
 
-} // namespace plo::gui
+} // namespace plot::gui

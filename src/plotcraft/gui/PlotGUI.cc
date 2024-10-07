@@ -1,7 +1,7 @@
 #include "Global.h"
 
 
-namespace plo::gui {
+namespace plot::gui {
 
 
 void _selectPlot(Player& player) {
@@ -114,4 +114,4 @@ void _changePlotName(Player& player, PlotMetadataPtr pt) {
 }
 
 
-} // namespace plo::gui
+} // namespace plot::gui

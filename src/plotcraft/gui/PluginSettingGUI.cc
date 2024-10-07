@@ -1,6 +1,6 @@
 #include "Global.h"
 
-namespace plo::gui {
+namespace plot::gui {
 
 void PluginSettingGUI(Player& player) {
     auto* impl = &data::PlotDBStorage::getInstance();
@@ -45,4 +45,4 @@ void PluginSettingGUI(Player& player) {
 }
 
 
-} // namespace plo::gui
+} // namespace plot::gui

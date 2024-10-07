@@ -20,7 +20,7 @@
 #include <vector>
 
 
-namespace plo::core {
+namespace plot::core {
 
 DefaultGenerator::DefaultGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON)
 : FlatWorldGenerator(dimension, seed, generationOptionsJSON) {
@@ -151,4 +151,4 @@ void DefaultGenerator::loadChunk(LevelChunk& levelchunk, bool /* forceImmediateR
     levelchunk.changeState(ChunkState::Generating, ChunkState::Generated);
 }
 
-} // namespace plo::core
+} // namespace plot::core

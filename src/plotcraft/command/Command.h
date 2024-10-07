@@ -64,7 +64,7 @@ using string = std::string;
 using ll::i18n_literals::operator""_tr;
 using ll::command::CommandRegistrar;
 
-namespace plo::command {
+namespace plot::command {
 
 #define COMMAND_NAME "plot"
 
@@ -134,4 +134,4 @@ inline string CommandOriginTypeToString(CommandOriginType type) {
         }                                                                                                              \
     }
 
-} // namespace plo::command
+} // namespace plot::command

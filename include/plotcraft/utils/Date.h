@@ -8,7 +8,7 @@
 
 using string = std::string;
 
-namespace plo::utils {
+namespace plot::utils {
 
 struct Date {
 private:
@@ -123,4 +123,4 @@ public:
     PLAPI std::time_t operator-(const Date& other) const { return (this->getTime() - other.getTime()); }
 };
 
-} // namespace plo::utils
+} // namespace plot::utils

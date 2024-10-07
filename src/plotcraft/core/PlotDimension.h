@@ -3,7 +3,7 @@
 #include "mc/world/level/dimension/Dimension.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 
-namespace plo::core {
+namespace plot::core {
 
 
 class PlotDimension : public Dimension {
@@ -45,6 +45,6 @@ public:
 };
 
 
-} // namespace plo::core
+} // namespace plot::core
 
 #endif // OVERWORLD

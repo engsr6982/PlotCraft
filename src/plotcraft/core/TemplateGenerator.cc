@@ -8,7 +8,7 @@
 #include <memory>
 
 
-namespace plo::core {
+namespace plot::core {
 
 
 TemplateGenerator::TemplateGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON)
@@ -36,4 +36,4 @@ void TemplateGenerator::loadChunk(LevelChunk& levelchunk, bool) {
 }
 
 
-} // namespace plo::core
+} // namespace plot::core

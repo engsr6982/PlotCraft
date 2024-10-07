@@ -1,7 +1,7 @@
 #include "Global.h"
 
 
-namespace plo::gui {
+namespace plot::gui {
 
 
 void PlotSaleGUI(Player& player, PlotMetadataPtr pt) {
@@ -56,7 +56,7 @@ void _sellPlotAndEditPrice(Player& player, PlotMetadataPtr pt, bool edit) {
             return;
         }
 
-         // 检查是否超过 int 范围
+        // 检查是否超过 int 范围
         if (!std::regex_match(pr, std::regex("^(?:[1-9]\\d{0,8}|0)$"))) {
             sendText<LogLevel::Error>(pl, "价格超出 int 范围");
             return;
@@ -81,4 +81,4 @@ void _sellPlotAndEditPrice(Player& player, PlotMetadataPtr pt, bool edit) {
 }
 
 
-} // namespace plo::gui
+} // namespace plot::gui

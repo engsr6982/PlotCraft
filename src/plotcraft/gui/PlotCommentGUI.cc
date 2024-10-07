@@ -1,7 +1,7 @@
 #include "Global.h"
 
 
-namespace plo::gui {
+namespace plot::gui {
 
 
 void PlotCommentGUI(Player& player, PlotMetadataPtr pt) {
@@ -160,4 +160,4 @@ void _editComment(Player& player, PlotMetadataPtr pt, CommentID id) {
 }
 
 
-} // namespace plo::gui
+} // namespace plot::gui

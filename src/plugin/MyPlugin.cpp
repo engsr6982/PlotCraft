@@ -18,14 +18,15 @@
 #include "mc/server/commands/ServerCommandOrigin.h"
 #include "mc/world/Minecraft.h"
 #include "plotcraft/Config.h"
+#include "plotcraft/EconomySystem.h"
 #include "plotcraft/command/Command.h"
 #include "plotcraft/core/PlotDimension.h"
 #include "plotcraft/data/PlayerNameDB.h"
 #include "plotcraft/data/PlotDBStorage.h"
 #include "plotcraft/event/Event.h"
-#include "plotcraft/utils/EconomySystem.h"
 #include "plotcraft/utils/Mc.h"
 #include <ll/api/utils/SystemUtils.h>
+
 
 #include "plotcraft/core/TemplateManager.h"
 
@@ -69,11 +70,11 @@ bool MyPlugin::load() {
     if (!fs::exists(dataDir)) fs::create_directories(dataDir);
 
     logger.info("加载数据...");
-    plo::Config::loadConfig();
+    plot::Config::loadConfig();
     ll::i18n::load(langDir);
-    plo::data::PlotDBStorage::getInstance().load();
-    plo::data::PlayerNameDB::getInstance().initPlayerNameDB();
-    plo::EconomySystem::getInstance().update(&plo::Config::cfg.economy);
+    plot::data::PlotDBStorage::getInstance().load();
+    plot::data::PlayerNameDB::getInstance().initPlayerNameDB();
+    plot::EconomySystem::getInstance().update(&plot::Config::cfg.economy);
 
     return true;
 }
@@ -85,11 +86,11 @@ bool MyPlugin::enable() {
     logger.info("Enabling...");
     logger.info("注册 命令、事件...");
 
-    auto& cfg       = plo::Config::cfg;
+    auto& cfg       = plot::Config::cfg;
     auto& ConfigDir = self.getConfigDir();
-    if (cfg.generator.type == plo::PlotGeneratorType::Template) {
+    if (cfg.generator.type == plot::PlotGeneratorType::Template) {
         logger.info("检测到使用模板生成器，加载地皮模板...");
-        if (plo::core::TemplateManager::loadTemplate((ConfigDir / cfg.generator.templateFile).string())) {
+        if (plot::core::TemplateManager::loadTemplate((ConfigDir / cfg.generator.templateFile).string())) {
             logger.info("模板 \"{}\" 已加载", cfg.generator.templateFile);
         } else {
             logger.error("加载模板 \"{}\" 失败，请检查配置文件", cfg.generator.templateFile);
@@ -99,16 +100,16 @@ bool MyPlugin::enable() {
 
 
 #ifdef DEBUG
-    plo::mc::executeCommand("gamerule showcoordinates true");
+    plot::mc::executeCommand("gamerule showcoordinates true");
 #endif
 
 #if !defined(OVERWORLD)
-    more_dimensions::CustomDimensionManager::getInstance().addDimension<plo::core::PlotDimension>("plot");
+    more_dimensions::CustomDimensionManager::getInstance().addDimension<plot::core::PlotDimension>("plot");
 #endif
 
-    plo::event::registerEventListener();                      // 注册事件监听器
-    plo::command::registerCommand();                          // 注册命令
-    plo::data::PlotDBStorage::getInstance().initSaveThread(); // 尝试启动自动保存线程
+    plot::event::registerEventListener();                      // 注册事件监听器
+    plot::command::registerCommand();                          // 注册命令
+    plot::data::PlotDBStorage::getInstance().initSaveThread(); // 尝试启动自动保存线程
 
     return true;
 }
@@ -118,9 +119,9 @@ bool MyPlugin::disable() {
     logger.info("Disabling...");
 
     logger.warn("正在保存数据，请不要强制关闭进程...");
-    plo::data::PlotDBStorage::getInstance().save();
+    plot::data::PlotDBStorage::getInstance().save();
 
-    plo::event::unRegisterEventListener();
+    plot::event::unRegisterEventListener();
 
     return true;
 }

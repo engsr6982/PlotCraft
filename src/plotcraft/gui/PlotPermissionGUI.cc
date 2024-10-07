@@ -4,7 +4,7 @@
 #include "ll/api/i18n/I18n.h"
 
 
-namespace plo::gui {
+namespace plot::gui {
 
 
 void PlotPermissionGUI(Player& player, PlotMetadataPtr pt) {
@@ -36,4 +36,4 @@ void PlotPermissionGUI(Player& player, PlotMetadataPtr pt) {
 }
 
 
-} // namespace plo::gui
+} // namespace plot::gui

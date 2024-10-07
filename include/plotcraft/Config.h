@@ -1,13 +1,13 @@
 #pragma once
 #include "Global.h"
 #include "ll/api/Config.h"
+#include "plotcraft/EconomySystem.h"
 #include "plotcraft/Global.h"
-#include "plotcraft/utils/EconomySystem.h"
 #include <string>
 #include <vector>
 
 
-namespace plo {
+namespace plot {
 
 enum class PlotGeneratorType : int { Default, Template };
 struct Config {
@@ -41,11 +41,6 @@ struct Config {
         int    maxMergePlotCount    = 4;    // 最大合并地皮数量
         int    baseMergePlotPrice   = 1000; // 基础合并地皮价格
         double mergePriceMultiplier = 1.1;  // 合并价格倍率，默认为1.0（保持基础价格不变）
-
-        struct {
-            bool onSculkSpreadListener{true};
-            bool onSculkBlockGrowthListener{true};
-        } eventListener;
     } plotWorld;
 
     struct {
@@ -68,4 +63,4 @@ struct Config {
     PLAPI static double calculateMergePlotPrice(int mergeCount); // 计算合并地皮价格
 };
 
-} // namespace plo
+} // namespace plot

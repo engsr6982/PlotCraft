@@ -9,7 +9,7 @@
 
 namespace fs = std::filesystem;
 
-namespace plo {
+namespace plot {
 
 Config Config::cfg;
 
@@ -61,4 +61,4 @@ double Config::calculateMergePlotPrice(int mergeCount) {
 }
 
 
-} // namespace plo
+} // namespace plot

@@ -6,7 +6,7 @@
 #include <variant>
 
 
-namespace plo::gui {
+namespace plot::gui {
 
 
 void PlotShareGUI(Player& player, PlotMetadataPtr pt) {
@@ -152,4 +152,4 @@ void _addSharePlayer(Player& player, PlotMetadataPtr pt) {
 }
 
 
-} // namespace plo::gui
+} // namespace plot::gui

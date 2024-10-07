@@ -2,7 +2,7 @@
 #include "plotcraft/utils/Mc.h"
 
 
-namespace plo::gui {
+namespace plot::gui {
 
 
 void PlotShopGUI(Player& player) {
@@ -135,4 +135,4 @@ void _buyPlot(Player& player, PlotMetadataPtr pt) {
 }
 
 
-} // namespace plo::gui
+} // namespace plot::gui

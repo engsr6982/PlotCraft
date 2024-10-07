@@ -7,7 +7,7 @@
 #include "plotcraft/math/PlotPos.h"
 
 
-namespace plo::event {
+namespace plot::event {
 
 using namespace data;
 
@@ -210,4 +210,4 @@ public:
     PLAPI string const&          getNewName() const;
 };
 
-} // namespace plo::event
+} // namespace plot::event

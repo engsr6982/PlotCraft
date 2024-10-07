@@ -10,7 +10,7 @@
 #include <vector>
 
 
-namespace plo::data {
+namespace plot::data {
 
 struct PlayerSettingItem {
     int version = SETTING_VERSION;
@@ -105,4 +105,4 @@ public:
 };
 
 
-} // namespace plo::data
+} // namespace plot::data

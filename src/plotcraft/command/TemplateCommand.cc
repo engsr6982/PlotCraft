@@ -8,9 +8,9 @@
 #include "plotcraft/core/TemplateManager.h"
 #include "plotcraft/data/PlotDBStorage.h"
 
-namespace plo::command {
-using namespace plo::data;
-using namespace plo::mc;
+namespace plot::command {
+using namespace plot::data;
+using namespace plot::mc;
 using TemplateManager = core::TemplateManager;
 
 struct StartData {
@@ -160,7 +160,7 @@ const auto reset = [](CommandOrigin const& ori, CommandOutput& out) {
 void _setupTemplateCommand() {
     auto& cmd = ll::command::CommandRegistrar::getInstance().getOrCreateCommand(COMMAND_NAME);
 
-    // plo template record start <int start> <int end> <int road> <bool fillBedrock> <Block defaultBlock>
+    // plot template record start <int start> <int end> <int road> <bool fillBedrock> <Block defaultBlock>
     cmd.overload<StartData>()
         .text("template")
         .text("record")
@@ -172,16 +172,16 @@ void _setupTemplateCommand() {
         .required("defaultBlock")
         .execute(start);
 
-    // plo template record pos1
+    // plot template record pos1
     cmd.overload().text("template").text("record").text("pos1").execute(pos1);
 
-    // plo template record pos2
+    // plot template record pos2
     cmd.overload().text("template").text("record").text("pos2").execute(pos2);
 
-    // plo template record execute <string fileName>
+    // plot template record execute <string fileName>
     cmd.overload<ExecuteData>().text("template").text("record").text("execute").required("fileName").execute(execute);
 
-    // plo template record reset
+    // plot template record reset
     cmd.overload().text("template").text("record").text("reset").execute(reset);
 }
-} // namespace plo::command
+} // namespace plot::command

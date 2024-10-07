@@ -1,4 +1,5 @@
 #pragma once
+#include "ll/api/schedule/Scheduler.h"
 #include "mc/deps/core/mce/UUID.h"
 #include "mc/world/level/BlockPos.h"
 #include <nlohmann/json.hpp>
@@ -13,7 +14,7 @@
 
 
 // Config
-#define CONFIG_VERSION 9
+#define CONFIG_VERSION 10
 
 // PlotMetadata
 #define METADATA_VERSION 7
@@ -22,7 +23,7 @@
 #define SETTING_VERSION 1
 
 
-namespace plo {
+namespace plot {
 
 
 using string    = std::string;
@@ -39,7 +40,11 @@ using UUIDs     = string;
 using CommentID = int;
 
 
-int getPlotWorldDimensionId();
+PLAPI int getPlotWorldDimensionId();
 
 
-} // namespace plo
+using ll::chrono_literals::operator""_tick;
+PLAPI extern ll::schedule::GameTickScheduler GlobalPlotScheduler;
+
+
+} // namespace plot
