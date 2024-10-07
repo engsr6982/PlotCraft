@@ -40,7 +40,7 @@ void SetupDebugCommand() {
                 return;
             }
 
-            auto bl = param.name.resolveBlock(param.name.id).getBlock();
+            auto bl = param.name.resolveBlock((int)param.name.id).getBlock();
             if (!bl) {
                 out.error("Could not find block");
                 return;
@@ -65,7 +65,7 @@ void SetupDebugCommand() {
                 return;
             }
 
-            auto bl = param.name.resolveBlock(param.name.id).getBlock();
+            auto bl = param.name.resolveBlock((int)param.name.id).getBlock();
             if (!bl) {
                 out.error("Could not find block");
                 return;
@@ -162,11 +162,11 @@ void SetupDebugCommand() {
             out.success(out_str.str());
         });
 
-    cmd.overload().text("debug_reset_db").execute([](CommandOrigin const& ori, CommandOutput& out) {
+    cmd.overload().text("debug_reset_db").execute([](CommandOrigin const&, CommandOutput&) {
         auto& db   = data::PlotDBStorage::getInstance();
         auto& impl = db.getDB();
 
-        impl.iter([&impl](auto k, auto v) {
+        impl.iter([&impl](auto k, auto) {
             impl.del(k);
             return true;
         });

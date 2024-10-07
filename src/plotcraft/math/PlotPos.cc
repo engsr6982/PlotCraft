@@ -153,7 +153,7 @@ bool PlotPos::isRadiusOnBorder(BlockPos const& center, int radius) const {
     if (!isValid()) {
         return false;
     }
-    return Polygon::isCircleOnEdge(mVertexs, center, radius);
+    return Polygon::isCircleOnEdge(mVertexs, center, (float)radius);
 }
 string PlotPos::toString() const {
 #if !defined(DEBUG)

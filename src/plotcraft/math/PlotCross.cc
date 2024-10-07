@@ -32,8 +32,8 @@ PlotCross::PlotCross(int x, int z) : mX(x), mZ(z) {
     int const  width =
         temp ? (core::TemplateManager::getCurrentTemplateChunkNum() * 16) : (cfg.plotWidth + cfg.roadWidth);
 
-    min.x = mX * width + width - road;
-    min.z = mZ * width + width - road;
+    min.x = (float)mX * width + width - road;
+    min.z = (float)mZ * width + width - road;
 
     max.x = min.x + road - 1;
     max.z = min.z + road - 1;
@@ -74,8 +74,8 @@ PlotCross::PlotCross(Vec3 const& vec3) {
     }
 
     if (isValid) {
-        min.x = mX * width + width - road;
-        min.z = mZ * width + width - road;
+        min.x = (float)mX * width + width - road;
+        min.z = (float)mZ * width + width - road;
 
         max.x = min.x + road - 1;
         max.z = min.z + road - 1;
@@ -113,8 +113,8 @@ void PlotCross::fill(Block const& block, bool removeBorder) {
     Block const& air = Block::tryGetFromRegistry("minecraft:air").value();
     int const    y   = PlotPos::getSurfaceYStatic() - 1;
 
-    for (int x = min.x; x <= max.x; x++) {
-        for (int z = min.z; z <= max.z; z++) {
+    for (int x = (int)min.x; x <= max.x; x++) {
+        for (int z = (int)min.z; z <= max.z; z++) {
             auto& bl = bs.getBlock(x, y, z);
 
             if (!bl.isAir()) {
