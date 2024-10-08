@@ -71,7 +71,7 @@ void _addSharePlayer(Player& player, PlotMetadataPtr pt) {
 
     std::vector<string> names;
     ll::service::getLevel()->forEachPlayer([&names, &player](Player& p) {
-        if (p == player) return true; // 排除自己
+        // if (p == player) return true; // 排除自己
         names.push_back(p.getRealName());
         return true;
     });
