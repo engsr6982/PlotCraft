@@ -30,8 +30,9 @@ lip install github.com/engsr6982/PlotCraft
 我们不推荐这么做，因为处理不好依赖版本可能导致未知的问题  
 如果您需要手动安装 PlotCraft，您需要安装以下前置组件（插件）
 
-- MoreDimension
-- LegacyMoney
+- MoreEvent（必须）
+- MoreDimension（编译OverWorld版本可不装）
+- LegacyMoney（不使用此经济可不装）
 
 > Tip  
 > 编译目标 Overwload 为 true 时 MoreDimension 无需安装  
@@ -62,6 +63,13 @@ PlotCraft 注册了以下命令：
 /plo template record pos2
 /plo template record reset
 /plo template record start <starty: int> <endy: int> <roadwidth: int> <fillBedrock: Boolean> <defaultBlock: Block>
+
+地皮合并命令
+/plot merge enable                开启合并功能
+/plot merge set <source|target>   设置源地皮、目标地皮
+/plot merge confirm               确认合并
+/plot merge cancel                取消当前操作
+
 ```
 
 ## 地皮模板系统
@@ -130,7 +138,10 @@ package("xxx")
     "buyPlotPrice": 1000, // 购买地皮价格
     "inPlotCanFly": true, // 是否启用地皮飞行
     "playerSellPlotTax": 0.1, // 玩家出售地皮税率
-    "spawnMob": false // 地皮世界是否生成实体
+    "spawnMob": false, // 地皮世界是否生成实体
+    "maxMergePlotCount": 4,    // 最大合并地皮数量
+    "baseMergePlotPrice": 1000, // 基础合并地皮价格
+    "mergePriceMultiplier": 1.1  // 合并价格倍率，默认为1.0（保持基础价格不变）
   },
   "switchDim": {
     // 地皮维度和主世界切换传送坐标，此项可在游戏中设置
