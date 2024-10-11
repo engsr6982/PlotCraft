@@ -46,23 +46,23 @@ lip install github.com/engsr6982/PlotCraft
 PlotCraft 注册了以下命令：
 
 ```command
-/plo go plot        进入地皮世界
-/plo go overworld   返回主世界
-/plo op <name>      添加地皮管理员
-/plo deop <name>    移除地皮管理员
-/plo this           打开脚下地皮的管理 GUI
-/plo mgr            打开插件设置GUI
-/plo setting        打开玩家设置GUI
-/plo                打开地皮系统主菜单
-/plo db save        立即保存数据到数据库
-/plo buy            购买脚下地皮（出售状态）
+/plot go plot        进入地皮世界
+/plot go overworld   返回主世界
+/plot op <name>      添加地皮管理员
+/plot deop <name>    移除地皮管理员
+/plot this           打开脚下地皮的管理 GUI
+/plot mgr            打开插件设置GUI
+/plot setting        打开玩家设置GUI
+/plot                打开地皮系统主菜单
+/plot db save        立即保存数据到数据库
+/plot buy            购买脚下地皮（出售状态）
 
 地皮模板记录命令(此功能请查看下文 "地皮模板系统")
-/plo template record execute <fileName: string>
-/plo template record pos1
-/plo template record pos2
-/plo template record reset
-/plo template record start <starty: int> <endy: int> <roadwidth: int> <fillBedrock: Boolean> <defaultBlock: Block>
+/plot template record execute <fileName: string>
+/plot template record pos1
+/plot template record pos2
+/plot template record reset
+/plot template record start <starty: int> <endy: int> <roadwidth: int> <fillBedrock: Boolean> <defaultBlock: Block>
 
 地皮合并命令
 /plot merge enable                开启合并功能
