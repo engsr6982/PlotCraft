@@ -23,9 +23,6 @@ class PlotDBStorage {
 private:
     std::unique_ptr<ll::data::KeyValueDB> mDB;
 
-    bool mThreadRunning{false};      // 保存线程是否正在运行
-    bool mThreadRequiredExit{false}; // 保存线程是否需要退出
-
     // Cache:
     std::vector<UUIDs>                           mAdminList;         // 管理
     std::unordered_map<PlotID, PlotMetadataPtr>  mPlotList;          // 地皮
@@ -62,9 +59,8 @@ public:
     PLAPI void save(); // 保存所有数据
     PLAPI void save(PlotMetadata const& plot);
 
-    PLAPI void initSaveThread(); // 初始化保存线程
-    PLAPI bool isSaveThreadRunning() const;
-    PLAPI void stopSaveThread(); // 停止保存线程
+    std::jthread mSaveThread;      // 保存线程
+    PLAPI void   initSaveThread(); // 初始化保存线程
 
     // Admin API:
     PLAPI bool hasAdmin(const UUIDs& uuid) const;

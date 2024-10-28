@@ -10,6 +10,7 @@
 #include "plugin/MyPlugin.h"
 #include <memory>
 #include <stdexcept>
+#include <stop_token>
 #include <thread>
 #include <vector>
 
@@ -18,19 +19,13 @@ using namespace plot::utils;
 
 namespace plot::data {
 
-bool PlotDBStorage::isSaveThreadRunning() const { return mThreadRunning; }
-void PlotDBStorage::stopSaveThread() { mThreadRequiredExit = true; }
 void PlotDBStorage::initSaveThread() {
-    if (mThreadRunning) return;
-    mThreadRunning = true;
-    std::thread([this]() {
-        while (!this->mThreadRequiredExit) {
+    mSaveThread = std::jthread([this](std::stop_token st) {
+        while (!st.stop_requested()) {
             this->save();
             std::this_thread::sleep_for(std::chrono::minutes(2));
         }
-        this->mThreadRunning      = false; // 重置标志位
-        this->mThreadRequiredExit = false; // 重置标志位
-    }).detach();
+    });
 }
 
 
