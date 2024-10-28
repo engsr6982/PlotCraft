@@ -4,6 +4,7 @@
 #include "plotcraft/data/PlotMetadata.h"
 #include "plotcraft/math/PlotPos.h"
 #include <memory>
+#include <optional>
 #include <thread>
 #include <unordered_map>
 #include <unordered_set>
@@ -93,6 +94,7 @@ public:
 
     PLAPI PlotPermission getPlayerPermission(UUIDs const& uuid, PlotID const& pid, bool ignoreAdmin = false) const;
 
+    PLAPI std::optional<PlotPos> findUnownedPlot() const;
 
     // 特殊数据 Key (统一定义Key，请勿修改)
     string const DB_ArchivedPrefix    = "Archived_";

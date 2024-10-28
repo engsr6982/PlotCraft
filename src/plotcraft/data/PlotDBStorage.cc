@@ -6,9 +6,11 @@
 #include "plotcraft/math/PlotCross.h"
 #include "plotcraft/math/PlotPos.h"
 #include "plotcraft/math/PlotRoad.h"
+#include "plotcraft/private/NodeTree.h"
 #include "plotcraft/utils/JsonHelper.h"
 #include "plugin/MyPlugin.h"
 #include <memory>
+#include <optional>
 #include <stdexcept>
 #include <stop_token>
 #include <thread>
@@ -319,6 +321,20 @@ bool PlotDBStorage::refreshMergeMap() {
         }
     }
     return true;
+}
+
+std::optional<PlotPos> PlotDBStorage::findUnownedPlot() const {
+    NodeTree tree;
+
+    for (auto const& [_, ptr] : mPlotList) {
+        tree.insert(NodeTree::Node(ptr->getX(), ptr->getZ()));
+    }
+
+    auto result = tree.findNearestUnmarkedNodeFromRoot();
+    if (result) {
+        return PlotPos(result->x, result->z);
+    }
+    return std::nullopt;
 }
 
 

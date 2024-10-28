@@ -57,7 +57,7 @@ const auto LambdaOP = [](CommandOrigin const& origin, CommandOutput& output, Par
 struct ParamGo {
     enum GoDimension { overworld, plot } dim;
 };
-const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, ParamGo const& param) {
+static const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, ParamGo const& param) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
 
@@ -72,7 +72,7 @@ const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& output, Par
 #endif
 
 
-const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output) {
+static const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
     if (player.getDimensionId() != getPlotWorldDimensionId()) {
@@ -94,28 +94,44 @@ const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output) {
 };
 
 
-const auto LambdaDefault = [](CommandOrigin const& origin, CommandOutput& output) {
+static const auto LambdaDefault = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
     gui::MainGUI(player);
 };
 
 
-const auto LambdaDBSave = [](CommandOrigin const& origin, CommandOutput& output) {
+static const auto LambdaDBSave = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::DedicatedServer);
     data::PlotDBStorage::getInstance().save();
     sendText<LogLevel::Success>(output, "操作完成!");
 };
 
-const auto LambdaMgr = [](CommandOrigin const& origin, CommandOutput& output) {
+static const auto LambdaMgr = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
     gui::PluginSettingGUI(player);
 };
-const auto LambdaSetting = [](CommandOrigin const& origin, CommandOutput& output) {
+static const auto LambdaSetting = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
     gui::PlayerSettingGUI(player);
+};
+
+static const auto LambdaFindUnownedPlot = [](CommandOrigin const& origin, CommandOutput& output) {
+    CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
+    Player& player = *static_cast<Player*>(origin.getEntity());
+    if (player.getDimensionId() != getPlotWorldDimensionId()) {
+        sendText<LogLevel::Error>(player, "此命令只能在地皮世界使用!");
+        return;
+    }
+
+    auto result = data::PlotDBStorage::getInstance().findUnownedPlot();
+    if (!result) {
+        sendText<LogLevel::Error>(player, "插件异常, 未找到无主地皮!");
+    }
+
+    player.teleport(result->getSafestPos(), getPlotWorldDimensionId());
 };
 
 
@@ -129,6 +145,10 @@ bool registerCommand() {
     cmd.overload().text("mgr").execute(LambdaMgr);                             // plot mgr
     cmd.overload().text("setting").execute(LambdaSetting);                     // plot setting
     cmd.overload().execute(LambdaDefault);                                     // plot
+
+    // 查找无主地皮
+    // plot find unowned_plot
+    cmd.overload().text("find").text("unowned_plot").execute(LambdaFindUnownedPlot);
 
     _setupTemplateCommand();
 
