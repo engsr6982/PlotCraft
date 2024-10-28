@@ -327,7 +327,7 @@ std::optional<PlotPos> PlotDBStorage::findUnownedPlot() const {
     NodeTree tree;
 
     for (auto const& [_, ptr] : mPlotList) {
-        tree.insert(NodeTree::Node(ptr->getX(), ptr->getZ()));
+        tree.insert(ptr->getX(), ptr->getZ());
     }
 
     auto result = tree.findNearestUnmarkedNodeFromRoot();

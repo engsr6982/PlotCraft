@@ -132,6 +132,7 @@ static const auto LambdaFindUnownedPlot = [](CommandOrigin const& origin, Comman
     }
 
     player.teleport(result->getSafestPos(), getPlotWorldDimensionId());
+    sendText<LogLevel::Success>(player, "已传送到无主地皮!");
 };
 
 

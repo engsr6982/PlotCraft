@@ -19,7 +19,7 @@ public:
         int    x, z;          // 坐标
         double distance{0.0}; // 距离
 
-        Node() = default;
+        Node() = delete;
         Node(int x, int z) : x(x), z(z) {}
         Node(NodePair const& p) : x(p.first), z(p.second) {}
         Node(int x, int z, double distance) : x(x), z(z), distance(distance) {}
