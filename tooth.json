@@ -1,22 +1,22 @@
 {
     "format_version": 2,
     "tooth": "github.com/engsr6982/PlotCraft",
-    "version": "1.1.0",
+    "version": "1.3.0-rc.1",
     "info": {
         "name": "PlotCraft - 地皮插件",
         "description": "地皮世界|地皮购买|地皮出售|地皮共享|地皮评论",
         "author": "engsr6982",
         "tags": [
-            "levilamina",
-            "plugin",
-            "mod",
+            "platform:levilamina",
+            "type:mod",
             "plot",
             "plotcraft"
         ]
     },
-    "asset_url": "https://github.com/engsr6982/PlotCraft/releases/download/v1.1.0/PlotCraft-windows-x64.zip",
+    "asset_url": "https://github.com/engsr6982/PlotCraft/releases/download/v1.3.0-rc.1/PlotCraft-windows-x64.zip",
     "prerequisites": {
-        "github.com/LiteLDev/LeviLamina": ">=0.13.4 <0.14.0",
+        "github.com/LiteLDev/LeviLamina": ">=1.0.0-rc.3",
+        "github.com/MiracleForest/iListenAttentively": ">=0.2.2",
         "github.com/LiteLDev/MoreDimensions": "0.4.1"
     },
     "files": {

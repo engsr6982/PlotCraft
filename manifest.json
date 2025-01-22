@@ -1,14 +1,17 @@
 {
-    "name": "${pluginName}",
-    "entry": "${pluginFile}",
-    "version": "${pluginVersion}",
+    "name": "${modName}",
+    "entry": "${modFile}",
+    "version": "${modVersion}",
     "type": "native",
     "dependencies": [
         {
-            "name": "more-dimensions"
+            "name": "iListenAttentively"
         }
     ],
     "optionalDependencies": [
+        {
+            "name": "more-dimensions"
+        },
         {
             "name": "LegacyMoney"
         }
