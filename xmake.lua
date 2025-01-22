@@ -53,7 +53,7 @@ target("PlotCraft")
     )
     add_packages(
         "levilamina",
-        "more_events"
+        "ilistenattentively"
     )
     add_files("src/**.cpp", "src/**.cc")
     add_includedirs(

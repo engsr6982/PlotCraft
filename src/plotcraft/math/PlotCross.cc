@@ -1,8 +1,6 @@
 #include "plotcraft/math/PlotCross.h"
 #include "fmt/core.h"
 #include "ll/api/service/Bedrock.h"
-#include "mc/enums/BlockUpdateFlag.h"
-#include "mc/math/Vec3.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/dimension/Dimension.h"
@@ -113,17 +111,18 @@ void PlotCross::fill(Block const& block, bool removeBorder) {
     Block const& air = Block::tryGetFromRegistry("minecraft:air").value();
     int const    y   = PlotPos::getSurfaceYStatic() - 1;
 
+    static uchar flags = (1 << 0) | (1 << 1); // 0b11 BlockUpdateFlag::All v0.13.5
     for (int x = (int)min.x; x <= max.x; x++) {
         for (int z = (int)min.z; z <= max.z; z++) {
             auto& bl = bs.getBlock(x, y, z);
 
             if (!bl.isAir()) {
-                bs.setBlock(x, y, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
+                bs.setBlock(x, y, z, block, flags, nullptr);
             }
 
             auto& borderBlock = bs.getBlock(x, y + 1, z);
             if ((removeBorder && !borderBlock.isAir()) && (x == min.x || x == max.x || z == min.z || z == max.z)) {
-                bs.setBlock(x, y + 1, z, air, (int)BlockUpdateFlag::AllPriority, nullptr);
+                bs.setBlock(x, y + 1, z, air, flags, nullptr);
             }
         }
     }

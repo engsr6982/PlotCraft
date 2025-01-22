@@ -1,6 +1,4 @@
 #pragma once
-#include "mc/math/Vec3.h"
-#include "mc/world/level/BlockPos.h"
 #include "mc/world/level/block/Block.h"
 #include "plotcraft/Global.h"
 #include <memory>
@@ -35,9 +33,9 @@ public:
 
     PLAPI bool isPosInPlot(const Vec3& vec3) const; // 判断一个点是否在地皮内
 
-    PLAPI bool isPosOnBorder(Vec3 const& vec3) const; // 判断一个点是否在地皮边界上
+    PLAPI bool isPosOnBorder(Vec3 const& vec3) const;                          // 判断一个点是否在地皮边界上
     PLAPI bool isAABBOnBorder(BlockPos const& min, BlockPos const& max) const; // 判断一个立方体是否在地皮边界上
-    PLAPI bool isRadiusOnBorder(BlockPos const& center, int radius) const; // 判断一个圆是否在地皮边界上
+    PLAPI bool isRadiusOnBorder(BlockPos const& center, int radius) const;     // 判断一个圆是否在地皮边界上
 
     PLAPI bool operator==(PlotPos const& other) const;
     PLAPI bool operator!=(PlotPos const& other) const;

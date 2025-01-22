@@ -39,17 +39,14 @@ namespace fs = std::filesystem;
 
 namespace my_plugin {
 
-static std::unique_ptr<MyPlugin> instance;
-
-MyPlugin& MyPlugin::getInstance() { return *instance; }
+MyPlugin& MyPlugin::getInstance() {
+    static MyPlugin instance;
+    return instance;
+}
 
 bool MyPlugin::load() {
     auto& self   = getSelf();
     auto& logger = self.getLogger();
-
-    if (ll::sys_utils::isStdoutSupportAnsi()) {
-        logger.title = fmt::format(fmt::fg(fmt::color::light_green), logger.title);
-    }
 
     logger.info(R"(                                                           )");
     logger.info(R"(         ____   __        __   ______              ____ __ )");
@@ -71,7 +68,7 @@ bool MyPlugin::load() {
 
     logger.info("加载数据...");
     plot::Config::loadConfig();
-    ll::i18n::load(langDir);
+    auto un_used = ll::i18n::getInstance().load(langDir);
     plot::data::PlotDBStorage::getInstance().load();
     plot::data::PlayerNameDB::getInstance().initPlayerNameDB();
     plot::EconomySystem::getInstance().update(&plot::Config::cfg.economy);
@@ -128,4 +125,4 @@ bool MyPlugin::disable() {
 
 } // namespace my_plugin
 
-LL_REGISTER_MOD(my_plugin::MyPlugin, my_plugin::instance);
+LL_REGISTER_MOD(my_plugin::MyPlugin, my_plugin::MyPlugin::getInstance());

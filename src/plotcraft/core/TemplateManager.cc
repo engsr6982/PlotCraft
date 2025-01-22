@@ -1,6 +1,5 @@
 #include "TemplateManager.h"
-#include "mc/deps/core/utility/buffer_span_mut.h"
-#include "mc/enums/LogLevel.h"
+#include "mc/_HeaderOutputPredefine.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/ChunkPos.h"
 #include "mc/world/level/block/Block.h"
@@ -111,13 +110,12 @@ bool TemplateManager::generatorBlockVolume(BlockVolume& volume) {
     int totalHeight = startHeight + data.template_height; // 起点 + buffer 高度
 
     for (auto& [key, buffer] : mBlockBuffer) {
-        mBlockVolume[string(key)] = BlockVolume(volume);
+        auto vol            = BlockVolume(volume); // 拷贝构造
+        vol.mHeight         = totalHeight;
+        vol.mBlocks->mBegin = &*buffer.begin();
+        vol.mBlocks->mEnd   = &*buffer.end();
 
-        auto& v = mBlockVolume[key];
-
-        v.mHeight        = totalHeight;
-        v.mBlocks.mBegin = &*buffer.begin();
-        v.mBlocks.mEnd   = &*buffer.end();
+        mBlockVolume.emplace(string(key), std::move(vol));
     }
     return true;
 }

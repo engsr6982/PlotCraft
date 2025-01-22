@@ -1,6 +1,7 @@
 #pragma once
-#include "ll/api/schedule/Scheduler.h"
-#include "mc/deps/core/mce/UUID.h"
+#include "ll/api/chrono/GameChrono.h"
+#include "mc/deps/core/math/Vec3.h"
+#include "mc/platform/UUID.h"
 #include "mc/world/level/BlockPos.h"
 #include <nlohmann/json.hpp>
 #include <string>
@@ -25,7 +26,6 @@
 
 namespace plot {
 
-
 using string    = std::string;
 using json      = nlohmann::json;
 using DiagonPos = std::pair<Vec3, Vec3>;
@@ -44,7 +44,6 @@ PLAPI int getPlotWorldDimensionId();
 
 
 using ll::chrono_literals::operator""_tick;
-PLAPI extern ll::schedule::GameTickScheduler GlobalPlotScheduler;
 
 
 } // namespace plot

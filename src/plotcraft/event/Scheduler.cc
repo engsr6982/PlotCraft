@@ -1,10 +1,11 @@
-#include "ll/api/schedule/Scheduler.h"
 #include "ll/api/chrono/GameChrono.h"
+#include "ll/api/coro/CoroTask.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/ListenerBase.h"
-#include "ll/api/schedule/Task.h"
 #include "ll/api/service/Bedrock.h"
-#include "mc/common/wrapper/optional_ref.h"
+#include "ll/api/service/GamingStatus.h"
+#include "ll/api/thread/ServerThreadExecutor.h"
+#include "mc/deps/core/utility/optional_ref.h"
 #include "mc/network/packet/TextPacket.h"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/gamemode/GameMode.h"
@@ -85,60 +86,64 @@ void _SetupPlotEventScheduler() {
     auto* db  = &data::PlotDBStorage::getInstance();
     auto* ndb = &data::PlayerNameDB::getInstance();
 
-    GlobalPlotScheduler.add<ll::schedule::RepeatTask>(5_tick, [bus, db, ndb]() {
-        ll::service::getLevel()->forEachPlayer([bus, db, ndb](Player& pl) {
-            auto& uuid = pl.getUuid();
+    ll::coro::keepThis([bus, db, ndb]() -> ll::coro::CoroTask<> {
+        while (ll::getGamingStatus() == ll::GamingStatus::Running) {
+            co_await 5_tick;
+            ll::service::getLevel()->forEachPlayer([bus, db, ndb](Player& pl) {
+                auto& uuid = pl.getUuid();
 
-            // 获取当前位置信息
-            auto const& curPos  = pl.getPosition();
-            auto const  curDim  = pl.getDimensionId();
-            auto const  curPlot = PlotPos(curPos);
+                // 获取当前位置信息
+                auto const& curPos  = pl.getPosition();
+                auto const  curDim  = pl.getDimensionId();
+                auto const  curPlot = PlotPos(curPos);
 
-            // 获取上一次位置信息
-            auto& lastDim  = EventHelper::mDimidMap[uuid];
-            auto& lastPlot = EventHelper::mPlotMap[uuid];
+                // 获取上一次位置信息
+                auto& lastDim  = EventHelper::mDimidMap[uuid];
+                auto& lastPlot = EventHelper::mPlotMap[uuid];
 
-            int const plotDimid = getPlotWorldDimensionId();
+                int const plotDimid = getPlotWorldDimensionId();
 
-            // 维度变化
-            if (curDim != lastDim) {
-                // 当前不在地皮维度 & 上一次在地皮维度 & 上一次在地皮内
-                if (curDim != plotDimid && lastDim == plotDimid && lastPlot.isValid()) {
-                    bus->publish(PlayerLeavePlot{lastPlot, &pl}); // 玩家离开地皮
+                // 维度变化
+                if (curDim != lastDim) {
+                    // 当前不在地皮维度 & 上一次在地皮维度 & 上一次在地皮内
+                    if (curDim != plotDimid && lastDim == plotDimid && lastPlot.isValid()) {
+                        bus->publish(PlayerLeavePlot{lastPlot, &pl}); // 玩家离开地皮
+                    }
+                    // 当前在地皮维度 & 上一次不在地皮维度 & 当前在地皮内
+                    else if (curDim == plotDimid && lastDim != plotDimid && curPlot.isValid()) {
+                        bus->publish(PlayerEnterPlot{curPlot, &pl}); // 玩家进入地皮
+                    }
+                    lastDim  = curDim;  // 更新维度缓存
+                    lastPlot = curPlot; // 更新地皮缓存
+                    return true;
                 }
-                // 当前在地皮维度 & 上一次不在地皮维度 & 当前在地皮内
-                else if (curDim == plotDimid && lastDim != plotDimid && curPlot.isValid()) {
-                    bus->publish(PlayerEnterPlot{curPlot, &pl}); // 玩家进入地皮
+
+                if (curDim != plotDimid) return true; // 不在地皮维度
+
+                if (db->getPlayerSetting(uuid.asString()).showPlotTip) {
+                    SendPlotTip(pl, curPlot, ndb, db);
                 }
-                lastDim  = curDim;  // 更新维度缓存
-                lastPlot = curPlot; // 更新地皮缓存
+
+                // 地皮变化
+                // 1. 离开地皮
+                // 2. 进入地皮
+                if (curPlot != lastPlot) {
+                    // 上一次在地皮内 & 当前不在地皮内
+                    if (lastPlot.isValid() && !curPlot.isValid()) {
+                        bus->publish(PlayerLeavePlot{lastPlot, &pl}); // 玩家离开地皮
+                    }
+                    // 上一次不在地皮内 & 当前在地皮内
+                    else if (!lastPlot.isValid() && curPlot.isValid()) {
+                        bus->publish(PlayerEnterPlot{curPlot, &pl}); // 玩家进入地皮
+                    }
+                    lastPlot = curPlot; // 更新地皮缓存
+                }
+
                 return true;
-            }
-
-            if (curDim != plotDimid) return true; // 不在地皮维度
-
-            if (db->getPlayerSetting(uuid.asString()).showPlotTip) {
-                SendPlotTip(pl, curPlot, ndb, db);
-            }
-
-            // 地皮变化
-            // 1. 离开地皮
-            // 2. 进入地皮
-            if (curPlot != lastPlot) {
-                // 上一次在地皮内 & 当前不在地皮内
-                if (lastPlot.isValid() && !curPlot.isValid()) {
-                    bus->publish(PlayerLeavePlot{lastPlot, &pl}); // 玩家离开地皮
-                }
-                // 上一次不在地皮内 & 当前在地皮内
-                else if (!lastPlot.isValid() && curPlot.isValid()) {
-                    bus->publish(PlayerEnterPlot{curPlot, &pl}); // 玩家进入地皮
-                }
-                lastPlot = curPlot; // 更新地皮缓存
-            }
-
-            return true;
-        });
-    });
+            });
+        }
+        co_return;
+    }).launch(ll::thread::ServerThreadExecutor::getDefault());
 }
 
 } // namespace plot::event

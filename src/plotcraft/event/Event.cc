@@ -3,29 +3,15 @@
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/Listener.h"
 #include "ll/api/event/ListenerBase.h"
-#include "ll/api/event/player/PlayerAttackEvent.h"
-#include "ll/api/event/player/PlayerDestroyBlockEvent.h"
-#include "ll/api/event/player/PlayerInteractBlockEvent.h"
-#include "ll/api/event/player/PlayerJoinEvent.h"
-#include "ll/api/event/player/PlayerPickUpItemEvent.h"
-#include "ll/api/event/player/PlayerPlaceBlockEvent.h"
-#include "ll/api/event/player/PlayerUseItemEvent.h"
-#include "ll/api/event/world/FireSpreadEvent.h"
-#include "ll/api/event/world/SpawnMobEvent.h"
-#include "ll/api/service/Bedrock.h"
-#include "mc/common/wrapper/optional_ref.h"
-#include "mc/enums/BlockUpdateFlag.h"
-#include "mc/enums/GameType.h"
+#include "mc/deps/core/math/Vec3.h"
 #include "mc/network/packet/UpdateBlockPacket.h"
 #include "mc/server/ServerPlayer.h"
-#include "mc/world/actor/player/Player.h"
-#include "mc/world/gamemode/GameMode.h"
-#include "mc/world/level/Level.h"
-#include "mc/world/level/block/Block.h"
-#include "mc/world/level/dimension/Dimension.h"
+#include "mc/world/level/BlockPos.h"
 #include "mc/world/level/material/Material.h"
 #include "mc/world/phys/AABB.h"
 #include "mc/world/phys/HitResult.h"
+#include "mc\world\level\block\components\BlockLiquidDetectionComponent.h"
+#include "mc\world\level\chunk\SubChunk.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/Global.h"
 #include "plotcraft/data/PlayerNameDB.h"
@@ -36,59 +22,78 @@
 #include "plotcraft/utils/Mc.h"
 #include "plotcraft/utils/Utils.h"
 #include "plugin/MyPlugin.h"
+#include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 
-#include "more_events/ActorRideEvent.h"
-#include "more_events/ArmorStandSwapItemEvent.h"
-#include "more_events/ExplodeEvent.h"
-#include "more_events/FarmDecayEvent.h"
-#include "more_events/LiquidFlowEvent.h"
-#include "more_events/MobHurtEffectEvent.h"
-#include "more_events/MossFertilizerEvent.h"
-#include "more_events/PistonTryPushEvent.h"
-#include "more_events/PlayerAttackBlockEvent.h"
-#include "more_events/PlayerDropItemEvent.h"
-#include "more_events/PlayerUseItemFrameEvent.h"
-#include "more_events/PressurePlateTriggerEvent.h"
-#include "more_events/ProjectileSpawnEvent.h"
-#include "more_events/RedstoneUpdateEvent.h"
-#include "more_events/SculkCatalystAbsorbExperienceEvent.h"
-#include "more_events/WitherDestroyBlockEvent.h"
+
+#include "ll/api/event/entity/ActorHurtEvent.h"
+#include "ll/api/event/player/PlayerAttackEvent.h"
+#include "ll/api/event/player/PlayerDestroyBlockEvent.h"
+#include "ll/api/event/player/PlayerInteractBlockEvent.h"
+#include "ll/api/event/player/PlayerJoinEvent.h"
+#include "ll/api/event/player/PlayerPickUpItemEvent.h"
+#include "ll/api/event/player/PlayerPlaceBlockEvent.h"
+#include "ll/api/event/player/PlayerUseItemEvent.h"
+#include "ll/api/event/world/FireSpreadEvent.h"
+#include "ll/api/event/world/SpawnMobEvent.h"
+
+#include "ila/event/minecraft/actor/ActorRideEvent.h"
+#include "ila/event/minecraft/actor/ActorTriggerPressurePlateEvent.h"
+#include "ila/event/minecraft/actor/ArmorStandSwapItemEvent.h"
+#include "ila/event/minecraft/actor/MobHurtEffectEvent.h"
+#include "ila/event/minecraft/actor/ProjectileCreateEvent.h"
+// #include "ila/event/minecraft/level/SculkCatalystAbsorbExperienceEvent.h"
+#include "ila/event/minecraft/player/PlayerAttackBlockEvent.h"
+#include "ila/event/minecraft/player/PlayerDropItemEvent.h"
+#include "ila/event/minecraft/player/PlayerOperatedItemFrameEvent.h"
+#include "ila/event/minecraft/world/ExplosionEvent.h"
+#include "ila/event/minecraft/world/FarmDecayEvent.h"
+#include "ila/event/minecraft/world/LiquidTryFlowEvent.h"
+#include "ila/event/minecraft/world/MossGrowthEvent.h"
+#include "ila/event/minecraft/world/PistonPushEvent.h"
+#include "ila/event/minecraft/world/RedstoneUpdateEvent.h"
+#include "ila/event/minecraft/world/SculkBlockGrowthEvent.h"
+#include "ila/event/minecraft/world/SculkSpreadEvent.h"
+#include "ila/event/minecraft/world/WitherDestroyEvent.h"
 
 
 using PlotPermission = plot::data::PlotPermission;
 
 
 // Global variables
-ll::event::ListenerPtr mPlayerJoinEvent;                    // 玩家进入服务器
-ll::event::ListenerPtr mSpawningMobEvent;                   // 生物尝试生成
-ll::event::ListenerPtr mPlayerDestroyBlockEvent;            // 玩家尝试破坏方块
-ll::event::ListenerPtr mPlayerPlaceingBlockEvent;           // 玩家尝试放置方块
-ll::event::ListenerPtr mPlayerUseItemOnEvent;               // 玩家对方块使用物品（点击右键）
-ll::event::ListenerPtr mFireSpreadEvent;                    // 火焰蔓延
-ll::event::ListenerPtr mPlayerAttackEntityEvent;            // 玩家攻击实体
-ll::event::ListenerPtr mPlayerPickUpItemEvent;              // 玩家捡起物品
-ll::event::ListenerPtr mPlayerInteractBlockEvent;           // 方块接受玩家互动
-ll::event::ListenerPtr mPlayerLeavePlotEvent;               // 玩家离开地皮
-ll::event::ListenerPtr mPlayerEnterPlotEvent;               // 玩家进入地皮
-ll::event::ListenerPtr mPlayerUseItemEvent;                 // 玩家使用物品
-ll::event::ListenerPtr mArmorStandSwapItemEvent;            // 玩家交换盔甲架物品 (more_events)
-ll::event::ListenerPtr mPlayerAttackBlockEvent;             // 玩家攻击方块 (more_events)
-ll::event::ListenerPtr mPlayerDropItemEvent;                // 玩家丢弃物品 (more_events)
-ll::event::ListenerPtr mActorRideEvent;                     // 实体骑乘 (more_events)
-ll::event::ListenerPtr mExplodeEvent;                       // 爆炸 (more_events)
-ll::event::ListenerPtr mFarmDecayEvent;                     // 农田退化 (more_events)
-ll::event::ListenerPtr mMobHurtEffectEvent;                 // 实体受伤效果 (more_events)
-ll::event::ListenerPtr mPistonTryPushEvent;                 // 活塞尝试推动方块 (more_events)
-ll::event::ListenerPtr mPlayerUseItemFrameEvent;            // 玩家使用物品展示框 (more_events)
-ll::event::ListenerPtr mPressurePlateTriggerEvent;          // 压力板触发 (more_events)
-ll::event::ListenerPtr mProjectileSpawnEvent;               // 投掷物生成 (more_events)
-ll::event::ListenerPtr mRedstoneUpdateEvent;                // 红石更新 (more_events)
-ll::event::ListenerPtr mWitherDestroyBlockEvent;            // 凋零破坏方块 (more_events)
-ll::event::ListenerPtr mMossFertilizerEvent;                // 苔藓施肥 (more_events)
-ll::event::ListenerPtr mLiquidFlowEvent;                    // 流体流动 (more_events)
-ll::event::ListenerPtr mSculkCatalystAbsorbExperienceEvent; // 幽匿催发体吸收经验 (more_events)
+ll::event::ListenerPtr mPlayerJoinEvent;           // 玩家进入服务器
+ll::event::ListenerPtr mActorHurtEvent;            // 实体受伤
+ll::event::ListenerPtr mSpawningMobEvent;          // 生物尝试生成
+ll::event::ListenerPtr mPlayerDestroyBlockEvent;   // 玩家尝试破坏方块
+ll::event::ListenerPtr mPlayerPlaceingBlockEvent;  // 玩家尝试放置方块
+ll::event::ListenerPtr mPlayerUseItemOnEvent;      // 玩家对方块使用物品（点击右键）
+ll::event::ListenerPtr mFireSpreadEvent;           // 火焰蔓延
+ll::event::ListenerPtr mPlayerAttackEntityEvent;   // 玩家攻击实体
+ll::event::ListenerPtr mPlayerPickUpItemEvent;     // 玩家捡起物品
+ll::event::ListenerPtr mPlayerInteractBlockEvent;  // 方块接受玩家互动
+ll::event::ListenerPtr mPlayerLeavePlotEvent;      // 玩家离开地皮
+ll::event::ListenerPtr mPlayerEnterPlotEvent;      // 玩家进入地皮
+ll::event::ListenerPtr mPlayerUseItemEvent;        // 玩家使用物品
+ll::event::ListenerPtr mArmorStandSwapItemEvent;   // 玩家交换盔甲架物品 (iListenAttentively)
+ll::event::ListenerPtr mPlayerAttackBlockEvent;    // 玩家攻击方块 (iListenAttentively)
+ll::event::ListenerPtr mPlayerDropItemEvent;       // 玩家丢弃物品 (iListenAttentively)
+ll::event::ListenerPtr mActorRideEvent;            // 实体骑乘 (iListenAttentively)
+ll::event::ListenerPtr mExplodeEvent;              // 爆炸 (iListenAttentively)
+ll::event::ListenerPtr mFarmDecayEvent;            // 农田退化 (iListenAttentively)
+ll::event::ListenerPtr mMobHurtEffectEvent;        // 实体受伤效果 (iListenAttentively)
+ll::event::ListenerPtr mPistonTryPushEvent;        // 活塞尝试推动方块 (iListenAttentively)
+ll::event::ListenerPtr mPlayerUseItemFrameEvent;   // 玩家使用物品展示框 (iListenAttentively)
+ll::event::ListenerPtr mPressurePlateTriggerEvent; // 压力板触发 (iListenAttentively)
+ll::event::ListenerPtr mProjectileSpawnEvent;      // 投掷物生成 (iListenAttentively)
+ll::event::ListenerPtr mRedstoneUpdateEvent;       // 红石更新 (iListenAttentively)
+ll::event::ListenerPtr mWitherDestroyBlockEvent;   // 凋零破坏方块 (iListenAttentively)
+ll::event::ListenerPtr mMossFertilizerEvent;       // 苔藓施肥 (iListenAttentively)
+ll::event::ListenerPtr mLiquidFlowEvent;           // 流体流动 (iListenAttentively)
+// ll::event::ListenerPtr mSculkCatalystAbsorbExperienceEvent; // 幽匿催发体吸收经验 (iListenAttentively)
+ll::event::ListenerPtr mSculkBlockGrowthEvent; // 幽匿尖啸体生成 (iListenAttentively)
+ll::event::ListenerPtr mSculkSpreadEvent;      // 幽匿蔓延 (iListenAttentively)
 
 
 namespace plot::event {
@@ -147,7 +152,7 @@ bool registerEventListener() {
         });
     }
 
-    // Minecraft events
+    // LeviLamina's events
     mPlayerJoinEvent = bus->emplaceListener<ll::event::PlayerJoinEvent>([ndb, db](ll::event::PlayerJoinEvent& e) {
         if (e.self().isSimulatedPlayer()) return true; // skip simulated player
         ndb->insertPlayer(e.self());
@@ -157,7 +162,7 @@ bool registerEventListener() {
 
     mPlayerDestroyBlockEvent =
         bus->emplaceListener<ll::event::PlayerDestroyBlockEvent>([db, logger](ll::event::PlayerDestroyBlockEvent& ev) {
-            ServerPlayer& player = ev.self();
+            auto& player = ev.self();
             if (player.getDimensionId() != getPlotWorldDimensionId()) return; // 被破坏的方块不在地皮世界
 
             BlockPos const& blockPos = ev.pos();
@@ -183,7 +188,7 @@ bool registerEventListener() {
 
     mPlayerPlaceingBlockEvent =
         bus->emplaceListener<ll::event::PlayerPlacingBlockEvent>([db, logger](ll::event::PlayerPlacingBlockEvent& ev) {
-            ServerPlayer& player = ev.self();
+            auto& player = ev.self();
             if (player.getDimensionId() != getPlotWorldDimensionId()) return;
 
             BlockPos blockPos = mc::face2Pos(ev.pos(), ev.face()); // 计算实际放置位置
@@ -389,12 +394,11 @@ bool registerEventListener() {
 
             auto& player = ev.self();
             auto  val    = player.traceRay(5.5f, false, true, [&](BlockSource const&, Block const& bl, bool) {
-                // if (!bl.isSolid()) return false;            // 非固体方块
                 if (bl.getMaterial().isLiquid()) return false; // 液体方块
                 return true;
             });
 
-            BlockPos const&  pos  = val.mBlockPos;
+            BlockPos const&  pos  = val.mBlock;
             ItemStack const& item = ev.item();
             Block const&     bl   = player.getDimensionBlockSource().getBlock(pos);
 
@@ -403,19 +407,62 @@ bool registerEventListener() {
             auto pps = PlotPos(pos);
             if (pps.isValid() && pps.isPosOnBorder(pos)) {
                 ev.cancel();
+                static uchar flags = (1 << 0) | (1 << 1); // 0b11 BlockUpdateFlag::All v0.13.5
                 UpdateBlockPacket(
                     pos,
-                    (uint)UpdateBlockPacket::BlockLayer::Extra,
+                    (uint)SubChunk::BlockLayer::Extra,
                     bl.getBlockItemId(),
-                    (uchar)BlockUpdateFlag::All
+                    flags
                 )
                     .sendTo(player); // 防刁民在边框放水，导致客户端不更新
             };
         });
 
+    // 可开关事件（作用于地皮世界）
+    mSpawningMobEvent =
+        bus->emplaceListener<ll::event::SpawningMobEvent>([/* logger */](ll::event::SpawningMobEvent& ev) {
+            if (ev.blockSource().getDimensionId() != getPlotWorldDimensionId()) return;
+
+            // logger->debug("[SpawningMob]: {}", ev.identifier().getFullName());
+
+            if (Config::cfg.plotWorld.spawnMob) return;
+
+            ev.cancel();
+        });
+
+    mActorHurtEvent = bus->emplaceListener<ll::event::ActorHurtEvent>([db, logger](ll::event::ActorHurtEvent& ev) {
+        auto& self = ev.self();
+        if (self.getDimensionId() != getPlotWorldDimensionId()) return;
+
+        logger->debug("[ActorHurtEvent] mob: {}", self.getTypeName());
+
+        auto pps = PlotPos(ev.self().getPosition());
+        if (!pps.isValid()) return;
+
+        auto meta = db->getPlot(pps.getPlotID());
+        if (meta) {
+            auto const& et  = self.getTypeName();
+            auto const& tab = meta->getPermissionTableConst();
+            if (tab.allowAttackPlayer && self.isPlayer()) return;
+            if (tab.allowAttackAnimal && TypeNameMap::AnimalEntityMap.contains(et)) return;
+            if (tab.allowAttackMob && !TypeNameMap::AnimalEntityMap.contains(et)) return;
+        }
+
+        if (self.isPlayer()) {
+            auto const pl = self.getWeakEntity().tryUnwrap<Player>();
+            if (pl.has_value()) {
+                if (PreCheck(meta, pl->getUuid().asString())) return;
+            }
+        }
+
+        ev.cancel();
+    });
+
+    // iLa
     mPlayerAttackBlockEvent =
-        bus->emplaceListener<more_events::PlayerAttackBlockEvent>([logger](more_events::PlayerAttackBlockEvent& ev) {
-            optional_ref<Player> pl = ev.getPlayer();
+        bus->emplaceListener<ila::mc::PlayerAttackBlockBeforeEvent>([logger](ila::mc::PlayerAttackBlockBeforeEvent& ev
+                                                                    ) {
+            optional_ref<Player> pl = ev.self();
             if (!pl.has_value()) return;
             Player& player = pl.value();
 
@@ -438,7 +485,8 @@ bool registerEventListener() {
         });
 
     mArmorStandSwapItemEvent =
-        bus->emplaceListener<more_events::ArmorStandSwapItemEvent>([logger](more_events::ArmorStandSwapItemEvent& ev) {
+        bus->emplaceListener<ila::mc::ArmorStandSwapItemBeforeEvent>([logger](ila::mc::ArmorStandSwapItemBeforeEvent& ev
+                                                                     ) {
             Player& player = ev.getPlayer();
             if (player.getDimensionId() != getPlotWorldDimensionId()) return;
 
@@ -458,8 +506,8 @@ bool registerEventListener() {
         });
 
     mPlayerDropItemEvent =
-        bus->emplaceListener<more_events::PlayerDropItemEvent>([logger](more_events::PlayerDropItemEvent& ev) {
-            Player& player = ev.getPlayer();
+        bus->emplaceListener<ila::mc::PlayerDropItemBeforeEvent>([logger](ila::mc::PlayerDropItemBeforeEvent& ev) {
+            Player& player = ev.self();
             if (player.getDimensionId() != getPlotWorldDimensionId()) return;
 
             logger->debug("[PlayerDropItem]: executed");
@@ -477,30 +525,18 @@ bool registerEventListener() {
             ev.cancel();
         });
 
-    // 可开关事件（作用于地皮世界）
-    mSpawningMobEvent =
-        bus->emplaceListener<ll::event::SpawningMobEvent>([/* logger */](ll::event::SpawningMobEvent& ev) {
-            if (ev.blockSource().getDimensionId() != getPlotWorldDimensionId()) return;
-
-            // logger->debug("[SpawningMob]: {}", ev.identifier().getFullName());
-
-            if (Config::cfg.plotWorld.spawnMob) return;
-
-            ev.cancel();
-        });
-
-    // MoreEvents
-    mActorRideEvent = bus->emplaceListener<more_events::ActorRideEvent>([logger](more_events::ActorRideEvent& ev) {
-        if (ev.getPassenger().getDimensionId() != getPlotWorldDimensionId()) return;
+    mActorRideEvent = bus->emplaceListener<ila::mc::ActorRideBeforeEvent>([logger](ila::mc::ActorRideBeforeEvent& ev) {
+        Actor& passenger = ev.self();
+        if (passenger.getDimensionId() != getPlotWorldDimensionId()) return;
 
         logger->debug("[生物骑乘] executed!");
 
-        if (!ev.getPassenger().isPlayer()) return;
+        if (!passenger.isPlayer()) return;
 
-        auto pps = PlotPos(ev.getPassenger().getPosition());
+        auto pps = PlotPos(passenger.getPosition());
         if (!pps.isValid()) return;
 
-        auto const& type = ev.getRided().getTypeName();
+        auto const& type = ev.getTarget().getTypeName();
         auto const  meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
         if (meta) {
             auto const& tab = meta->getPermissionTableConst();
@@ -511,8 +547,8 @@ bool registerEventListener() {
             }
         }
 
-        if (ev.getPassenger().isPlayer()) {
-            auto pl = ev.getPassenger().getWeakEntity().tryUnwrap<Player>();
+        if (passenger.isPlayer()) {
+            auto pl = passenger.getWeakEntity().tryUnwrap<Player>();
             if (pl.has_value()) {
                 if (PreCheck(meta, pl->getUuid().asString())) return;
             }
@@ -521,16 +557,16 @@ bool registerEventListener() {
         return;
     });
 
-    mExplodeEvent = bus->emplaceListener<more_events::ExplodeEvent>([logger](more_events::ExplodeEvent& ev) {
-        auto& bs  = ev.getRegion();
-        auto& pos = ev.getPos();
-        auto& exp = ev.getExplosionRadius();
+    mExplodeEvent = bus->emplaceListener<ila::mc::ExplosionBeforeEvent>([logger](ila::mc::ExplosionBeforeEvent& ev) {
+        auto& bs  = ev.blockSource();
+        auto& exp = ev.getExplosion();
+        auto  pos = BlockPos{exp.mPos};
 
         if (bs.getDimensionId() != getPlotWorldDimensionId()) return;
 
         logger->debug("[Explode] pos: {}", pos.toString());
 
-        int   r    = (int)(exp + 1.0f);
+        int   r    = (int)(exp.mRadius + 1.0);
         auto  land = PlotPos::getPlotPosAt(pos, r);
         auto& db   = PlotDBStorage::getInstance();
 
@@ -551,8 +587,8 @@ bool registerEventListener() {
         ev.cancel(); // 地皮世界禁止爆炸
     });
 
-    mFarmDecayEvent = bus->emplaceListener<more_events::FarmDecayEvent>([logger](more_events::FarmDecayEvent& ev) {
-        auto& region = ev.getBlockSource();
+    mFarmDecayEvent = bus->emplaceListener<ila::mc::FarmDecayBeforeEvent>([logger](ila::mc::FarmDecayBeforeEvent& ev) {
+        auto& region = ev.blockSource();
         if (region.getDimensionId() != getPlotWorldDimensionId()) return;
 
         logger->debug("[耕地退化] pos: {}", ev.getPos().toString());
@@ -569,25 +605,26 @@ bool registerEventListener() {
     });
 
     mMobHurtEffectEvent =
-        bus->emplaceListener<more_events::MobHurtEffectEvent>([logger](more_events::MobHurtEffectEvent& ev) {
-            if (ev.getSelf().getDimensionId() != getPlotWorldDimensionId()) return;
+        bus->emplaceListener<ila::mc::MobHurtEffectBeforeEvent>([logger](ila::mc::MobHurtEffectBeforeEvent& ev) {
+            auto& self = ev.self();
+            if (self.getDimensionId() != getPlotWorldDimensionId()) return;
 
-            logger->debug("[MobHurt] mob: {}", ev.getSelf().getTypeName());
+            logger->debug("[MobHurt] mob: {}", self.getTypeName());
 
-            auto pps = PlotPos(ev.getSelf().getPosition());
+            auto pps = PlotPos(ev.self().getPosition());
             if (!pps.isValid()) return;
 
             auto meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
             if (meta) {
-                auto const& et  = ev.getSelf().getTypeName();
+                auto const& et  = self.getTypeName();
                 auto const& tab = meta->getPermissionTableConst();
-                if (tab.allowAttackPlayer && ev.getSelf().isPlayer()) return;
+                if (tab.allowAttackPlayer && self.isPlayer()) return;
                 if (tab.allowAttackAnimal && TypeNameMap::AnimalEntityMap.contains(et)) return;
                 if (tab.allowAttackMob && !TypeNameMap::AnimalEntityMap.contains(et)) return;
             }
 
-            if (ev.getSelf().isPlayer()) {
-                auto const pl = ev.getSelf().getWeakEntity().tryUnwrap<Player>();
+            if (self.isPlayer()) {
+                auto const pl = self.getWeakEntity().tryUnwrap<Player>();
                 if (pl.has_value()) {
                     if (PreCheck(meta, pl->getUuid().asString())) return;
                 }
@@ -597,8 +634,8 @@ bool registerEventListener() {
         });
 
     mPistonTryPushEvent =
-        bus->emplaceListener<more_events::PistonTryPushEvent>([logger](more_events::PistonTryPushEvent& ev) {
-            auto& region = ev.getRegion();
+        bus->emplaceListener<ila::mc::PistonPushBeforeEvent>([logger](ila::mc::PistonPushBeforeEvent& ev) {
+            auto& region = ev.blockSource();
             if (region.getDimensionId() != getPlotWorldDimensionId()) return;
 
             logger->debug("[活塞推动方块] 目标: {}", ev.getPushPos().toString());
@@ -618,36 +655,35 @@ bool registerEventListener() {
             ev.cancel();
         });
 
-    mPlayerUseItemFrameEvent =
-        bus->emplaceListener<more_events::PlayerUseItemFrameEvent>([logger](more_events::PlayerUseItemFrameEvent& ev) {
-            auto player = ev.getPlayer();
-            if (!player) return;
-            if (player->getDimensionId() != getPlotWorldDimensionId()) return;
+    mPlayerUseItemFrameEvent = bus->emplaceListener<ila::mc::PlayerOperatedItemFrameBeforeEvent>(
+        [logger](ila::mc::PlayerOperatedItemFrameBeforeEvent& ev) {
+            auto& player = ev.self();
+            if (player.getDimensionId() != getPlotWorldDimensionId()) return;
 
-            logger->debug("[物品展示框] pos: {}", ev.getPos().toString());
+            logger->debug("[物品展示框] pos: {}", ev.getBlockPos().toString());
 
-            auto pps = PlotPos(ev.getPos());
+            auto pps = PlotPos(ev.getBlockPos());
             if (!pps.isValid()) return;
 
             auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
             if (meta) {
                 if (meta->getPermissionTableConst().useItemFrame) return;
             }
-            if (PreCheck(meta, player->getUuid().asString())) return;
+            if (PreCheck(meta, player.getUuid().asString())) return;
 
             ev.cancel();
-        });
+        }
+    );
 
-    mPressurePlateTriggerEvent =
-        bus->emplaceListener<more_events::PressurePlateTriggerEvent>([logger](more_events::PressurePlateTriggerEvent& ev
-                                                                     ) {
-            auto& region = ev.getRegion();
+    mPressurePlateTriggerEvent = bus->emplaceListener<ila::mc::ActorTriggerPressurePlateBeforeEvent>(
+        [logger](ila::mc::ActorTriggerPressurePlateBeforeEvent& ev) {
+            auto& self   = ev.self();
+            auto& region = self.getDimensionBlockSource();
             auto& pos    = ev.getPos();
-            auto& entity = ev.getEntity();
 
             if (region.getDimensionId() != getPlotWorldDimensionId()) return;
 
-            logger->debug("[压力板] pos: {} entity: {}", pos.toString(), entity.getTypeName());
+            logger->debug("[压力板] pos: {} entity: {}", pos.toString(), self.getTypeName());
 
             auto pps = PlotPos(pos);
             if (!pps.isValid()) return;
@@ -657,28 +693,29 @@ bool registerEventListener() {
                 if (meta->getPermissionTableConst().usePressurePlate) return;
             }
 
-            if (entity.isPlayer()) {
-                auto pl = entity.getWeakEntity().tryUnwrap<Player>();
+            if (self.isPlayer()) {
+                auto pl = self.getWeakEntity().tryUnwrap<Player>();
                 if (pl.has_value()) {
                     if (PreCheck(meta, pl->getUuid().asString())) return;
                 }
             }
 
             ev.cancel();
-        });
+        }
+    );
 
     mProjectileSpawnEvent =
-        bus->emplaceListener<more_events::ProjectileSpawnEvent>([logger](more_events::ProjectileSpawnEvent& ev) {
-            auto actor = ev.getSpawner();
-            if (!actor) return;
-            if (actor->getDimensionId() != getPlotWorldDimensionId()) return;
+        bus->emplaceListener<ila::mc::ProjectileCreateBeforeEvent>([logger](ila::mc::ProjectileCreateBeforeEvent& ev) {
+            auto& actor = ev.self();
+            if (actor.getDimensionId() != getPlotWorldDimensionId()) return;
 
-            logger->debug("[弹射物生成] type: {}", ev.getProjectileType());
+            auto const& type = actor.getTypeName();
 
-            auto pps = PlotPos(actor->getPosition());
+            logger->debug("[弹射物生成] type: {}", type);
+
+            auto pps = PlotPos(actor.getPosition());
             if (!pps.isValid()) return;
 
-            auto const& type = ev.getProjectileType();
 
             auto const meta = PlotDBStorage::getInstance().getPlot(pps.getPlotID());
             if (meta) {
@@ -694,8 +731,8 @@ bool registerEventListener() {
                 if (type == "minecraft:egg" && tab.allowThrowEgg) return;                 // 鸡蛋
             }
 
-            if (actor->isPlayer()) {
-                auto pl = actor->getWeakEntity().tryUnwrap<Player>();
+            if (actor.isPlayer()) {
+                auto pl = actor.getWeakEntity().tryUnwrap<Player>();
                 if (pl.has_value()) {
                     if (PreCheck(meta, pl->getUuid().asString())) return;
                 }
@@ -705,8 +742,8 @@ bool registerEventListener() {
         });
 
     mRedstoneUpdateEvent =
-        bus->emplaceListener<more_events::RedstoneUpdateEvent>([logger](more_events::RedstoneUpdateEvent& ev) {
-            auto& region = ev.getBlockSource();
+        bus->emplaceListener<ila::mc::RedstoneUpdateBeforeEvent>([logger](ila::mc::RedstoneUpdateBeforeEvent& ev) {
+            auto& region = ev.blockSource();
             if (region.getDimensionId() != getPlotWorldDimensionId()) return;
 
             logger->debug("[RedstoneUpdate] pos: {}", ev.getPos().toString());
@@ -723,13 +760,13 @@ bool registerEventListener() {
         });
 
     mWitherDestroyBlockEvent =
-        bus->emplaceListener<more_events::WitherDestroyBlockEvent>([logger](more_events::WitherDestroyBlockEvent& ev) {
-            auto& region = ev.getRegion();
+        bus->emplaceListener<ila::mc::WitherDestroyBeforeEvent>([logger](ila::mc::WitherDestroyBeforeEvent& ev) {
+            auto& region = ev.blockSource();
             if (region.getDimensionId() != getPlotWorldDimensionId()) return;
 
             logger->debug("[凋零破坏方块] executed!");
 
-            auto& bb   = ev.getAABB();
+            auto& bb   = ev.getBox();
             auto  land = PlotPos::getPlotPosAt(bb.min, bb.max);
             auto& db   = PlotDBStorage::getInstance();
 
@@ -758,8 +795,8 @@ bool registerEventListener() {
         });
 
     mMossFertilizerEvent =
-        bus->emplaceListener<more_events::MossFertilizerEvent>([logger, db](more_events::MossFertilizerEvent& ev) {
-            if (ev.getRegion().getDimensionId() != getPlotWorldDimensionId()) return;
+        bus->emplaceListener<ila::mc::MossGrowthBeforeEvent>([logger, db](ila::mc::MossGrowthBeforeEvent& ev) {
+            if (ev.blockSource().getDimensionId() != getPlotWorldDimensionId()) return;
 
             logger->debug("[MossSpread] {}", ev.getPos().toString());
 
@@ -781,45 +818,78 @@ bool registerEventListener() {
             }
         });
 
-    mLiquidFlowEvent = bus->emplaceListener<more_events::LiquidFlowEvent>([](more_events::LiquidFlowEvent& ev) {
-        auto& bs = ev.getBlockSource();
-        if (bs.getDimensionId() != getPlotWorldDimensionId()) return;
+    mLiquidFlowEvent =
+        bus->emplaceListener<ila::mc::LiquidTryFlowBeforeEvent>([](ila::mc::LiquidTryFlowBeforeEvent& ev) {
+            auto& bs = ev.blockSource();
+            if (bs.getDimensionId() != getPlotWorldDimensionId()) return;
 
-        auto& sou = ev.getLiquidPos();
-        auto  pps = PlotPos(sou);
-        if (!pps.isValid()) {
-            ev.cancel(); // 禁止在非领地流动
-            return;
-        }
+            auto& sou = ev.getPos();
+            auto  pps = PlotPos(sou);
+            if (!pps.isValid()) {
+                ev.cancel(); // 禁止在非领地流动
+                return;
+            }
 
-        if (pps.isPosOnBorder(sou)) {
-            ev.cancel(); // 禁止在边框流动
-            return;
-        }
-    });
+            if (pps.isPosOnBorder(sou)) {
+                ev.cancel(); // 禁止在边框流动
+                return;
+            }
+        });
 
-    mSculkCatalystAbsorbExperienceEvent = bus->emplaceListener<more_events::SculkCatalystAbsorbExperienceEvent>(
-        [logger](more_events::SculkCatalystAbsorbExperienceEvent& ev) {
-            auto& actor  = ev.getDiedActor();
-            auto& region = actor.getDimensionBlockSource();
-            if (region.getDimensionId() != getPlotWorldDimensionId()) return;
+    // mSculkCatalystAbsorbExperienceEvent = bus->emplaceListener<more_events::SculkCatalystAbsorbExperienceEvent>(
+    //     [logger](more_events::SculkCatalystAbsorbExperienceEvent& ev) {
+    //         auto& actor  = ev.getDiedActor();
+    //         auto& region = actor.getDimensionBlockSource();
+    //         if (region.getDimensionId() != getPlotWorldDimensionId()) return;
 
-            auto pos = actor.getBlockPosCurrentlyStandingOn(&actor);
+    //         auto pos = actor.getBlockPosCurrentlyStandingOn(&actor);
 
-            logger->debug("[SculkCatalystAbsorbExperience] Pos: {}", pos.toString());
+    //         logger->debug("[SculkCatalystAbsorbExperience] Pos: {}", pos.toString());
 
-            auto pps = PlotPos(pos);
+    //         auto pps = PlotPos(pos);
+    //         if (!pps.isValid()) {
+    //             ev.cancel(); // 禁止在非领地蔓延
+    //             return;
+    //         }
+
+    //         if (pps.isAABBOnBorder(pos - 9, pos + 9)) {
+    //             ev.cancel(); // 禁止在边框蔓延
+    //             return;
+    //         }
+    //     }
+    // );
+
+    mSculkBlockGrowthEvent =
+        bus->emplaceListener<ila::mc::SculkBlockGrowthBeforeEvent>([db,
+                                                                    logger](ila::mc::SculkBlockGrowthBeforeEvent& ev) {
+            auto& pos = ev.getPos();
+            logger->debug("[SculkBlockGrowth] {}", pos.toString());
+
+            PlotPos pps(pos);
             if (!pps.isValid()) {
                 ev.cancel(); // 禁止在非领地蔓延
                 return;
             }
 
-            if (pps.isAABBOnBorder(pos - 9, pos + 9)) {
+            if (pps.isPosOnBorder(pos)) {
                 ev.cancel(); // 禁止在边框蔓延
                 return;
             }
-        }
-    );
+        });
+
+    mSculkSpreadEvent =
+        bus->emplaceListener<ila::mc::SculkSpreadBeforeEvent>([logger](ila::mc::SculkSpreadBeforeEvent& ev) {
+            logger->debug("[SculkSpread] {} -> {}", ev.getSelfPos().toString(), ev.getTargetPos().toString());
+
+            PlotPos sou{ev.getSelfPos()};
+            PlotPos tar{ev.getTargetPos()};
+
+            if (!sou.isValid() || !tar.isValid()) {
+                ev.cancel(); // 道路禁止蔓延
+                return;
+            }
+        });
+
     return true;
 }
 
@@ -851,7 +921,7 @@ bool unRegisterEventListener() {
     bus.removeListener(mWitherDestroyBlockEvent);
     bus.removeListener(mMossFertilizerEvent);
     bus.removeListener(mLiquidFlowEvent);
-    bus.removeListener(mSculkCatalystAbsorbExperienceEvent);
+    // bus.removeListener(mSculkCatalystAbsorbExperienceEvent);
     return true;
 }
 

@@ -1,4 +1,5 @@
 #include "Global.h"
+#include "ll/api/i18n/I18n.h"
 
 namespace plot::gui {
 
@@ -6,13 +7,13 @@ namespace plot::gui {
 void PlayerSettingGUI(Player& player) {
     CustomForm fm{PLUGIN_TITLE};
 
-    auto setting     = data::PlotDBStorage::getInstance().getPlayerSetting(player.getUuid().asString());
-    auto i18n        = ll::i18n::getInstance().get();
-    auto settingJson = JsonHelper::structToJson(setting);
+    auto  setting     = data::PlotDBStorage::getInstance().getPlayerSetting(player.getUuid().asString());
+    auto& i18n        = ll::i18n::getInstance();
+    auto  settingJson = JsonHelper::structToJson(setting);
 
     for (auto const& [key, value] : settingJson.items()) {
         if (key == "version") continue;
-        fm.appendToggle(key, string(i18n->get(key)), value.get<bool>());
+        fm.appendToggle(key, string(i18n.get(key, ll::i18n::getDefaultLocaleCode())), value.get<bool>());
     }
 
     fm.sendTo(player, [setting, settingJson](Player& pl, CustomFormResult const& dt, FormCancelReason) {

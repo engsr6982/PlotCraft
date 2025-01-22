@@ -9,7 +9,7 @@ class TemplateGenerator : public FlatWorldGenerator {
 public:
     TemplateGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON);
 
-    void loadChunk(class LevelChunk& levelchunk, bool forceImmediateReplacementDataLoad);
+    void loadChunk(class LevelChunk& levelchunk, bool forceImmediateReplacementDataLoad) override;
 };
 
 

@@ -1,7 +1,5 @@
 #pragma once
 #include "PlotDirection.h"
-#include "mc/math/Vec3.h"
-#include "mc/world/level/BlockPos.h"
 #include "mc/world/level/block/Block.h"
 #include "plotcraft/Global.h"
 #include <vector>

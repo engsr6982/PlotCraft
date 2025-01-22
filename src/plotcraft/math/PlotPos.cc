@@ -1,8 +1,6 @@
 #include "plotcraft/math/PlotPos.h"
 #include "fmt/core.h"
 #include "ll/api/service/Bedrock.h"
-#include "mc/enums/BlockUpdateFlag.h"
-#include "mc/math/Vec3.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/dimension/Dimension.h"
@@ -364,6 +362,7 @@ std::unique_ptr<PlotPos> PlotPos::tryMerge(PlotPos const& other) const {
 bool PlotPos::operator!=(PlotPos const& other) const { return !(*this == other); }
 bool PlotPos::operator==(PlotPos const& other) const { return other.mVertexs == this->mVertexs; }
 
+
 // static
 bool PlotPos::isAdjacent(const PlotPos& plot1, const PlotPos& plot2) {
     int dx = std::abs(plot1.mX - plot2.mX);
@@ -476,10 +475,11 @@ void PlotPos::fillAABB(const BlockPos& min, const BlockPos& max, const Block& bl
     BlockPos end   = max;
     Polygon::fixAABB(start, end);
 
+    static uchar flags = (1 << 0) | (1 << 1); // 0b11 BlockUpdateFlag::All v0.13.5
     for (int x = start.x; x <= end.x; ++x) {
         for (int z = start.z; z <= end.z; ++z) {
             for (int y = start.y; y <= end.y; ++y) {
-                bs.setBlock(x, y, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
+                bs.setBlock(x, y, z, block, flags, nullptr);
             }
         }
     }

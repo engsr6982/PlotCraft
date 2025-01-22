@@ -1,21 +1,25 @@
 #include "DefaultGenerator.h"
-#include "mc/deps/core/utility/buffer_span_mut.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/ChunkBlockPos.h"
+#include "mc/world/level/ChunkPos.h"
 #include "mc/world/level/Level.h"
-#include "mc/world/level/biome/VanillaBiomeNames.h"
 #include "mc/world/level/biome/registry/BiomeRegistry.h"
 #include "mc/world/level/block/Block.h"
 #include "mc/world/level/block/BlockLegacy.h"
 #include "mc/world/level/block/BlockVolume.h"
 #include "mc/world/level/block/actor/BlockActor.h"
 #include "mc/world/level/block/registry/BlockTypeRegistry.h"
-#include "mc/world/level/block/utils/VanillaBlockTypeIds.h"
 #include "mc/world/level/chunk/LevelChunk.h"
 #include "mc/world/level/levelgen/v1/ChunkLocalNoiseCache.h"
+#include "mc\_HeaderOutputPredefine.h"
 #include "plotcraft/Config.h"
 #include <cstdio>
+#include <mc\world\level\biome\registry\BiomeRegistry.h>
+#include <mc\world\level\biome\registry\VanillaBiomeNames.h>
+#include <mc\world\level\biome\source\FixedBiomeSource.h>
+#include <mc\world\level\block\VanillaBlockTypeIds.h>
+#include <mc\world\level\dimension\Dimension.h>
 #include <memory>
 #include <vector>
 
@@ -24,15 +28,15 @@ namespace plot::core {
 
 DefaultGenerator::DefaultGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON)
 : FlatWorldGenerator(dimension, seed, generationOptionsJSON) {
-    mBiome       = getLevel().getBiomeRegistry().lookupByHash(VanillaBiomeNames::Plains);
+    mBiome       = getLevel().getBiomeRegistry().lookupByHash(VanillaBiomeNames::Plains());
     mBiomeSource = std::make_unique<FixedBiomeSource>(*mBiome);
 
     auto& gen = Config::cfg.generator;
 
 
     // 初始化方块指针
-    mBlock_Dirt    = &BlockTypeRegistry::getDefaultBlockState(VanillaBlockTypeIds::Dirt);
-    mBlock_Bedrock = &BlockTypeRegistry::getDefaultBlockState(VanillaBlockTypeIds::Bedrock);
+    mBlock_Dirt    = &BlockTypeRegistry::getDefaultBlockState(VanillaBlockTypeIds::Dirt());
+    mBlock_Bedrock = &BlockTypeRegistry::getDefaultBlockState(VanillaBlockTypeIds::Bedrock());
     mBlock_Road    = &BlockTypeRegistry::getDefaultBlockState(gen.roadBlock.c_str());
     mBlock_Fill    = &BlockTypeRegistry::getDefaultBlockState(gen.fillBlock.c_str());
     mBlock_Border  = &BlockTypeRegistry::getDefaultBlockState(gen.borderBlock.c_str());
@@ -59,22 +63,22 @@ DefaultGenerator::DefaultGenerator(Dimension& dimension, uint seed, Json::Value 
     // 生成4个模板子区块Volume
     for (int i = 0; i < mSubChunkNum; i++) {
         // 拷贝原有的 BlockVolume 而不使用构造函数（使用构造函数不生效，原因未知）
-        auto ptr            = std::make_unique<BlockVolume>(mPrototype);
-        ptr->mBlocks.mBegin = &*mVector_Dirt16.begin(); // 指向 mVector_Dirt
-        ptr->mBlocks.mEnd   = &*mVector_Dirt16.end();
+        auto ptr             = std::make_unique<BlockVolume>(mPrototype);
+        ptr->mBlocks->mBegin = &*mVector_Dirt16.begin(); // 指向 mVector_Dirt
+        ptr->mBlocks->mEnd   = &*mVector_Dirt16.end();
         mTemplateSubChunks.push_back(std::move(ptr));
     }
     // 确保有基岩和草方块
-    auto begin            = mTemplateSubChunks[0].get();
-    begin->mBlocks.mBegin = &*mVector_Bedrock1_Dirt15.begin(); // 指向 mVector_Bedrock1_Dirt15
-    begin->mBlocks.mEnd   = &*mVector_Bedrock1_Dirt15.end();
-    auto end              = mTemplateSubChunks[mSubChunkNum - 1].get();
-    end->mBlocks.mEnd     = &*mVector_Dirt15_Grass1.end(); // 指向 mVector_Dirt15_Grass1
-    end->mBlocks.mBegin   = &*mVector_Dirt15_Grass1.begin();
+    auto begin             = mTemplateSubChunks[0].get();
+    begin->mBlocks->mBegin = &*mVector_Bedrock1_Dirt15.begin(); // 指向 mVector_Bedrock1_Dirt15
+    begin->mBlocks->mEnd   = &*mVector_Bedrock1_Dirt15.end();
+    auto end               = mTemplateSubChunks[mSubChunkNum - 1].get();
+    end->mBlocks->mEnd     = &*mVector_Dirt15_Grass1.end(); // 指向 mVector_Dirt15_Grass1
+    end->mBlocks->mBegin   = &*mVector_Dirt15_Grass1.begin();
 
     // 设置群系
     mBiomeSource =
-        std::make_unique<FixedBiomeSource>(*dimension.getBiomeRegistry().lookupByHash(VanillaBiomeNames::Plains));
+        std::make_unique<FixedBiomeSource>(*dimension.getBiomeRegistry().lookupByHash(VanillaBiomeNames::Plains()));
 }
 
 

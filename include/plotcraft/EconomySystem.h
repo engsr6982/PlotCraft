@@ -1,5 +1,4 @@
 #pragma once
-#include "mc/deps/core/mce/UUID.h"
 #include "mc/world/actor/player/Player.h"
 #include "plotcraft/Global.h"
 

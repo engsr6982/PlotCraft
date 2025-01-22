@@ -33,7 +33,7 @@ public:
 
 
     DefaultGenerator(Dimension& dimension, uint seed, Json::Value const& generationOptionsJSON);
-    void loadChunk(LevelChunk& levelchunk, bool forceImmediateReplacementDataLoad);
+    void loadChunk(LevelChunk& levelchunk, bool forceImmediateReplacementDataLoad) override;
 };
 
 } // namespace plot::core

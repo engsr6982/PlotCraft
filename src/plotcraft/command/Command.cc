@@ -1,6 +1,5 @@
 #include "Command.h"
 #include "ll/api/command/CommandRegistrar.h"
-#include "mc/math/Vec3.h"
 #include "mc/server/commands/CommandOrigin.h"
 #include "mc/server/commands/CommandOriginType.h"
 #include "mc/world/level/BlockPos.h"

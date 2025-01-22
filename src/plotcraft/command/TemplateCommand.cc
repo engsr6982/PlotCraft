@@ -7,6 +7,7 @@
 #include "mc/server/commands/CommandSelector.h"
 #include "plotcraft/core/TemplateManager.h"
 #include "plotcraft/data/PlotDBStorage.h"
+#include "plotcraft/utils/Mc.h"
 
 namespace plot::command {
 using namespace plot::data;
@@ -37,11 +38,14 @@ const auto start = [](CommandOrigin const& ori, CommandOutput& out, StartData co
         return;
     }
 
-    auto bl = data.defaultBlock.resolveBlock((int)data.defaultBlock.id).getBlock();
+    auto bl = data.defaultBlock.resolveBlock(data.defaultBlock.mBlockNameHash).getBlock();
     if (bl == nullptr) {
         sendText<LogLevel::Error>(player, "获取默认方块失败");
         return;
     }
+#ifdef DEBUG
+    std::cout << "Block: " << bl->getTypeName() << std::endl;
+#endif
 
     bool ok = TemplateManager::prepareRecordTemplate(
         data.starty,

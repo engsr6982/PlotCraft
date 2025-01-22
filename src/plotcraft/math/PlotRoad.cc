@@ -1,8 +1,6 @@
 #include "plotcraft/math/PlotRoad.h"
 #include "fmt/core.h"
 #include "ll/api/service/Bedrock.h"
-#include "mc/enums/BlockUpdateFlag.h"
-#include "mc/math/Vec3.h"
 #include "mc/world/level/BlockPos.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/dimension/Dimension.h"
@@ -140,26 +138,27 @@ void PlotRoad::fill(Block const& block, bool removeBorder) {
     int min_z = min.z - 1;
     int max_z = max.z + 1;
 
+    static uchar flags = (1 << 0) | (1 << 1); // 0b11 BlockUpdateFlag::All v0.13.5
     for (int x = min.x; x <= max.x; x++) {
         for (int z = min.z; z <= max.z; z++) {
             auto& bl = bs.getBlock(x, y_road, z);
 
             if (!bl.isAir()) {
-                bs.setBlock(x, y_road, z, block, (int)BlockUpdateFlag::AllPriority, nullptr);
+                bs.setBlock(x, y_road, z, block, flags, nullptr);
             }
 
             if (removeBorder) {
                 if (isX && x - 1 == min_x) {
-                    bs.setBlock(x - 1, y_border, z, air, (int)BlockUpdateFlag::AllPriority, nullptr);
+                    bs.setBlock(x - 1, y_border, z, air, flags, nullptr);
 
                 } else if (isX && x + 1 == max_x) {
-                    bs.setBlock(x + 1, y_border, z, air, (int)BlockUpdateFlag::AllPriority, nullptr);
+                    bs.setBlock(x + 1, y_border, z, air, flags, nullptr);
 
                 } else if (!isX && z - 1 == min_z) {
-                    bs.setBlock(x, y_border, z - 1, air, (int)BlockUpdateFlag::AllPriority, nullptr);
+                    bs.setBlock(x, y_border, z - 1, air, flags, nullptr);
 
                 } else if (!isX && z + 1 == max_z) {
-                    bs.setBlock(x, y_border, z + 1, air, (int)BlockUpdateFlag::AllPriority, nullptr);
+                    bs.setBlock(x, y_border, z + 1, air, flags, nullptr);
                 }
             }
         }

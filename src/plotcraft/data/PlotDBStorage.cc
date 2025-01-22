@@ -59,7 +59,7 @@ void PlotDBStorage::load() {
 
     // Load data from database
     auto* logger = &my_plugin::MyPlugin::getInstance().getSelf().getLogger();
-    mDB->iter([this, logger](std::string_view key, std::string_view value) {
+    for (auto const& [key, value] : mDB->iter()) {
         try {
             if (key.starts_with("(") && key.ends_with(")")) {
                 auto j   = nlohmann::json::parse(value);
@@ -84,8 +84,7 @@ void PlotDBStorage::load() {
         } catch (...) {
             logger->fatal("Fail in {}, error key: {}", __func__, key);
         }
-        return true;
-    });
+    };
 
     logger->info("已加载 {}条 地皮数据", mPlotList.size());
     logger->info("已加载 {}位 管理员数据", mAdminList.size());

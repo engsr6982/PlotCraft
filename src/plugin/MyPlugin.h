@@ -9,7 +9,8 @@ class MyPlugin {
 public:
     static MyPlugin& getInstance();
 
-    MyPlugin(ll::mod::NativeMod& self) : mSelf(self) {}
+    // MyPlugin(ll::mod::NativeMod& self) : mSelf(self) {}
+    MyPlugin() : mSelf(*ll::mod::NativeMod::current()) {}
 
     [[nodiscard]] ll::mod::NativeMod& getSelf() const { return mSelf; }
 
