@@ -1,20 +1,26 @@
 on:
   pull_request:
     paths:
-      - ".github/workflows/build.yml"
-      - "src/**"
-      - "include/**"
-      - "xmake.lua"
+      - src/**
+      - include/**
+      - xmake.lua
+      - .github/workflows/build.yml
   push:
     paths:
-      - ".github/workflows/build.yml"
-      - "src/**"
-      - "include/**"
-      - "xmake.lua"
+      - src/**
+      - include/**
+      - xmake.lua
+      - .github/workflows/build.yml
   workflow_dispatch:
 
 jobs:
   build:
+    env:
+      targetName: ${{ matrix.overworld == 'y' && 'overworld' || 'more_dimension' }}
+    strategy:
+      matrix:
+        overworld: ["y", "n"]
+    name: Build-${{ matrix.overworld == 'y' && 'overworld' || 'more_dimension' }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,8 +28,8 @@ jobs:
           fetch-depth: 0
 
       - uses: xmake-io/github-action-setup-xmake@v1
-        with:
-          xmake-version: "2.9.3"
+        # with:
+        #   xmake-version: "2.9.3"
 
       - uses: actions/cache@v4
         with:
@@ -33,7 +39,7 @@ jobs:
           restore-keys: |
             xmake-
 
-      - uses: microsoft/setup-msbuild@v2
+      # - uses: microsoft/setup-msbuild@v2
 
       - run: |
           xmake repo -u
@@ -46,7 +52,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.repository.name }}-windows-x64-${{ github.sha }}
+          name: ${{ github.event.repository.name }}-windows-x64-${{ env.targetName }}-${{ github.sha }}
           path: |
             bin/
 
@@ -70,18 +76,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SDK-${{ github.sha }}
+          name: SDK-${{ env.targetName }}-${{ github.sha }}
           path: SDK
-
-  # clang-format:
-  #   runs-on: windows-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-
-  #     - run: |
-  #         choco install llvm -y --version=17.0.6
-
-  #     - name: clang-format
-  #       run: |
-  #         Get-ChildItem src/ -Filter *.cpp -Recurse | ForEach-Object { clang-format --dry-run -Werror $_.FullName; if ($LASTEXITCODE -ne 0) { exit 1; } }
-  #         Get-ChildItem src/ -Filter *.h -Recurse | ForEach-Object { clang-format --dry-run -Werror $_.FullName; if ($LASTEXITCODE -ne 0) { exit 1; } }
