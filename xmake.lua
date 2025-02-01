@@ -7,9 +7,9 @@ add_repositories("miracleforest-repo https://github.com/MiracleForest/xmake-repo
 -- add_requires("levilamina develop") to use develop version
 -- please note that you should add bdslibrary yourself if using dev version
 if is_config("target_type", "server") then
-    add_requires("levilamina 1.0.0", {configs = {target_type = "server"}})
+    add_requires("levilamina 1.0.1", {configs = {target_type = "server"}})
 else
-    add_requires("levilamina 1.0.0", {configs = {target_type = "client"}})
+    add_requires("levilamina 1.0.1", {configs = {target_type = "client"}})
 end
 add_requires("levibuildscript")
 add_requires("ilistenattentively 0.2.3")
@@ -19,7 +19,7 @@ if not has_config("vs_runtime") then
 end
 
 if get_config("overworld") == false then 
-    add_requires("more-dimensions 0.4.1")
+    add_requires("more-dimensions 0.5.0")
 end 
 
 option("target_type")
