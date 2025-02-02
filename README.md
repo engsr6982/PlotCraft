@@ -35,7 +35,7 @@ lip install github.com/engsr6982/PlotCraft
 我们不推荐这么做，因为处理不好依赖版本可能导致未知的问题  
 如果您需要手动安装 PlotCraft，您需要安装以下前置组件（插件）
 
-- MoreEvent（必须）
+- iListenAttentively（必须）
 - MoreDimension（编译OverWorld版本可不装）
 - LegacyMoney（不使用此经济可不装）
 
