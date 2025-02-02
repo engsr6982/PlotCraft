@@ -94,7 +94,7 @@ void _SetupPlotEventScheduler() {
 
                 // 获取当前位置信息
                 auto const& curPos  = pl.getPosition();
-                auto const  curDim  = pl.getDimensionId();
+                auto const  curDim  = pl.getDimensionId().id;
                 auto const  curPlot = PlotPos(curPos);
 
                 // 获取上一次位置信息

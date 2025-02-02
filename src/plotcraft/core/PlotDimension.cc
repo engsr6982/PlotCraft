@@ -2,19 +2,25 @@
 #include "PlotDimension.h"
 #include "DefaultGenerator.h"
 #include "TemplateGenerator.h"
+#include "mc/common/Brightness.h"
+#include "mc/common/BrightnessPair.h"
 #include "mc/world/level/BlockSource.h"
 #include "mc/world/level/DimensionConversionData.h"
 #include "mc/world/level/Level.h"
 #include "mc/world/level/LevelSeed64.h"
-#include "mc/world/level/chunk/ChunkGeneratorStructureState.h"
-#include "mc/world/level/chunk/VanillaLevelChunkUpgrade.h"
+#include "mc/world/level/biome/source/FixedBiomeSource.h"
+#include "mc/world/level/chunk/vanilla_level_chunk_upgrade/VanillaLevelChunkUpgrade.h"
+#include "mc/world/level/dimension/Dimension.h"
 #include "mc/world/level/dimension/DimensionBrightnessRamp.h"
+#include "mc/world/level/dimension/DimensionHeightRange.h"
 #include "mc/world/level/dimension/OverworldBrightnessRamp.h"
 #include "mc/world/level/dimension/VanillaDimensions.h"
 #include "mc/world/level/levelgen/flat/FlatWorldGenerator.h"
 #include "mc/world/level/levelgen/structure/StructureFeatureRegistry.h"
-#include "mc/world/level/levelgen/structure/StructureSetRegistry.h"
 #include "mc/world/level/levelgen/structure/VillageFeature.h"
+#include "mc/world/level/levelgen/structure/registry/StructureSetRegistry.h"
+#include "mc/world/level/levelgen/v2/ChunkGeneratorStructureState.h"
+#include "mc/world/level/storage/LevelData.h"
 #include "more_dimensions/api/dimension/CustomDimensionManager.h"
 #include "plotcraft/Config.h"
 #include "plotcraft/Global.h"
@@ -25,7 +31,7 @@ namespace plot::core {
 PlotDimension::PlotDimension(std::string const& name, more_dimensions::DimensionFactoryInfo const& info)
 : Dimension(info.level, info.dimId, {-64, 320}, info.scheduler, name) {
     // 这里说明下，在DimensionFactoryInfo里面more-dimensions会提供维度id，请不要使用固定维度id，避免id冲突导致维度注册出现异常
-    mDefaultBrightness.sky   = Brightness::MAX;
+    mDefaultBrightness->sky  = Brightness::MAX();
     mSeaLevel                = -61;
     mHasWeather              = true;
     mDimensionBrightnessRamp = std::make_unique<OverworldBrightnessRamp>();
@@ -49,7 +55,7 @@ PlotDimension::createGenerator(br::worldgen::StructureSetRegistry const& /* stru
             std::make_unique<plot::core::TemplateGenerator>(*this, seed, levelData.getFlatWorldGeneratorOptions());
     }
 
-    worldGenerator->init(); // 必须调用，初始化生成器
+    // worldGenerator->init(); // 必须调用，初始化生成器
 
     return std::move(worldGenerator);
 }

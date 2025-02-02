@@ -163,7 +163,7 @@ bool registerEventListener() {
     mPlayerDestroyBlockEvent =
         bus->emplaceListener<ll::event::PlayerDestroyBlockEvent>([db, logger](ll::event::PlayerDestroyBlockEvent& ev) {
             auto& player = ev.self();
-            if (player.getDimensionId() != getPlotWorldDimensionId()) return; // 被破坏的方块不在地皮世界
+            if (player.getDimensionId().id != getPlotWorldDimensionId()) return; // 被破坏的方块不在地皮世界
 
             BlockPos const& blockPos = ev.pos();
             PlotPos         pps      = PlotPos(blockPos);
@@ -189,7 +189,7 @@ bool registerEventListener() {
     mPlayerPlaceingBlockEvent =
         bus->emplaceListener<ll::event::PlayerPlacingBlockEvent>([db, logger](ll::event::PlayerPlacingBlockEvent& ev) {
             auto& player = ev.self();
-            if (player.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (player.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             BlockPos blockPos = mc::face2Pos(ev.pos(), ev.face()); // 计算实际放置位置
             auto     pps      = PlotPos(blockPos);
@@ -214,7 +214,7 @@ bool registerEventListener() {
         bus->emplaceListener<ll::event::PlayerInteractBlockEvent>([db,
                                                                    logger](ll::event::PlayerInteractBlockEvent& ev) {
             auto& player = ev.self();
-            if (player.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (player.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             auto& vec3 = ev.clickPos();
             auto  pps  = PlotPos(vec3);
@@ -294,7 +294,7 @@ bool registerEventListener() {
     mPlayerAttackEntityEvent =
         bus->emplaceListener<ll::event::PlayerAttackEvent>([db, logger](ll::event::PlayerAttackEvent& ev) {
             auto& player = ev.self();
-            if (player.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (player.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             auto const& pos = ev.target().getPosition();
             auto        pps = PlotPos(pos);
@@ -324,7 +324,7 @@ bool registerEventListener() {
     mPlayerPickUpItemEvent =
         bus->emplaceListener<ll::event::PlayerPickUpItemEvent>([db, logger](ll::event::PlayerPickUpItemEvent& ev) {
             auto& player = ev.self();
-            if (player.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (player.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             auto const& pos = ev.itemActor().getPosition();
             auto        pps = PlotPos(pos);
@@ -350,7 +350,7 @@ bool registerEventListener() {
         bus->emplaceListener<ll::event::PlayerInteractBlockEvent>([db,
                                                                    logger](ll::event::PlayerInteractBlockEvent& ev) {
             auto& player = ev.self();
-            if (player.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (player.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             auto const& pos = ev.blockPos(); // 交互的方块位置
             auto        pps = PlotPos(pos);
@@ -389,7 +389,7 @@ bool registerEventListener() {
 
     mPlayerUseItemEvent =
         bus->emplaceListener<ll::event::PlayerUseItemEvent>([logger](ll::event::PlayerUseItemEvent& ev) {
-            if (ev.self().getDimensionId() != getPlotWorldDimensionId()) return;
+            if (ev.self().getDimensionId().id != getPlotWorldDimensionId()) return;
             if (!ev.item().getTypeName().ends_with("bucket")) return;
 
             auto& player = ev.self();
@@ -421,7 +421,7 @@ bool registerEventListener() {
     // 可开关事件（作用于地皮世界）
     mSpawningMobEvent =
         bus->emplaceListener<ll::event::SpawningMobEvent>([/* logger */](ll::event::SpawningMobEvent& ev) {
-            if (ev.blockSource().getDimensionId() != getPlotWorldDimensionId()) return;
+            if (ev.blockSource().getDimensionId().id != getPlotWorldDimensionId()) return;
 
             // logger->debug("[SpawningMob]: {}", ev.identifier().getFullName());
 
@@ -432,7 +432,7 @@ bool registerEventListener() {
 
     mActorHurtEvent = bus->emplaceListener<ll::event::ActorHurtEvent>([db, logger](ll::event::ActorHurtEvent& ev) {
         auto& self = ev.self();
-        if (self.getDimensionId() != getPlotWorldDimensionId()) return;
+        if (self.getDimensionId().id != getPlotWorldDimensionId()) return;
 
         logger->debug("[ActorHurtEvent] mob: {}", self.getTypeName());
 
@@ -466,7 +466,7 @@ bool registerEventListener() {
             if (!pl.has_value()) return;
             Player& player = pl.value();
 
-            if (player.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (player.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             logger->debug("[AttackBlock]: Pos: {}", ev.getPos().toString());
 
@@ -488,7 +488,7 @@ bool registerEventListener() {
         bus->emplaceListener<ila::mc::ArmorStandSwapItemBeforeEvent>([logger](ila::mc::ArmorStandSwapItemBeforeEvent& ev
                                                                      ) {
             Player& player = ev.getPlayer();
-            if (player.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (player.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             logger->debug("[ArmorStandSwapItem]: executed");
 
@@ -508,7 +508,7 @@ bool registerEventListener() {
     mPlayerDropItemEvent =
         bus->emplaceListener<ila::mc::PlayerDropItemBeforeEvent>([logger](ila::mc::PlayerDropItemBeforeEvent& ev) {
             Player& player = ev.self();
-            if (player.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (player.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             logger->debug("[PlayerDropItem]: executed");
 
@@ -527,7 +527,7 @@ bool registerEventListener() {
 
     mActorRideEvent = bus->emplaceListener<ila::mc::ActorRideBeforeEvent>([logger](ila::mc::ActorRideBeforeEvent& ev) {
         Actor& passenger = ev.self();
-        if (passenger.getDimensionId() != getPlotWorldDimensionId()) return;
+        if (passenger.getDimensionId().id != getPlotWorldDimensionId()) return;
 
         logger->debug("[生物骑乘] executed!");
 
@@ -562,7 +562,7 @@ bool registerEventListener() {
         auto& exp = ev.getExplosion();
         auto  pos = BlockPos{exp.mPos};
 
-        if (bs.getDimensionId() != getPlotWorldDimensionId()) return;
+        if (bs.getDimensionId().id != getPlotWorldDimensionId()) return;
 
         logger->debug("[Explode] pos: {}", pos.toString());
 
@@ -589,7 +589,7 @@ bool registerEventListener() {
 
     mFarmDecayEvent = bus->emplaceListener<ila::mc::FarmDecayBeforeEvent>([logger](ila::mc::FarmDecayBeforeEvent& ev) {
         auto& region = ev.blockSource();
-        if (region.getDimensionId() != getPlotWorldDimensionId()) return;
+        if (region.getDimensionId().id != getPlotWorldDimensionId()) return;
 
         logger->debug("[耕地退化] pos: {}", ev.getPos().toString());
 
@@ -607,7 +607,7 @@ bool registerEventListener() {
     mMobHurtEffectEvent =
         bus->emplaceListener<ila::mc::MobHurtEffectBeforeEvent>([logger](ila::mc::MobHurtEffectBeforeEvent& ev) {
             auto& self = ev.self();
-            if (self.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (self.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             logger->debug("[MobHurt] mob: {}", self.getTypeName());
 
@@ -636,7 +636,7 @@ bool registerEventListener() {
     mPistonTryPushEvent =
         bus->emplaceListener<ila::mc::PistonPushBeforeEvent>([logger](ila::mc::PistonPushBeforeEvent& ev) {
             auto& region = ev.blockSource();
-            if (region.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (region.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             logger->debug("[活塞推动方块] 目标: {}", ev.getPushPos().toString());
 
@@ -658,7 +658,7 @@ bool registerEventListener() {
     mPlayerUseItemFrameEvent = bus->emplaceListener<ila::mc::PlayerOperatedItemFrameBeforeEvent>(
         [logger](ila::mc::PlayerOperatedItemFrameBeforeEvent& ev) {
             auto& player = ev.self();
-            if (player.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (player.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             logger->debug("[物品展示框] pos: {}", ev.getBlockPos().toString());
 
@@ -681,7 +681,7 @@ bool registerEventListener() {
             auto& region = self.getDimensionBlockSource();
             auto& pos    = ev.getPos();
 
-            if (region.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (region.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             logger->debug("[压力板] pos: {} entity: {}", pos.toString(), self.getTypeName());
 
@@ -707,7 +707,7 @@ bool registerEventListener() {
     mProjectileSpawnEvent =
         bus->emplaceListener<ila::mc::ProjectileCreateBeforeEvent>([logger](ila::mc::ProjectileCreateBeforeEvent& ev) {
             auto& actor = ev.self();
-            if (actor.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (actor.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             auto const& type = actor.getTypeName();
 
@@ -744,7 +744,7 @@ bool registerEventListener() {
     mRedstoneUpdateEvent =
         bus->emplaceListener<ila::mc::RedstoneUpdateBeforeEvent>([logger](ila::mc::RedstoneUpdateBeforeEvent& ev) {
             auto& region = ev.blockSource();
-            if (region.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (region.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             logger->debug("[RedstoneUpdate] pos: {}", ev.getPos().toString());
 
@@ -762,7 +762,7 @@ bool registerEventListener() {
     mWitherDestroyBlockEvent =
         bus->emplaceListener<ila::mc::WitherDestroyBeforeEvent>([logger](ila::mc::WitherDestroyBeforeEvent& ev) {
             auto& region = ev.blockSource();
-            if (region.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (region.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             logger->debug("[凋零破坏方块] executed!");
 
@@ -796,7 +796,7 @@ bool registerEventListener() {
 
     mMossFertilizerEvent =
         bus->emplaceListener<ila::mc::MossGrowthBeforeEvent>([logger, db](ila::mc::MossGrowthBeforeEvent& ev) {
-            if (ev.blockSource().getDimensionId() != getPlotWorldDimensionId()) return;
+            if (ev.blockSource().getDimensionId().id != getPlotWorldDimensionId()) return;
 
             logger->debug("[MossSpread] {}", ev.getPos().toString());
 
@@ -821,7 +821,7 @@ bool registerEventListener() {
     mLiquidFlowEvent =
         bus->emplaceListener<ila::mc::LiquidTryFlowBeforeEvent>([](ila::mc::LiquidTryFlowBeforeEvent& ev) {
             auto& bs = ev.blockSource();
-            if (bs.getDimensionId() != getPlotWorldDimensionId()) return;
+            if (bs.getDimensionId().id != getPlotWorldDimensionId()) return;
 
             auto& sou = ev.getPos();
             auto  pps = PlotPos(sou);

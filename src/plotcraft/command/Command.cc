@@ -74,7 +74,7 @@ static const auto LambdaGo = [](CommandOrigin const& origin, CommandOutput& outp
 static const auto LambdaPlot = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
-    if (player.getDimensionId() != getPlotWorldDimensionId()) {
+    if (player.getDimensionId().id != getPlotWorldDimensionId()) {
         sendText<LogLevel::Error>(player, "此命令只能在地皮世界使用!");
         return;
     }
@@ -120,7 +120,7 @@ static const auto LambdaSetting = [](CommandOrigin const& origin, CommandOutput&
 static const auto LambdaFindUnownedPlot = [](CommandOrigin const& origin, CommandOutput& output) {
     CHECK_COMMAND_TYPE(output, origin, CommandOriginType::Player);
     Player& player = *static_cast<Player*>(origin.getEntity());
-    if (player.getDimensionId() != getPlotWorldDimensionId()) {
+    if (player.getDimensionId().id != getPlotWorldDimensionId()) {
         sendText<LogLevel::Error>(player, "此命令只能在地皮世界使用!");
         return;
     }
