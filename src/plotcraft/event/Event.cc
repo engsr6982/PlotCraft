@@ -187,11 +187,7 @@ bool registerEventListener() {
                 }
 
                 if (meta && meta->getPermissionTableConst().allowDestroy) return; // 玩家有权限破坏地皮内方块
-            } else {
-                ev.cancel(); // 玩家不能破坏地皮边界方块
-                return;
             }
-
             ev.cancel();
         });
 
