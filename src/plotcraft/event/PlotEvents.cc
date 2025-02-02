@@ -1,4 +1,6 @@
 #include "plotcraft/event/PlotEvents.h"
+#include "ll/api/event/Emitter.h"
+#include "ll/api/event/EmitterBase.h"
 
 namespace plot::event {
 
@@ -63,5 +65,27 @@ PlotMetadataPtr const& PlayerChangePlotNameBefore::getPlot() const { return mPlo
 Player*                PlayerChangePlotNameAfter::getPlayer() const { return mPlayer; }
 PlotMetadataPtr const& PlayerChangePlotNameAfter::getPlot() const { return mPlot; }
 string const&          PlayerChangePlotNameAfter::getNewName() const { return mNewName; }
+
+
+// EventEmitter
+#define IMPLEMENT_EVENT_EMITTER(EventName)                                                                             \
+    static std::unique_ptr<ll::event::EmitterBase> emitterFactory##EventName();                                        \
+    class EventName##Emitter : public ll::event::Emitter<emitterFactory##EventName, EventName> {};                     \
+    static std::unique_ptr<ll::event::EmitterBase> emitterFactory##EventName() {                                       \
+        return std::make_unique<EventName##Emitter>();                                                                 \
+    }
+
+IMPLEMENT_EVENT_EMITTER(PlayerEnterPlot);
+IMPLEMENT_EVENT_EMITTER(PlayerLeavePlot);
+IMPLEMENT_EVENT_EMITTER(PlayerCommentPlotBefore);
+IMPLEMENT_EVENT_EMITTER(PlayerCommentPlotAfter);
+IMPLEMENT_EVENT_EMITTER(PlayerEditCommentBefore);
+IMPLEMENT_EVENT_EMITTER(PlayerEditCommentAfter);
+IMPLEMENT_EVENT_EMITTER(PlayerDeletePlotComment);
+IMPLEMENT_EVENT_EMITTER(PlayerBuyPlotBefore);
+IMPLEMENT_EVENT_EMITTER(PlayerBuyPlotAfter);
+IMPLEMENT_EVENT_EMITTER(PlayerChangePlotNameBefore);
+IMPLEMENT_EVENT_EMITTER(PlayerChangePlotNameAfter);
+
 
 } // namespace plot::event

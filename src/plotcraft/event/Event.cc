@@ -166,21 +166,30 @@ bool registerEventListener() {
             if (player.getDimensionId().id != getPlotWorldDimensionId()) return; // 被破坏的方块不在地皮世界
 
             BlockPos const& blockPos = ev.pos();
+            auto            uuid     = player.getUuid().asString();
             PlotPos         pps      = PlotPos(blockPos);
 
             logger->debug("[DestroyBlock]: {}", blockPos.toString());
 
-            PlotMetadataPtr meta = db->getPlot(pps.getPlotID());
-            if (PreCheck(meta, player.getUuid().asString())) {
+            if (db->isAdmin(uuid)) {
                 return;
             }
 
-            if (meta) {
-                auto const& tab = meta->getPermissionTableConst();
-
-                if (pps.isValid() && !pps.isPosOnBorder(blockPos) && tab.allowDestroy) {
-                    return; // 玩家有权限破坏地皮内方块
+            if (pps.isValid()) {
+                if (pps.isPosOnBorder(blockPos)) {
+                    ev.cancel(); // 玩家不能破坏地皮边界方块
+                    return;
                 }
+
+                PlotMetadataPtr meta = db->getPlot(pps.getPlotID());
+                if (PreCheck(meta, uuid)) {
+                    return;
+                }
+
+                if (meta && meta->getPermissionTableConst().allowDestroy) return; // 玩家有权限破坏地皮内方块
+            } else {
+                ev.cancel(); // 玩家不能破坏地皮边界方块
+                return;
             }
 
             ev.cancel();
@@ -193,21 +202,29 @@ bool registerEventListener() {
 
             BlockPos blockPos = mc::face2Pos(ev.pos(), ev.face()); // 计算实际放置位置
             auto     pps      = PlotPos(blockPos);
+            auto     uuid     = player.getUuid().asString();
 
             logger->debug("[PlaceingBlock]: {}", blockPos.toString());
 
-            auto meta = db->getPlot(pps.getPlotID());
-            if (PreCheck(meta, player.getUuid().asString())) {
+
+            if (db->isAdmin(uuid)) {
                 return;
             }
 
-            if (meta) {
-                auto const& tab = meta->getPermissionTableConst();
+            if (pps.isValid()) {
+                if (pps.isPosOnBorder(blockPos)) {
+                    ev.cancel(); // 玩家不能放置地皮边界方块
+                }
 
-                if (pps.isValid() && !pps.isPosOnBorder(blockPos) && tab.allowPlace) return;
+                PlotMetadataPtr meta = db->getPlot(pps.getPlotID());
+                if (PreCheck(meta, uuid)) {
+                    return;
+                }
+
+                if (meta && meta->getPermissionTableConst().allowPlace) return; // 玩家有权限放置地皮内方块
+            } else {
+                ev.cancel(); // 玩家不能放置地皮边界方块
             }
-
-            ev.cancel();
         });
 
     mPlayerUseItemOnEvent =
@@ -862,6 +879,8 @@ bool registerEventListener() {
     mSculkBlockGrowthEvent =
         bus->emplaceListener<ila::mc::SculkBlockGrowthBeforeEvent>([db,
                                                                     logger](ila::mc::SculkBlockGrowthBeforeEvent& ev) {
+            if (ev.blockSource().getDimensionId().id != getPlotWorldDimensionId()) return;
+
             auto& pos = ev.getPos();
             logger->debug("[SculkBlockGrowth] {}", pos.toString());
 
@@ -879,7 +898,9 @@ bool registerEventListener() {
 
     mSculkSpreadEvent =
         bus->emplaceListener<ila::mc::SculkSpreadBeforeEvent>([logger](ila::mc::SculkSpreadBeforeEvent& ev) {
-            logger->debug("[SculkSpread] {} -> {}", ev.getSelfPos().toString(), ev.getTargetPos().toString());
+            if (ev.blockSource().getDimensionId().id != getPlotWorldDimensionId()) return;
+
+            // logger->debug("[SculkSpread] {} -> {}", ev.getSelfPos().toString(), ev.getTargetPos().toString());
 
             PlotPos sou{ev.getSelfPos()};
             PlotPos tar{ev.getTargetPos()};
