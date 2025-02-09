@@ -292,6 +292,7 @@ bool registerEventListener() {
         });
 
     mFireSpreadEvent = bus->emplaceListener<ll::event::FireSpreadEvent>([db](ll::event::FireSpreadEvent& ev) {
+        if (ev.blockSource().getDimensionId().id != getPlotWorldDimensionId()) return true;
         auto const& pos  = ev.pos();
         auto        pps  = PlotPos(pos);
         auto const  meta = db->getPlot(pps.getPlotID());
